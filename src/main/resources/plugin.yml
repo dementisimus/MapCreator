@@ -1,0 +1,11 @@
+name: MapCreator
+main: dev.dementisimus.mapcreator.MapCreator
+author: dementisimus
+version: 1.3.0
+website: dementisimus.dev
+softdepend: [ CoreAPI ]
+api-version: 1.16
+
+commands:
+  mapcreator:
+  mc:
