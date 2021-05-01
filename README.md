@@ -32,9 +32,9 @@
 - **caches** used data for **maximum performance**
 - **multilingual** - by selecting the **correct language** for a player **automatically**
 - high scalability
-- docs on [docs.dementisimus.dev](https://docs.dementisimus.dev/MapCreator/ "docs.dementisimus.dev")
-- Support @ [Discord](https://discord.gg/sTRg8A7 "Discord") && [SpigotMC](https://www.spigotmc.org/conversations/add?to=dementisimus "SpigotMC") (Discord **preferred, so your question might help other people as well!**)
-- issues can be reported [here](https://discord.gg/sTRg8A7 "here")
+- **docs** on [docs.dementisimus.dev](https://docs.dementisimus.dev/MapCreator/ "docs.dementisimus.dev")
+- **Support** @ [Discord](https://discord.gg/sTRg8A7 "Discord") && [SpigotMC](https://www.spigotmc.org/conversations/add?to=dementisimus "SpigotMC") (Discord **preferred, so your question might help other people as well!**)
+- **issues** can be **reported** [here](https://discord.gg/sTRg8A7 "here")
 - [have a look at upcoming features on GitHub!](https://github.com/dementisimus/MapCreator/projects "have a look at upcoming features on GitHub!")
 
 ## default world settings:
