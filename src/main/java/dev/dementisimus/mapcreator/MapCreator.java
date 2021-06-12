@@ -64,29 +64,23 @@ public class MapCreator extends JavaPlugin {
         mapCreator = this;
         coreAPI = bukkitCoreAPI.getCoreAPI();
         try {
-            bukkitCoreAPI.addListenersToRegisterOnSetUpDone(new Listener[]{new SetUpStatePrintInstructionsListener(), new SetUpStateChangeListener(),
-                                                                           new SetUpDoneListener()});
-            coreAPI.prepareInit(new String[]{LANGUAGE.name(), MAPPOOL.name(), DEFAULT_WORLD_FOR_USAGE.name(), USE_API_MODE_ONLY.name()},
-                                new ResourceBundle[]{getBundle(coreAPI.getBaseName(), ENGLISH), getBundle(coreAPI.getBaseName(), GERMAN)},
-                                capi -> capi.init(initialized -> {
-                                    if(initialized) {
-                                        new Config(getCoreAPI().getConfigFile()).read(result -> {
-                                            if(result != null) {
-                                                AbstractCreator.setWorldPoolFolder(result.getString(MAPPOOL.name()));
-                                                SetUpData setUpData = getCoreAPI().getSetUpData();
-                                                setUpData.setData(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD,
-                                                                  Boolean.parseBoolean(result.getString(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD
-                                                                                                                .name())));
-                                                setUpData.setData(USE_API_MODE_ONLY,
-                                                                  Boolean.parseBoolean(result.getString(USE_API_MODE_ONLY.name())));
-                                                if(setUpData.getBoolean(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
-                                                    setUpData.setData(DEFAULT_WORLD_FOR_USAGE, result.getString(DEFAULT_WORLD_FOR_USAGE.name()));
-                                                }
-                                            }
-                                            setMapCreatorSettings();
-                                        });
-                                    }
-                                }));
+            bukkitCoreAPI.addListenersToRegisterOnSetUpDone(new Listener[]{new SetUpStatePrintInstructionsListener(), new SetUpStateChangeListener(), new SetUpDoneListener()});
+            coreAPI.prepareInit(new String[]{LANGUAGE.name(), MAPPOOL.name(), DEFAULT_WORLD_FOR_USAGE.name(), USE_API_MODE_ONLY.name()}, new ResourceBundle[]{getBundle(coreAPI.getBaseName(), ENGLISH), getBundle(coreAPI.getBaseName(), GERMAN)}, capi -> capi.init(initialized -> {
+                if(initialized) {
+                    new Config(getCoreAPI().getConfigFile()).read(result -> {
+                        if(result != null) {
+                            AbstractCreator.setWorldPoolFolder(result.getString(MAPPOOL.name()));
+                            SetUpData setUpData = getCoreAPI().getSetUpData();
+                            setUpData.setData(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD, Boolean.parseBoolean(result.getString(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.name())));
+                            setUpData.setData(USE_API_MODE_ONLY, Boolean.parseBoolean(result.getString(USE_API_MODE_ONLY.name())));
+                            if(setUpData.getBoolean(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
+                                setUpData.setData(DEFAULT_WORLD_FOR_USAGE, result.getString(DEFAULT_WORLD_FOR_USAGE.name()));
+                            }
+                        }
+                        setMapCreatorSettings();
+                    });
+                }
+            }));
         }catch(Exception ex) {
             System.out.println(new BukkitTranslation(CoreAPITranslations.CONSOLE_ERROR_NO_PLUGIN_FOUND.id).get(true));
             Bukkit.getPluginManager().disablePlugin(this);
@@ -131,23 +125,17 @@ public class MapCreator extends JavaPlugin {
             }
             if(!setUpData.getBoolean(USE_API_MODE_ONLY)) {
                 Bukkit.getScheduler().runTaskTimer(this, () -> {
-                    for(Player p : Bukkit.getOnlinePlayers()) {
-                        if(p != null) {
-                            String mapName = p.getWorld().getName();
+                    for(Player player : Bukkit.getOnlinePlayers()) {
+                        if(player != null) {
+                            String mapName = player.getWorld().getName();
                             if(!mapName.equalsIgnoreCase(CreatorConstants.DEFAULT_WORLD)) {
-                                p.sendActionBar(new BukkitTranslation(Translations.PLAYER_ACTIONBAR_CURRENTWORLD.id).get(p, "$world$", mapName));
+                                player.sendActionBar(new BukkitTranslation(Translations.PLAYER_ACTIONBAR_CURRENTWORLD.id).get(player, "$world$", mapName));
                             }
                         }
                     }
                 }, 30, 30);
             }else {
-                getCoreAPI().getDependencyDownloader().loadClasses(new File(Bukkit.getPluginManager()
-                                                                                  .getPlugin("MapCreator")
-                                                                                  .getClass()
-                                                                                  .getProtectionDomain()
-                                                                                  .getCodeSource()
-                                                                                  .getLocation()
-                                                                                  .getPath()), b -> {
+                getCoreAPI().getDependencyDownloader().loadClasses(new File(Bukkit.getPluginManager().getPlugin("MapCreator").getClass().getProtectionDomain().getCodeSource().getLocation().getPath()), b -> {
                     out.println(new BukkitTranslation(Translations.CONSOLE_API_ENABLED.id).get(true));
                 });
             }

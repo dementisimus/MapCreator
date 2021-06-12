@@ -31,10 +31,7 @@ public class SetUpStateChangeListener implements Listener {
         SetUpData setUpData = MapCreator.getMapCreator().getCoreAPI().getSetUpData();
         SetUpHelper setUpHelper = new SetUpHelper(currentState, event.getIssuedCommand(), setUpState, setUpData);
         if(currentState.equalsIgnoreCase(AdditionalSetUpState.MAPPOOL.name())) {
-            if(new File(event.getIssuedCommand()).exists() && new File(event.getIssuedCommand(),
-                                                                       (event.getIssuedCommand()
-                                                                             .endsWith("/") ? "DEFAULTMAPS/defaultWorld" : "/DEFAULTMAPS/defaultWorld"))
-                    .exists()) {
+            if(new File(event.getIssuedCommand()).exists() && new File(event.getIssuedCommand(), (event.getIssuedCommand().endsWith("/") ? "DEFAULTMAPS/defaultWorld" : "/DEFAULTMAPS/defaultWorld")).exists()) {
                 setUpData.setData(AdditionalSetUpState.MAPPOOL.name(), event.getIssuedCommand());
                 setUpState.setCurrentSetUpState(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.name(), true);
             }else {
@@ -42,10 +39,7 @@ public class SetUpStateChangeListener implements Listener {
                 System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_MAPPOOL.id).get(true));
             }
         }else if(currentState.equalsIgnoreCase(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.name())) {
-            setUpHelper.evalYesOrNo(Translations.CONSOLE_SETUP_SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.id,
-                                    AdditionalSetUpState.USE_API_MODE_ONLY,
-                                    true,
-                                    false);
+            setUpHelper.evalYesOrNo(Translations.CONSOLE_SETUP_SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.id, AdditionalSetUpState.USE_API_MODE_ONLY, true, false);
             if(SetUpHelper.getYesNoFromCommand(event.getIssuedCommand()) != null) {
                 if(SetUpHelper.getYesNoFromCommand(event.getIssuedCommand())) {
                     setUpState.setCurrentSetUpState(AdditionalSetUpState.DEFAULT_WORLD_FOR_USAGE.name(), true);

@@ -60,14 +60,11 @@ public class PlayerJoinListener implements Listener {
     }
 
     private void teleport(Player player) {
-        LocationManager.getConfigLocation(getWorld().getWorldFolder(),
-                                          getWorld().getName(),
-                                          "SPAWN",
-                                          location -> getScheduler().runTask(getMapCreator(), () -> {
-                                              if(location != null) {
-                                                  LocationManager.teleport(player, location);
-                                              }
-                                          }));
+        LocationManager.getConfigLocation(getWorld().getWorldFolder(), getWorld().getName(), "SPAWN", location -> getScheduler().runTask(getMapCreator(), () -> {
+            if(location != null) {
+                LocationManager.teleport(player, location);
+            }
+        }));
     }
 
 }

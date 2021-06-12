@@ -63,23 +63,23 @@ public class PreviousLocationObject {
     }
 
     public void restorePreviousLocation(boolean teleport, boolean resetPreviousLocation) {
-        Player p = Bukkit.getPlayer(UUID.fromString(getPlayer()));
+        Player player = Bukkit.getPlayer(UUID.fromString(getPlayer()));
         Bukkit.getScheduler().runTask(MapCreator.getMapCreator(), () -> {
-            if(p != null) {
+            if(player != null) {
                 if(teleport) {
                     if(Bukkit.getWorld(getLocation().get("world").toString()) != null) {
-                        p.teleport(Location.deserialize(getLocation()));
+                        player.teleport(Location.deserialize(getLocation()));
                     }
                 }
-                p.setGameMode(getGameMode());
+                player.setGameMode(getGameMode());
                 List<ItemStack> itemList = BukkitHelper.decodeItems(getContents());
                 ItemStack[] items = new ItemStack[itemList.size()];
-                p.getInventory().setContents(itemList.toArray(items));
-                p.getInventory().setHeldItemSlot(getHeldItemSlot());
-                p.setAllowFlight(getAllowFlight());
-                p.setFlying(isFlying());
+                player.getInventory().setContents(itemList.toArray(items));
+                player.getInventory().setHeldItemSlot(getHeldItemSlot());
+                player.setAllowFlight(getAllowFlight());
+                player.setFlying(isFlying());
                 if(resetPreviousLocation) {
-                    AbstractCreator.resetPreviousLocation(p);
+                    AbstractCreator.resetPreviousLocation(player);
                 }
             }
         });

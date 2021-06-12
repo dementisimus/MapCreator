@@ -51,20 +51,11 @@ public class COMMAND_mapcreator implements CommandExecutor {
                         if(subFolder.exists()) {
                             player.sendMessage(Objects.requireNonNull(AbstractCreator.printDirectoryTree(subFolder)));
                         }else {
-                            player.sendMessage(new BukkitTranslation(Translations.CREATOR_COMMAND_TREE_SUBFOLDER_DOES_NOT_EXIST.id).get(player,
-                                                                                                                                        new String[]{
-                                                                                                                                                "$prefix$",
-                                                                                                                                                "$folder$"},
-                                                                                                                                        new String[]{
-                                                                                                                                                Prefixes.MAPCREATOR,
-                                                                                                                                                args[1].toUpperCase()}));
+                            player.sendMessage(new BukkitTranslation(Translations.CREATOR_COMMAND_TREE_SUBFOLDER_DOES_NOT_EXIST.id).get(player, new String[]{"$prefix$", "$folder$"}, new String[]{Prefixes.MAPCREATOR, args[1].toUpperCase()}));
                         }
                     }else if(args[0].equalsIgnoreCase("teleport") || args[0].equalsIgnoreCase("tp")) {
                         String arg = args[1];
-                        List<Player> players = Bukkit.getOnlinePlayers()
-                                                     .stream()
-                                                     .filter(onlinePlayer -> onlinePlayer.getName().equalsIgnoreCase(arg))
-                                                     .collect(Collectors.toList());
+                        List<Player> players = Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> onlinePlayer.getName().equalsIgnoreCase(arg)).collect(Collectors.toList());
                         if(arg.equalsIgnoreCase("all")) {
                             int count = 0;
                             Player firstP = null;
@@ -84,58 +75,27 @@ public class COMMAND_mapcreator implements CommandExecutor {
                                 playersTeleported = playersTeleported.substring(0, playersTeleported.length() - 2);
                             }
                             if(count == 0) {
-                                player.sendMessage(new BukkitTranslation(Translations.CREATOR_NO_PLAYER_TELEPORTED.id).get(player,
-                                                                                                                           "$prefix$",
-                                                                                                                           Prefixes.MAPCREATOR));
+                                player.sendMessage(new BukkitTranslation(Translations.CREATOR_NO_PLAYER_TELEPORTED.id).get(player, "$prefix$", Prefixes.MAPCREATOR));
                             }else {
                                 if(count == 1) {
-                                    player.sendMessage(new BukkitTranslation(Translations.CREATOR_PLAYER_TELEPORTED.id).get(player,
-                                                                                                                            new String[]{"$prefix$",
-                                                                                                                                         "$player$"},
-                                                                                                                            new String[]{
-                                                                                                                                    Prefixes.MAPCREATOR,
-                                                                                                                                    firstP.getName()}));
+                                    player.sendMessage(new BukkitTranslation(Translations.CREATOR_PLAYER_TELEPORTED.id).get(player, new String[]{"$prefix$", "$player$"}, new String[]{Prefixes.MAPCREATOR, firstP.getName()}));
                                 }else {
-                                    player.sendMessage(new BukkitTranslation(Translations.CREATOR_PLAYERS_TELEPORTED.id).get(player,
-                                                                                                                             new String[]{"$prefix$",
-                                                                                                                                          "$playerCount$",
-                                                                                                                                          "$players$"},
-                                                                                                                             new String[]{
-                                                                                                                                     Prefixes.MAPCREATOR,
-                                                                                                                                     String.valueOf(
-                                                                                                                                             count),
-                                                                                                                                     playersTeleported}));
+                                    player.sendMessage(new BukkitTranslation(Translations.CREATOR_PLAYERS_TELEPORTED.id).get(player, new String[]{"$prefix$", "$playerCount$", "$players$"}, new String[]{Prefixes.MAPCREATOR, String.valueOf(count), playersTeleported}));
                                 }
                             }
                         }else if(players != null && !players.isEmpty()) {
                             Player target = players.get(0);
                             if(!target.getName().equalsIgnoreCase(player.getName())) {
                                 teleport(player, player, player, Translations.CREATOR_TELEPORTED_TO_WORLD);
-                                target.sendMessage(new BukkitTranslation(Translations.CREATOR_PLAYER_TELEPORTED.id).get(player,
-                                                                                                                        new String[]{"$prefix$",
-                                                                                                                                     "$player$"},
-                                                                                                                        new String[]{
-                                                                                                                                Prefixes.MAPCREATOR,
-                                                                                                                                target.getName()}));
+                                target.sendMessage(new BukkitTranslation(Translations.CREATOR_PLAYER_TELEPORTED.id).get(player, new String[]{"$prefix$", "$player$"}, new String[]{Prefixes.MAPCREATOR, target.getName()}));
                             }else {
                                 sendHelpMessage(player);
                             }
                         }else if(!player.getWorld().getName().equalsIgnoreCase(arg)) {
                             if(Bukkit.getWorld(arg) != null) {
-                                AbstractCreator.teleportToExistingWorld(player,
-                                                                        Bukkit.getWorld(arg),
-                                                                        player,
-                                                                        player,
-                                                                        Translations.CREATOR_TELEPORTED_TO_WORLD,
-                                                                        null);
+                                AbstractCreator.teleportToExistingWorld(player, Bukkit.getWorld(arg), player, player, Translations.CREATOR_TELEPORTED_TO_WORLD, null);
                             }else {
-                                player.sendMessage(new BukkitTranslation(Translations.CREATOR_WORLD_NOT_LOADED_MAP_ONLY.id).get(player,
-                                                                                                                                new String[]{
-                                                                                                                                        "$prefix$",
-                                                                                                                                        "$map$"},
-                                                                                                                                new String[]{
-                                                                                                                                        Prefixes.MAPCREATOR,
-                                                                                                                                        arg}));
+                                player.sendMessage(new BukkitTranslation(Translations.CREATOR_WORLD_NOT_LOADED_MAP_ONLY.id).get(player, new String[]{"$prefix$", "$map$"}, new String[]{Prefixes.MAPCREATOR, arg}));
                             }
                         }else {
                             sendHelpMessage(player);
@@ -187,32 +147,24 @@ public class COMMAND_mapcreator implements CommandExecutor {
         return false;
     }
 
-    private void teleport(Player p, Player target, Player sendMessageTo, Translations translations) {
-        AbstractCreator.teleportToExistingWorld(p, p.getWorld(), target, sendMessageTo, translations, null);
+    private void teleport(Player player, Player target, Player sendMessageTo, Translations translations) {
+        AbstractCreator.teleportToExistingWorld(player, player.getWorld(), target, sendMessageTo, translations, null);
     }
 
-    private void loadWorld(Player p, String world, MapCreatorAPI creator, boolean setDefaultWorldSettings) {
-        if(!p.getWorld().getName().equalsIgnoreCase(world)) {
+    private void loadWorld(Player player, String world, MapCreatorAPI creator, boolean setDefaultWorldSettings) {
+        if(!player.getWorld().getName().equalsIgnoreCase(world)) {
             creator.load(setDefaultWorldSettings);
         }else {
-            p.sendMessage(new BukkitTranslation(Translations.CREATOR_WORLD_ALREADY_LOADED_NAME_ONLY.id).get(p,
-                                                                                                            new String[]{"$prefix$", "$map$"},
-                                                                                                            new String[]{Prefixes.MAPCREATOR,
-                                                                                                                         world}));
+            player.sendMessage(new BukkitTranslation(Translations.CREATOR_WORLD_ALREADY_LOADED_NAME_ONLY.id).get(player, new String[]{"$prefix$", "$map$"}, new String[]{Prefixes.MAPCREATOR, world}));
         }
     }
 
-    private void sendHelpMessage(Player p) {
-        p.sendMessage(new BukkitTranslation(Translations.COMMAND_MAPCREATOR_HELP.id).get(p,
-                                                                                         new String[]{"$prefix$"},
-                                                                                         new String[]{Prefixes.MAPCREATOR}));
+    private void sendHelpMessage(Player player) {
+        player.sendMessage(new BukkitTranslation(Translations.COMMAND_MAPCREATOR_HELP.id).get(player, new String[]{"$prefix$"}, new String[]{Prefixes.MAPCREATOR}));
     }
 
-    private void sendLocationSetMessage(Player p) {
-        p.sendMessage(new BukkitTranslation(Translations.COMMAND_MAPCREATOR_SET_SPAWN.id).get(p,
-                                                                                              new String[]{"$prefix$", "$world$"},
-                                                                                              new String[]{Prefixes.MAPCREATOR,
-                                                                                                           p.getWorld().getName()}));
+    private void sendLocationSetMessage(Player player) {
+        player.sendMessage(new BukkitTranslation(Translations.COMMAND_MAPCREATOR_SET_SPAWN.id).get(player, new String[]{"$prefix$", "$world$"}, new String[]{Prefixes.MAPCREATOR, player.getWorld().getName()}));
     }
 
 }

@@ -118,8 +118,7 @@ public abstract class AbstractCreator {
     }
 
     public static void setPreviousLocation(Player player) {
-        if(getPreviousLocation(player) != null && getPreviousLocation(player).getLocation().get("world").toString().equalsIgnoreCase(player.getWorld()
-                                                                                                                                           .getName())) {
+        if(getPreviousLocation(player) != null && getPreviousLocation(player).getLocation().get("world").toString().equalsIgnoreCase(player.getWorld().getName())) {
             return;
         }
         PREVIOUS_LOCATIONS.put(player, new PreviousLocationObject(player));
@@ -152,20 +151,10 @@ public abstract class AbstractCreator {
         }
         sb.append(getIndentString(indent));
         sb.append("§6+--");
-        sb.append("§e").append(folder.getName()).append("§c | §e" + DATE_FORMAT.format(new Date(folder.lastModified())) + (loadedWorlds.contains(
-                folder.getName()) ? " §7| §a§l✔§7" : ""));
+        sb.append("§e").append(folder.getName()).append("§c | §e" + DATE_FORMAT.format(new Date(folder.lastModified())) + (loadedWorlds.contains(folder.getName()) ? " §7| §a§l✔§7" : ""));
         sb.append("\n");
         for(File file : folder.listFiles()) {
-            if(file.isDirectory() && !file.getName().equalsIgnoreCase("datapacks") && !file.getName().equalsIgnoreCase("data") && !file.getName()
-                                                                                                                                       .equalsIgnoreCase(
-                                                                                                                                               "DIM1") && !file
-                    .getName()
-                    .equalsIgnoreCase("DIM-1") && !file.getName().equalsIgnoreCase("poi") && !file.getName()
-                                                                                                  .equalsIgnoreCase("region") && !file.getName()
-                                                                                                                                      .equalsIgnoreCase(
-                                                                                                                                              "stats") && !file
-                    .getName()
-                    .equalsIgnoreCase("playerdata") && !file.getName().equalsIgnoreCase("advancements")) {
+            if(file.isDirectory() && !file.getName().equalsIgnoreCase("datapacks") && !file.getName().equalsIgnoreCase("data") && !file.getName().equalsIgnoreCase("DIM1") && !file.getName().equalsIgnoreCase("DIM-1") && !file.getName().equalsIgnoreCase("poi") && !file.getName().equalsIgnoreCase("region") && !file.getName().equalsIgnoreCase("stats") && !file.getName().equalsIgnoreCase("playerdata") && !file.getName().equalsIgnoreCase("advancements")) {
                 printDirectoryTree(file, indent + 1, sb, loadedWorlds);
             }
         }
@@ -196,12 +185,7 @@ public abstract class AbstractCreator {
         }
     }
 
-    public static void teleportToExistingWorld(Player executor,
-                                               World world,
-                                               Player target,
-                                               Player sendMessageTo,
-                                               Translations translations,
-                                               String mapType) {
+    public static void teleportToExistingWorld(Player executor, World world, Player target, Player sendMessageTo, Translations translations, String mapType) {
         if(executor != null && target != null && sendMessageTo != null) {
             setPreviousLocationAndPreparePlayer(world, target);
             if(mapType == null) {
@@ -210,10 +194,7 @@ public abstract class AbstractCreator {
             String finalMapType = mapType;
             LocationManager.getConfigLocation(world.getWorldFolder(), world.getName(), "SPAWN", location -> {
                 if(location != null) {
-                    sendMessageTo.sendMessage(new BukkitTranslation(translations.id).get(target,
-                                                                                         new String[]{"$prefix$", "$map$", "$type$", "$byPlayer$"},
-                                                                                         new String[]{Prefixes.MAPCREATOR, world.getName(),
-                                                                                                      finalMapType, executor.getName()}));
+                    sendMessageTo.sendMessage(new BukkitTranslation(translations.id).get(target, new String[]{"$prefix$", "$map$", "$type$", "$byPlayer$"}, new String[]{Prefixes.MAPCREATOR, world.getName(), finalMapType, executor.getName()}));
                     preparePlayerForTeleportation(target, world.getName());
                     getScheduler().runTask(getMapCreator(), () -> {
                         try {
@@ -240,9 +221,7 @@ public abstract class AbstractCreator {
 
     private static void sendMessage(Player player, Translations translations, String mapType, String mapName) {
         if(player != null) {
-            player.sendMessage(new BukkitTranslation(translations.id).get(player,
-                                                                          new String[]{"$prefix$", "$type$", "$map$"},
-                                                                          new String[]{Prefixes.MAPCREATOR, mapType, mapName}));
+            player.sendMessage(new BukkitTranslation(translations.id).get(player, new String[]{"$prefix$", "$type$", "$map$"}, new String[]{Prefixes.MAPCREATOR, mapType, mapName}));
         }
     }
 
@@ -281,36 +260,30 @@ public abstract class AbstractCreator {
     }
 
     private void loadInnerSyncBody(boolean setDefaultWorldSettings, String defaultMapName, Callback<Boolean> cb) {
-        loadWorldDyn(defaultMapName,
-                     bukkitWorld -> LocationManager.getConfigLocationAsMap(defaultWorld,
-                                                                           defaultMapName,
-                                                                           "SPAWN",
-                                                                           map -> getScheduler().runTask(getMapCreator(), () -> {
-                                                                               if(setDefaultWorldSettings) {
-                                                                                   bukkitWorld.setAutoSave(true);
-                                                                                   bukkitWorld.setGameRule(GameRule.RANDOM_TICK_SPEED, 0);
-                                                                                   bukkitWorld.setGameRule(GameRule.DO_FIRE_TICK, false);
-                                                                                   bukkitWorld.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-                                                                                   bukkitWorld.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
-                                                                                   bukkitWorld.setGameRule(GameRule.DO_MOB_SPAWNING, false);
-                                                                                   bukkitWorld.setGameRule(GameRule.MOB_GRIEFING, false);
-                                                                               }
-                                                                               if(player != null) {
-                                                                                   if(bukkitWorld != null) {
-                                                                                       setPreviousLocationAndPreparePlayer(bukkitWorld, player);
-                                                                                       player.teleport(LocationManager.getLocationFromMap(bukkitWorld,
-                                                                                                                                          map));
-                                                                                   }
-                                                                                   Location loc = LocationManager.getLocationFromMap(bukkitWorld,
-                                                                                                                                     map);
-                                                                                   if(loc != null) {
-                                                                                       LocationManager.teleport(player, loc);
-                                                                                       cb.done(true);
-                                                                                       return;
-                                                                                   }
-                                                                                   cb.done(false);
-                                                                               }
-                                                                           })));
+        loadWorldDyn(defaultMapName, bukkitWorld -> LocationManager.getConfigLocationAsMap(defaultWorld, defaultMapName, "SPAWN", map -> getScheduler().runTask(getMapCreator(), () -> {
+            if(setDefaultWorldSettings) {
+                bukkitWorld.setAutoSave(true);
+                bukkitWorld.setGameRule(GameRule.RANDOM_TICK_SPEED, 0);
+                bukkitWorld.setGameRule(GameRule.DO_FIRE_TICK, false);
+                bukkitWorld.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+                bukkitWorld.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
+                bukkitWorld.setGameRule(GameRule.DO_MOB_SPAWNING, false);
+                bukkitWorld.setGameRule(GameRule.MOB_GRIEFING, false);
+            }
+            if(player != null) {
+                if(bukkitWorld != null) {
+                    setPreviousLocationAndPreparePlayer(bukkitWorld, player);
+                    player.teleport(LocationManager.getLocationFromMap(bukkitWorld, map));
+                }
+                Location loc = LocationManager.getLocationFromMap(bukkitWorld, map);
+                if(loc != null) {
+                    LocationManager.teleport(player, loc);
+                    cb.done(true);
+                    return;
+                }
+                cb.done(false);
+            }
+        })));
     }
 
     private void loadInnerSyncFooter(String defaultMapName) {
@@ -408,10 +381,7 @@ public abstract class AbstractCreator {
     private void evaluateTeleportLocation(World world, boolean save, boolean delete, Callback<Boolean> cb) {
         LocationManager.getConfigLocation(world.getWorldFolder(), world.getName(), "SPAWN", location -> {
             getScheduler().runTask(getMapCreator(), () -> {
-                List<Player> players = Bukkit.getOnlinePlayers().stream().filter(player -> player.getWorld()
-                                                                                                 .getName()
-                                                                                                 .equalsIgnoreCase(world.getName())).collect(
-                        Collectors.toList());
+                List<Player> players = Bukkit.getOnlinePlayers().stream().filter(player -> player.getWorld().getName().equalsIgnoreCase(world.getName())).collect(Collectors.toList());
                 while(true) {
                     if(players.isEmpty()) {
                         cb.done(true);
@@ -436,11 +406,7 @@ public abstract class AbstractCreator {
                                 w = Bukkit.getWorld(CreatorConstants.DEFAULT_WORLD);
                             }
                             World finalW = w;
-                            LocationManager.getConfigLocation(w.getWorldFolder(),
-                                                              w.getName(),
-                                                              "SPAWN",
-                                                              loc -> currentPlayer.teleport(Objects.requireNonNullElseGet(loc,
-                                                                                                                          finalW :: getSpawnLocation)));
+                            LocationManager.getConfigLocation(w.getWorldFolder(), w.getName(), "SPAWN", loc -> currentPlayer.teleport(Objects.requireNonNullElseGet(loc, finalW :: getSpawnLocation)));
                         }
                     }
                     players.remove(currentPlayer);

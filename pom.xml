@@ -50,7 +50,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.2.0</version>
                 <configuration>
-                    <source>11</source>
+                    <source>16</source>
                     <excludePackageNames>
                         dev.dementisimus.mapcreator:
                         dev.dementisimus.mapcreator.setup: dev.dementisimus.mapcreator.setup.*:
@@ -82,8 +82,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.2</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>16</source>
+                    <target>16</target>
                 </configuration>
             </plugin>
         </plugins>
