@@ -23,7 +23,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
@@ -56,28 +55,28 @@ public class MapCreator extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        init();
+        this.init();
     }
 
     private void init() {
-        bukkitCoreAPI = new BukkitCoreAPI(this);
+        this.bukkitCoreAPI = new BukkitCoreAPI(this);
         mapCreator = this;
-        coreAPI = bukkitCoreAPI.getCoreAPI();
+        this.coreAPI = this.bukkitCoreAPI.getCoreAPI();
         try {
-            bukkitCoreAPI.addListenersToRegisterOnSetUpDone(new Listener[]{new SetUpStatePrintInstructionsListener(), new SetUpStateChangeListener(), new SetUpDoneListener()});
-            coreAPI.prepareInit(new String[]{LANGUAGE.name(), MAPPOOL.name(), DEFAULT_WORLD_FOR_USAGE.name(), USE_API_MODE_ONLY.name()}, new ResourceBundle[]{getBundle(coreAPI.getBaseName(), ENGLISH), getBundle(coreAPI.getBaseName(), GERMAN)}, capi -> capi.init(initialized -> {
+            this.bukkitCoreAPI.addListenersToRegisterOnSetUpDone(new Listener[]{new SetUpStatePrintInstructionsListener(), new SetUpStateChangeListener(), new SetUpDoneListener()});
+            this.coreAPI.prepareInit(new String[]{LANGUAGE.name(), MAPPOOL.name(), DEFAULT_WORLD_FOR_USAGE.name(), USE_API_MODE_ONLY.name()}, new ResourceBundle[]{getBundle(this.coreAPI.getBaseName(), ENGLISH), getBundle(this.coreAPI.getBaseName(), GERMAN)}, capi -> capi.init(initialized -> {
                 if(initialized) {
-                    new Config(getCoreAPI().getConfigFile()).read(result -> {
+                    new Config(this.getCoreAPI().getConfigFile()).read(result -> {
                         if(result != null) {
                             AbstractCreator.setWorldPoolFolder(result.getString(MAPPOOL.name()));
-                            SetUpData setUpData = getCoreAPI().getSetUpData();
+                            SetUpData setUpData = this.getCoreAPI().getSetUpData();
                             setUpData.setData(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD, Boolean.parseBoolean(result.getString(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.name())));
                             setUpData.setData(USE_API_MODE_ONLY, Boolean.parseBoolean(result.getString(USE_API_MODE_ONLY.name())));
                             if(setUpData.getBoolean(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
                                 setUpData.setData(DEFAULT_WORLD_FOR_USAGE, result.getString(DEFAULT_WORLD_FOR_USAGE.name()));
                             }
                         }
-                        setMapCreatorSettings();
+                        this.setMapCreatorSettings();
                     });
                 }
             }));
@@ -89,10 +88,10 @@ public class MapCreator extends JavaPlugin {
 
     public void registerCommandsAndEvents() {
         try {
-            SetUpData setUpData = getCoreAPI().getSetUpData();
+            SetUpData setUpData = this.getCoreAPI().getSetUpData();
             if(!setUpData.getBoolean(USE_API_MODE_ONLY)) {
-                Objects.requireNonNull(getCommand("mapcreator")).setExecutor(new COMMAND_mapcreator());
-                Objects.requireNonNull(getCommand("mc")).setExecutor(new COMMAND_mapcreator());
+                Objects.requireNonNull(this.getCommand("mapcreator")).setExecutor(new COMMAND_mapcreator());
+                Objects.requireNonNull(this.getCommand("mc")).setExecutor(new COMMAND_mapcreator());
             }
             if(setUpData.getBoolean(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
                 BukkitHelper.registerEvents(this, new Listener[]{new PlayerJoinListener(), new PlayerCommandPreprocessListener()});
@@ -104,8 +103,8 @@ public class MapCreator extends JavaPlugin {
 
     public void setMapCreatorSettings() {
         Bukkit.getScheduler().runTask(this, () -> {
-            registerCommandsAndEvents();
-            SetUpData setUpData = getCoreAPI().getSetUpData();
+            this.registerCommandsAndEvents();
+            SetUpData setUpData = this.getCoreAPI().getSetUpData();
             if(setUpData.getBoolean(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
                 MapCreatorAPI creator = new MapCreatorAPI();
                 String mapEntry = setUpData.getString(DEFAULT_WORLD_FOR_USAGE);
@@ -135,19 +134,17 @@ public class MapCreator extends JavaPlugin {
                     }
                 }, 30, 30);
             }else {
-                getCoreAPI().getDependencyDownloader().loadClasses(new File(Bukkit.getPluginManager().getPlugin("MapCreator").getClass().getProtectionDomain().getCodeSource().getLocation().getPath()), b -> {
-                    out.println(new BukkitTranslation(Translations.CONSOLE_API_ENABLED.id).get(true));
-                });
+                out.println(new BukkitTranslation(Translations.CONSOLE_API_ENABLED.id).get(true));
             }
         });
     }
 
     public BukkitCoreAPI getBukkitCoreAPI() {
-        return bukkitCoreAPI;
+        return this.bukkitCoreAPI;
     }
 
     public CoreAPI getCoreAPI() {
-        return coreAPI;
+        return this.coreAPI;
     }
 
 }

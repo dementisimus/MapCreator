@@ -1,12 +1,12 @@
 package dev.dementisimus.mapcreator.creator;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import dev.dementisimus.capi.core.helpers.Helper;
 import dev.dementisimus.capi.core.helpers.bukkit.BukkitHelper;
 import dev.dementisimus.mapcreator.MapCreator;
-import dev.dementisimus.relocation.gson.Gson;
-import dev.dementisimus.relocation.gson.GsonBuilder;
-import dev.dementisimus.relocation.gson.JsonArray;
-import dev.dementisimus.relocation.gson.JsonObject;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -63,21 +63,21 @@ public class PreviousLocationObject {
     }
 
     public void restorePreviousLocation(boolean teleport, boolean resetPreviousLocation) {
-        Player player = Bukkit.getPlayer(UUID.fromString(getPlayer()));
+        Player player = Bukkit.getPlayer(UUID.fromString(this.getPlayer()));
         Bukkit.getScheduler().runTask(MapCreator.getMapCreator(), () -> {
             if(player != null) {
                 if(teleport) {
-                    if(Bukkit.getWorld(getLocation().get("world").toString()) != null) {
-                        player.teleport(Location.deserialize(getLocation()));
+                    if(Bukkit.getWorld(this.getLocation().get("world").toString()) != null) {
+                        player.teleport(Location.deserialize(this.getLocation()));
                     }
                 }
-                player.setGameMode(getGameMode());
-                List<ItemStack> itemList = BukkitHelper.decodeItems(getContents());
+                player.setGameMode(this.getGameMode());
+                List<ItemStack> itemList = BukkitHelper.decodeItems(this.getContents());
                 ItemStack[] items = new ItemStack[itemList.size()];
                 player.getInventory().setContents(itemList.toArray(items));
-                player.getInventory().setHeldItemSlot(getHeldItemSlot());
-                player.setAllowFlight(getAllowFlight());
-                player.setFlying(isFlying());
+                player.getInventory().setHeldItemSlot(this.getHeldItemSlot());
+                player.setAllowFlight(this.getAllowFlight());
+                player.setFlying(this.isFlying());
                 if(resetPreviousLocation) {
                     AbstractCreator.resetPreviousLocation(player);
                 }
@@ -88,21 +88,21 @@ public class PreviousLocationObject {
     public String toJsonString() {
         JsonObject jsonObject = new JsonObject();
         JsonArray array = new JsonArray();
-        for(String item : getContents()) {
+        for(String item : this.getContents()) {
             array.add(item);
         }
-        jsonObject.addProperty("player", getPlayer());
+        jsonObject.addProperty("player", this.getPlayer());
         jsonObject.add("contents", array);
-        jsonObject.addProperty("heldItemSlot", getHeldItemSlot());
-        jsonObject.addProperty("gameMode", getGameMode().name());
-        jsonObject.addProperty("location", getLocation().toString());
-        jsonObject.addProperty("isFlying", isFlying());
-        jsonObject.addProperty("allowFlight", getAllowFlight());
+        jsonObject.addProperty("heldItemSlot", this.getHeldItemSlot());
+        jsonObject.addProperty("gameMode", this.getGameMode().name());
+        jsonObject.addProperty("location", this.getLocation().toString());
+        jsonObject.addProperty("isFlying", this.isFlying());
+        jsonObject.addProperty("allowFlight", this.getAllowFlight());
         return getGson().toJson(jsonObject);
     }
 
     public String getPlayer() {
-        return player;
+        return this.player;
     }
 
     public void setPlayer(String player) {
@@ -110,7 +110,7 @@ public class PreviousLocationObject {
     }
 
     public List<String> getContents() {
-        return contents;
+        return this.contents;
     }
 
     public void setContents(List<String> contents) {
@@ -118,7 +118,7 @@ public class PreviousLocationObject {
     }
 
     public int getHeldItemSlot() {
-        return heldItemSlot;
+        return this.heldItemSlot;
     }
 
     public void setHeldItemSlot(int heldItemSlot) {
@@ -126,7 +126,7 @@ public class PreviousLocationObject {
     }
 
     public GameMode getGameMode() {
-        return gameMode;
+        return this.gameMode;
     }
 
     public void setGameMode(GameMode gameMode) {
@@ -134,7 +134,7 @@ public class PreviousLocationObject {
     }
 
     public Map<String, Object> getLocation() {
-        return location;
+        return this.location;
     }
 
     public void setLocation(Map<String, Object> location) {
@@ -142,15 +142,15 @@ public class PreviousLocationObject {
     }
 
     public boolean isFlying() {
-        return isFlying;
+        return this.isFlying;
     }
 
     public void setFlying(boolean flying) {
-        isFlying = flying;
+        this.isFlying = flying;
     }
 
     public boolean getAllowFlight() {
-        return allowFlight;
+        return this.allowFlight;
     }
 
     public void setAllowFlight(boolean allowFlight) {
