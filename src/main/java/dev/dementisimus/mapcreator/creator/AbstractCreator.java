@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +45,7 @@ import static org.bukkit.Bukkit.getScheduler;
 public abstract class AbstractCreator {
 
     public static final String DEFAULT_MAP = "DEFAULTMAPS/defaultWorld";
+    private static final String[] HIDDEN_FOLDERS = new String[]{"datapacks", "data", "DIM1", "DIM-1", "poi", "region", "stats", "playerdata", "advancements", "entities"};
     private static final HashMap<Player, PreviousLocationObject> PREVIOUS_LOCATIONS = new HashMap<>();
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy, HH:mm:ss");
     public static File worldPoolFolder;
@@ -151,12 +153,10 @@ public abstract class AbstractCreator {
         }
         sb.append(getIndentString(indent));
         sb.append("§6+--");
-        sb.append("§e").append(folder.getName()).append("§c | §e" + DATE_FORMAT.format(new Date(folder.lastModified())) + (loadedWorlds.contains(folder.getName()) ? " §7| §a§l✔§7" : ""));
+        sb.append("§e").append(folder.getName()).append("§c | §e").append(DATE_FORMAT.format(new Date(folder.lastModified()))).append(loadedWorlds.contains(folder.getName()) ? " §7| §a§l✔§7" : "");
         sb.append("\n");
-        for(File file : folder.listFiles()) {
-            if(file.isDirectory() && !file.getName().equalsIgnoreCase("datapacks") && !file.getName().equalsIgnoreCase("data") && !file.getName().equalsIgnoreCase("DIM1") && !file.getName().equalsIgnoreCase("DIM-1") && !file.getName().equalsIgnoreCase("poi") && !file.getName().equalsIgnoreCase("region") && !file.getName().equalsIgnoreCase("stats") && !file.getName().equalsIgnoreCase("playerdata") && !file.getName().equalsIgnoreCase("advancements")) {
-                printDirectoryTree(file, indent + 1, sb, loadedWorlds);
-            }
+        for(File file : Objects.requireNonNull(folder.listFiles((dir, name) -> dir.isDirectory() && !Arrays.asList(HIDDEN_FOLDERS).contains(name)))) {
+            printDirectoryTree(file, indent + 1, sb, loadedWorlds);
         }
     }
 
