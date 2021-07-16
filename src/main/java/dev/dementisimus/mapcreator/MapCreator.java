@@ -62,8 +62,8 @@ public class MapCreator extends JavaPlugin {
         this.bukkitCoreAPI = new BukkitCoreAPI(this);
         mapCreator = this;
         this.coreAPI = this.bukkitCoreAPI.getCoreAPI();
+        BukkitHelper.registerEvents(this, new Listener[]{new SetUpStatePrintInstructionsListener(), new SetUpStateChangeListener(), new SetUpDoneListener()});
         try {
-            this.bukkitCoreAPI.addListenersToRegisterOnSetUpDone(new Listener[]{new SetUpStatePrintInstructionsListener(), new SetUpStateChangeListener(), new SetUpDoneListener()});
             this.coreAPI.prepareInit(new String[]{LANGUAGE.name(), MAPPOOL.name(), DEFAULT_WORLD_FOR_USAGE.name(), USE_API_MODE_ONLY.name()}, new ResourceBundle[]{getBundle(this.coreAPI.getBaseName(), ENGLISH), getBundle(this.coreAPI.getBaseName(), GERMAN)}, capi -> capi.init(initialized -> {
                 if(initialized) {
                     new Config(this.getCoreAPI().getConfigFile()).read(result -> {

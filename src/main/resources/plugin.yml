@@ -1,9 +1,9 @@
 name: MapCreator
 main: dev.dementisimus.mapcreator.MapCreator
 author: dementisimus
-version: 1.3.0
+version: ${project.version}
 website: dementisimus.dev
-softdepend: [ CoreAPI ]
+softdepend: [ CoreAPI, CoreAPIDependencies ]
 api-version: 1.17
 
 commands:
