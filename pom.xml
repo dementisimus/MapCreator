@@ -12,7 +12,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <paper-api.version>1.17.1-R0.1-SNAPSHOT</paper-api.version>
-        <annotations.version>19.0.0</annotations.version>
+        <annotations.version>21.0.1</annotations.version>
+        <guice.version>5.0.1</guice.version>
     </properties>
 
     <dependencies>
@@ -33,6 +34,12 @@
             <artifactId>CoreAPI</artifactId>
             <version>latest</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

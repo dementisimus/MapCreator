@@ -99,7 +99,7 @@ public abstract class AbstractCreator {
         AbstractCreator.worldPoolFolder = worldPoolFolder;
         File defaultWorldSave = new File(getWorldPoolFolderPath() + DEFAULT_MAP);
         if(!defaultWorldSave.exists()) {
-            System.out.println(new BukkitTranslation(Translations.DEFAULT_WORLD_NOT_AVAILABLE.id).get(true));
+            System.out.println(new BukkitTranslation(Translations.DEFAULT_WORLD_NOT_AVAILABLE).get(true));
             Bukkit.getPluginManager().disablePlugin(getMapCreator());
             defaultWorld = null;
             return;
@@ -185,7 +185,7 @@ public abstract class AbstractCreator {
         }
     }
 
-    public static void teleportToExistingWorld(Player executor, World world, Player target, Player sendMessageTo, Translations translations, String mapType) {
+    public static void teleportToExistingWorld(Player executor, World world, Player target, Player sendMessageTo, String translation, String mapType) {
         if(executor != null && target != null && sendMessageTo != null) {
             setPreviousLocationAndPreparePlayer(world, target);
             if(mapType == null) {
@@ -194,7 +194,7 @@ public abstract class AbstractCreator {
             String finalMapType = mapType;
             LocationManager.getConfigLocation(world.getWorldFolder(), world.getName(), "SPAWN", location -> {
                 if(location != null) {
-                    sendMessageTo.sendMessage(new BukkitTranslation(translations.id).get(target, new String[]{"$prefix$", "$map$", "$type$", "$byPlayer$"}, new String[]{Prefixes.MAPCREATOR, world.getName(), finalMapType, executor.getName()}));
+                    sendMessageTo.sendMessage(new BukkitTranslation(translation).get(target, new String[]{"$prefix$", "$map$", "$type$", "$byPlayer$"}, new String[]{Prefixes.MAPCREATOR, world.getName(), finalMapType, executor.getName()}));
                     preparePlayerForTeleportation(target, world.getName());
                     getScheduler().runTask(getMapCreator(), () -> {
                         try {
@@ -219,38 +219,38 @@ public abstract class AbstractCreator {
         return new File(file, "previousLocations.json");
     }
 
-    private static void sendMessage(Player player, Translations translations, String mapType, String mapName) {
+    private static void sendMessage(Player player, String translation, String mapType, String mapName) {
         if(player != null) {
-            player.sendMessage(new BukkitTranslation(translations.id).get(player, new String[]{"$prefix$", "$type$", "$map$"}, new String[]{Prefixes.MAPCREATOR, mapType, mapName}));
+            player.sendMessage(new BukkitTranslation(translation).get(player, new String[]{"$prefix$", "$type$", "$map$"}, new String[]{Prefixes.MAPCREATOR, mapType, mapName}));
         }
     }
 
     public void loadSync(boolean setDefaultWorldSettings, String defaultMapName) {
-        loadInnerSyncHeader(defaultMapName);
-        loadInnerSyncBody(setDefaultWorldSettings, defaultMapName, b -> loadInnerSyncFooter(defaultMapName));
+        this.loadInnerSyncHeader(defaultMapName);
+        this.loadInnerSyncBody(setDefaultWorldSettings, defaultMapName, b -> this.loadInnerSyncFooter(defaultMapName));
     }
 
     public void load(boolean setDefaultWorldSettings) {
         ThreadPool.execute(() -> {
-            if(loadInnerSyncHeader(mapName)) {
-                loadInnerSyncBody(setDefaultWorldSettings, mapName, b -> loadInnerSyncFooter(mapName));
+            if(this.loadInnerSyncHeader(this.mapName)) {
+                this.loadInnerSyncBody(setDefaultWorldSettings, this.mapName, b -> this.loadInnerSyncFooter(this.mapName));
             }
         });
     }
 
     private boolean loadInnerSyncHeader(String defaultMapName) {
-        mapType = mapType.toUpperCase();
+        this.mapType = this.mapType.toUpperCase();
         World world = Bukkit.getWorld(defaultMapName);
         if(world != null) {
-            teleportToExistingWorld(player, world, player, player, Translations.CREATOR_WORLD_ALREADY_LOADED, mapType);
+            teleportToExistingWorld(this.player, world, this.player, this.player, Translations.CREATOR_WORLD_ALREADY_LOADED, this.mapType);
             return false;
         }
         File worldFolder = new File(defaultMapName);
         FileUtils.createDirectory(worldFolder);
-        if(checkIfMapExists()) {
-            defaultWorld = getOldSave();
+        if(this.checkIfMapExists()) {
+            defaultWorld = this.getOldSave();
         }
-        removeSessionFiles(defaultWorld);
+        this.removeSessionFiles(defaultWorld);
         FileUtils.copy(defaultWorld, worldFolder);
         return true;
     }
@@ -260,7 +260,7 @@ public abstract class AbstractCreator {
     }
 
     private void loadInnerSyncBody(boolean setDefaultWorldSettings, String defaultMapName, Callback<Boolean> cb) {
-        loadWorldDyn(defaultMapName, bukkitWorld -> LocationManager.getConfigLocationAsMap(defaultWorld, defaultMapName, "SPAWN", map -> getScheduler().runTask(getMapCreator(), () -> {
+        this.loadWorldDyn(defaultMapName, bukkitWorld -> LocationManager.getConfigLocationAsMap(defaultWorld, defaultMapName, "SPAWN", map -> getScheduler().runTask(getMapCreator(), () -> {
             if(setDefaultWorldSettings) {
                 bukkitWorld.setAutoSave(true);
                 bukkitWorld.setGameRule(GameRule.RANDOM_TICK_SPEED, 0);
@@ -270,14 +270,14 @@ public abstract class AbstractCreator {
                 bukkitWorld.setGameRule(GameRule.DO_MOB_SPAWNING, false);
                 bukkitWorld.setGameRule(GameRule.MOB_GRIEFING, false);
             }
-            if(player != null) {
+            if(this.player != null) {
                 if(bukkitWorld != null) {
-                    setPreviousLocationAndPreparePlayer(bukkitWorld, player);
-                    player.teleport(LocationManager.getLocationFromMap(bukkitWorld, map));
+                    setPreviousLocationAndPreparePlayer(bukkitWorld, this.player);
+                    this.player.teleport(LocationManager.getLocationFromMap(bukkitWorld, map));
                 }
                 Location loc = LocationManager.getLocationFromMap(bukkitWorld, map);
                 if(loc != null) {
-                    LocationManager.teleport(player, loc);
+                    LocationManager.teleport(this.player, loc);
                     cb.done(true);
                     return;
                 }
@@ -287,35 +287,35 @@ public abstract class AbstractCreator {
     }
 
     private void loadInnerSyncFooter(String defaultMapName) {
-        File mapTypeIdentifier = new File(defaultMapName, mapType + ".mapType");
+        File mapTypeIdentifier = new File(defaultMapName, this.mapType + ".mapType");
         try {
             mapTypeIdentifier.createNewFile();
         }catch(IOException e) {
             e.printStackTrace();
         }
-        sendMessage(player, Translations.CREATOR_WORLD_LOADED, mapType, mapName);
+        sendMessage(this.player, Translations.CREATOR_WORLD_LOADED, this.mapType, this.mapName);
     }
 
     public void save() {
-        generalPreparation(true, false);
+        this.generalPreparation(true, false);
     }
 
     public void leave() {
-        generalPreparation(false, false);
+        this.generalPreparation(false, false);
     }
 
     public void delete() {
-        generalPreparation(false, true);
+        this.generalPreparation(false, true);
     }
 
     public boolean checkIfMapExists() {
         setDefaultWorld();
-        return checkInnerIfMapExists(getOldSaveParent()) && checkInnerIfMapExists(getOldSave());
+        return this.checkInnerIfMapExists(this.getOldSaveParent()) && this.checkInnerIfMapExists(this.getOldSave());
     }
 
     private boolean checkInnerIfMapExists(File file) {
         if(!file.exists() || file.listFiles() == null || file.listFiles().length == 0) {
-            if(mapName != null && Bukkit.getWorld(mapName) != null) {
+            if(this.mapName != null && Bukkit.getWorld(this.mapName) != null) {
                 FileUtils.createDirectory(file);
                 return false;
             }
@@ -325,9 +325,9 @@ public abstract class AbstractCreator {
     }
 
     private void manageFiles(File worldFolder, boolean save, boolean delete) {
-        File oldSave = getOldSave();
+        File oldSave = this.getOldSave();
         if(save) {
-            removeSessionFiles(worldFolder);
+            this.removeSessionFiles(worldFolder);
             if(oldSave.exists()) {
                 FileUtils.delete(oldSave);
             }
@@ -335,7 +335,7 @@ public abstract class AbstractCreator {
             FileUtils.copy(worldFolder, oldSave);
         }else {
             if(delete) {
-                if(checkIfMapExists()) {
+                if(this.checkIfMapExists()) {
                     FileUtils.delete(oldSave);
                 }
             }
@@ -345,21 +345,21 @@ public abstract class AbstractCreator {
 
     private void generalPreparation(boolean save, boolean delete) {
         ThreadPool.execute(() -> {
-            checkIfMapExists();
-            prepareWorld(save, delete, o -> {
+            this.checkIfMapExists();
+            this.prepareWorld(save, delete, o -> {
                 Object[] mapPreparation = (Object[]) o;
                 if(mapPreparation == null) {
-                    sendMessage(player, Translations.CREATOR_WORLD_NOT_LOADED, mapType, mapName);
+                    sendMessage(this.player, Translations.CREATOR_WORLD_NOT_LOADED, this.mapType, this.mapName);
                     return;
                 }
                 World world = (World) mapPreparation[1];
                 File worldFolder = (File) mapPreparation[2];
                 getScheduler().runTaskTimer(MapCreator.getMapCreator(), scheduler -> {
-                    Bukkit.unloadWorld(mapName, save);
-                    manageFiles(worldFolder, save, delete);
-                    if(player != null) {
-                        if(world.getName().equalsIgnoreCase(player.getLocation().getWorld().getName())) {
-                            player.getInventory().clear();
+                    Bukkit.unloadWorld(this.mapName, save);
+                    this.manageFiles(worldFolder, save, delete);
+                    if(this.player != null) {
+                        if(world.getName().equalsIgnoreCase(this.player.getLocation().getWorld().getName())) {
+                            this.player.getInventory().clear();
                         }
                     }
                     scheduler.cancel();
@@ -369,13 +369,13 @@ public abstract class AbstractCreator {
     }
 
     private void prepareWorld(boolean save, boolean delete, Callback<Object> cb) {
-        World world = Bukkit.getWorld(mapName);
+        World world = Bukkit.getWorld(this.mapName);
         if(world == null) {
             cb.done(null);
             return;
         }
         File worldFolder = world.getWorldFolder();
-        evaluateTeleportLocation(world, save, delete, b -> cb.done(new Object[]{mapType, world, worldFolder}));
+        this.evaluateTeleportLocation(world, save, delete, b -> cb.done(new Object[]{this.mapType, world, worldFolder}));
     }
 
     private void evaluateTeleportLocation(World world, boolean save, boolean delete, Callback<Boolean> cb) {
@@ -389,10 +389,10 @@ public abstract class AbstractCreator {
                     }
                     Player currentPlayer = players.get(0);
                     if(currentPlayer != null) {
-                        if(!currentPlayer.equals(player)) {
-                            evalMsg(currentPlayer, save, delete);
+                        if(!currentPlayer.equals(this.player)) {
+                            this.evalMsg(currentPlayer, save, delete);
                         }else {
-                            evalMsg(player, save, delete);
+                            this.evalMsg(this.player, save, delete);
                         }
                         PreviousLocationObject previousLocationObject = new PreviousLocationObject(currentPlayer);
                         String prevLoc = previousLocationObject.toJsonString();
@@ -422,23 +422,23 @@ public abstract class AbstractCreator {
     private void evalMsg(Player player, boolean save, boolean delete) {
         if(player != null) {
             if(save) {
-                sendMessage(player, Translations.CREATOR_WORLD_SAVED, mapType, mapName);
+                sendMessage(player, Translations.CREATOR_WORLD_SAVED, this.mapType, this.mapName);
             }else {
                 if(!delete) {
-                    sendMessage(player, Translations.CREATOR_WORLD_LEFT, mapType, mapName);
+                    sendMessage(player, Translations.CREATOR_WORLD_LEFT, this.mapType, this.mapName);
                 }else {
-                    sendMessage(player, Translations.CREATOR_WORLD_DELETED, mapType, mapName);
+                    sendMessage(player, Translations.CREATOR_WORLD_DELETED, this.mapType, this.mapName);
                 }
             }
         }
     }
 
     private File getOldSaveParent() {
-        return new File(getWorldPoolFolderPath() + mapType);
+        return new File(getWorldPoolFolderPath() + this.mapType);
     }
 
     private File getOldSave() {
-        return new File(getOldSaveParent() + "/" + mapName);
+        return new File(this.getOldSaveParent() + "/" + this.mapName);
     }
 
     private void removeSessionFiles(File file) {
@@ -451,7 +451,7 @@ public abstract class AbstractCreator {
     }
 
     public String getMapName() {
-        return mapName;
+        return this.mapName;
     }
 
     public void setMapName(String mapName) {
@@ -459,7 +459,7 @@ public abstract class AbstractCreator {
     }
 
     public String getMapType() {
-        return mapType;
+        return this.mapType;
     }
 
     public void setMapType(String mapType) {

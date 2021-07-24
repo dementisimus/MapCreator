@@ -1,5 +1,6 @@
 package dev.dementisimus.mapcreator.listeners;
 
+import dev.dementisimus.capi.core.annotations.bukkit.OptionalBukkitListener;
 import dev.dementisimus.capi.core.utils.LocationManager;
 import dev.dementisimus.mapcreator.MapCreator;
 import dev.dementisimus.mapcreator.creator.CreatorConstants;
@@ -26,6 +27,7 @@ import static org.bukkit.Bukkit.getScheduler;
  * @author dementisimus
  * @since 23.07.2020:22:41
  */
+@OptionalBukkitListener
 public class PlayerJoinListener implements Listener {
 
     private final Map<Player, Integer> taskId = new HashMap<>();
@@ -34,7 +36,7 @@ public class PlayerJoinListener implements Listener {
     public void on(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         if(MapCreator.getMapCreator().getCoreAPI().getSetUpData().getBoolean(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
-            teleport(player);
+            this.teleport(player);
         }
     }
 
@@ -43,12 +45,12 @@ public class PlayerJoinListener implements Listener {
         Player player = event.getPlayer();
         if(MapCreator.getMapCreator().getCoreAPI().getSetUpData().getBoolean(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
             int[] cou = {0};
-            taskId.put(player, getScheduler().runTaskTimer(getMapCreator(), () -> {
+            this.taskId.put(player, getScheduler().runTaskTimer(getMapCreator(), () -> {
                 if(cou[0] == 1) {
                     cou[0] = 0;
-                    getScheduler().cancelTask(taskId.get(player));
+                    getScheduler().cancelTask(this.taskId.get(player));
                 }
-                teleport(player);
+                this.teleport(player);
                 cou[0]++;
 
             }, 10, 1).getTaskId());
@@ -60,7 +62,7 @@ public class PlayerJoinListener implements Listener {
     }
 
     private void teleport(Player player) {
-        LocationManager.getConfigLocation(getWorld().getWorldFolder(), getWorld().getName(), "SPAWN", location -> getScheduler().runTask(getMapCreator(), () -> {
+        LocationManager.getConfigLocation(this.getWorld().getWorldFolder(), this.getWorld().getName(), "SPAWN", location -> getScheduler().runTask(getMapCreator(), () -> {
             if(location != null) {
                 LocationManager.teleport(player, location);
             }

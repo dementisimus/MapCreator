@@ -1,5 +1,6 @@
 package dev.dementisimus.mapcreator.listeners;
 
+import dev.dementisimus.capi.core.annotations.bukkit.BukkitSetupListener;
 import dev.dementisimus.capi.core.events.bukkit.BukkitPrintCustomInstructionsMessageEvent;
 import dev.dementisimus.capi.core.setup.SetUpState;
 import dev.dementisimus.capi.core.translations.bukkit.BukkitTranslation;
@@ -17,6 +18,7 @@ import org.bukkit.event.Listener;
  * @author dementisimus
  * @since 13.07.2020:12:29
  */
+@BukkitSetupListener
 public class SetUpStatePrintInstructionsListener implements Listener {
 
     @EventHandler
@@ -24,16 +26,16 @@ public class SetUpStatePrintInstructionsListener implements Listener {
         String state = event.getCurrentState();
         SetUpState setUpState = MapCreator.getMapCreator().getCoreAPI().getSetUpState();
         if(state.equalsIgnoreCase(AdditionalSetUpState.MAPPOOL.name())) {
-            System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_MAPPOOL.id).get(true));
+            System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_MAPPOOL).get(true));
             setUpState.setCurrentSetUpState(AdditionalSetUpState.MAPPOOL.name(), false);
         }else if(state.equalsIgnoreCase(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.name())) {
-            System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.id).get(true));
+            System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_SET_DEFAULT_WORLD_INSTEAD_OF_WORLD).get(true));
             setUpState.setCurrentSetUpState(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.name(), false);
         }else if(state.equalsIgnoreCase(AdditionalSetUpState.USE_API_MODE_ONLY.name())) {
-            System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_USE_API_MODE_ONLY.id).get(true));
+            System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_USE_API_MODE_ONLY).get(true));
             setUpState.setCurrentSetUpState(AdditionalSetUpState.USE_API_MODE_ONLY.name(), false);
         }else if(state.equalsIgnoreCase(AdditionalSetUpState.DEFAULT_WORLD_FOR_USAGE.name())) {
-            System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_DEFAULT_WORLD_FOR_USAGE.id).get(true));
+            System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_DEFAULT_WORLD_FOR_USAGE).get(true));
         }
     }
 

@@ -1,5 +1,6 @@
 package dev.dementisimus.mapcreator.listeners;
 
+import dev.dementisimus.capi.core.annotations.bukkit.BukkitSetupListener;
 import dev.dementisimus.capi.core.events.bukkit.BukkitChangeSetUpStateEvent;
 import dev.dementisimus.capi.core.helpers.SetUpHelper;
 import dev.dementisimus.capi.core.setup.DefaultSetUpState;
@@ -22,6 +23,7 @@ import java.io.File;
  * @author dementisimus
  * @since 13.07.2020:13:03
  */
+@BukkitSetupListener
 public class SetUpStateChangeListener implements Listener {
 
     @EventHandler
@@ -35,11 +37,11 @@ public class SetUpStateChangeListener implements Listener {
                 setUpData.setData(AdditionalSetUpState.MAPPOOL.name(), event.getIssuedCommand());
                 setUpState.setCurrentSetUpState(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.name(), true);
             }else {
-                System.out.println(new BukkitTranslation(Translations.DEFAULT_WORLD_NOT_AVAILABLE.id).get(true));
-                System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_MAPPOOL.id).get(true));
+                System.out.println(new BukkitTranslation(Translations.DEFAULT_WORLD_NOT_AVAILABLE).get(true));
+                System.out.println(new BukkitTranslation(Translations.CONSOLE_SETUP_MAPPOOL).get(true));
             }
         }else if(currentState.equalsIgnoreCase(AdditionalSetUpState.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.name())) {
-            setUpHelper.evalYesOrNo(Translations.CONSOLE_SETUP_SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.id, AdditionalSetUpState.USE_API_MODE_ONLY, true, false);
+            setUpHelper.evalYesOrNo(Translations.CONSOLE_SETUP_SET_DEFAULT_WORLD_INSTEAD_OF_WORLD, AdditionalSetUpState.USE_API_MODE_ONLY, true, false);
             if(SetUpHelper.getYesNoFromCommand(event.getIssuedCommand()) != null) {
                 if(SetUpHelper.getYesNoFromCommand(event.getIssuedCommand())) {
                     setUpState.setCurrentSetUpState(AdditionalSetUpState.DEFAULT_WORLD_FOR_USAGE.name(), true);
@@ -51,7 +53,7 @@ public class SetUpStateChangeListener implements Listener {
             setUpData.setData(AdditionalSetUpState.DEFAULT_WORLD_FOR_USAGE.name(), event.getIssuedCommand());
             setUpState.setCurrentSetUpState(AdditionalSetUpState.USE_API_MODE_ONLY.name(), true);
         }else if(currentState.equalsIgnoreCase(AdditionalSetUpState.USE_API_MODE_ONLY.name())) {
-            setUpHelper.evalYesOrNo(Translations.CONSOLE_SETUP_USE_API_MODE_ONLY.id, DefaultSetUpState.DONE, false, true);
+            setUpHelper.evalYesOrNo(Translations.CONSOLE_SETUP_USE_API_MODE_ONLY, DefaultSetUpState.DONE, false, true);
         }
     }
 

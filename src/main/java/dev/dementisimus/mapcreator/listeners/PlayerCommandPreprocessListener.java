@@ -1,5 +1,6 @@
 package dev.dementisimus.mapcreator.listeners;
 
+import dev.dementisimus.capi.core.annotations.bukkit.OptionalBukkitListener;
 import dev.dementisimus.capi.core.translations.bukkit.BukkitTranslation;
 import dev.dementisimus.mapcreator.translation.Translations;
 import org.bukkit.entity.Player;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
  * @author dementisimus
  * @since 14.11.2020:18:07
  */
+@OptionalBukkitListener
 public class PlayerCommandPreprocessListener implements Listener {
 
     private final ArrayList<Player> teleportWarningSent = new ArrayList<>();
@@ -26,9 +28,9 @@ public class PlayerCommandPreprocessListener implements Listener {
         Player player = event.getPlayer();
         String command = event.getMessage();
         if(command.startsWith("/tp ") || command.startsWith("/teleport ")) {
-            if(!teleportWarningSent.contains(player)) {
-                player.sendMessage(new BukkitTranslation(Translations.CREATOR_TELEPORT_WARNING.id).get(player));
-                teleportWarningSent.add(player);
+            if(!this.teleportWarningSent.contains(player)) {
+                player.sendMessage(new BukkitTranslation(Translations.CREATOR_TELEPORT_WARNING).get(player));
+                this.teleportWarningSent.add(player);
                 event.setCancelled(true);
             }
         }
