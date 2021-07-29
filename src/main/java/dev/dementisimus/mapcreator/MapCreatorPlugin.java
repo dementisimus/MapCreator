@@ -7,7 +7,7 @@ import dev.dementisimus.capi.core.config.Config;
 import dev.dementisimus.capi.core.core.BukkitCoreAPI;
 import dev.dementisimus.capi.core.setup.DefaultSetUpState;
 import dev.dementisimus.capi.core.setup.SetUpData;
-import dev.dementisimus.mapcreator.creator.MapCreator;
+import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.SlimeDataSource;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -34,7 +34,7 @@ public class MapCreatorPlugin extends JavaPlugin {
     private BukkitCoreAPI bukkitCoreAPI;
     private SlimePlugin slimePlugin;
     private SlimeLoader slimeLoader;
-    private MapCreator mapCreator;
+    private CustomMapCreator customMapCreator;
 
     public static MapCreatorPlugin getMapCreatorPlugin() {
         return mapCreatorPlugin;
@@ -48,15 +48,15 @@ public class MapCreatorPlugin extends JavaPlugin {
 
         this.coreAPI.prepareInit(new String[]{DefaultSetUpState.LANGUAGE.name(), MAPPOOL, DEFAULT_WORLD_FOR_USAGE, USE_API_MODE_ONLY}, () -> {
             this.retrieveSlimePlugin();
-            this.mapCreator = new MapCreator(this.getSlimePlugin(), SlimeDataSource.MONGODB);
-            this.slimeLoader = this.mapCreator.getSlimeLoader();
+            this.customMapCreator = new CustomMapCreator(this.getSlimePlugin(), SlimeDataSource.MONGODB);
+            this.slimeLoader = this.customMapCreator.getSlimeLoader();
 
             this.coreAPI.registerAdditionalModuleToInject(MapCreatorPlugin.class, this);
             this.coreAPI.registerAdditionalModuleToInject(CoreAPI.class, this.coreAPI);
             this.coreAPI.registerAdditionalModuleToInject(BukkitCoreAPI.class, this.bukkitCoreAPI);
             this.coreAPI.registerAdditionalModuleToInject(SlimePlugin.class, this.getSlimePlugin());
             this.coreAPI.registerAdditionalModuleToInject(SlimeLoader.class, this.getSlimeLoader());
-            this.coreAPI.registerAdditionalModuleToInject(MapCreator.class, this.getMapCreator());
+            this.coreAPI.registerAdditionalModuleToInject(CustomMapCreator.class, this.getMapCreator());
 
             this.coreAPI.init(initializedCoreAPI -> {
                 new Config(this.getCoreAPI().getConfigFile()).read(result -> {
@@ -90,7 +90,7 @@ public class MapCreatorPlugin extends JavaPlugin {
         Bukkit.getScheduler().runTask(this, () -> {
             SetUpData setUpData = this.getCoreAPI().getSetUpData();
             if(setUpData.getBoolean(SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
-                MapCreator mapCreator = new MapCreator(this.getSlimePlugin(), "mongodb");
+                CustomMapCreator customMapCreator = new CustomMapCreator(this.getSlimePlugin(), "mongodb");
                 String mapEntry = setUpData.getString(DEFAULT_WORLD_FOR_USAGE);
                 String[] entry = (mapEntry.contains("/") ? mapEntry.split("/") : null);
                 String type;
@@ -144,8 +144,8 @@ public class MapCreatorPlugin extends JavaPlugin {
         return this.slimeLoader;
     }
 
-    public MapCreator getMapCreator() {
-        return this.mapCreator;
+    public CustomMapCreator getMapCreator() {
+        return this.customMapCreator;
     }
 
     public static class SetupStates {

@@ -78,7 +78,7 @@
                     <excludePackageNames>
                         dev.dementisimus.mapcreator:
                         dev.dementisimus.mapcreator.setup: dev.dementisimus.mapcreator.setup.*:
-                        dev.dementisimus.mapcreator.mapCreator: dev.dementisimus.mapcreator.mapCreator.*:
+                        dev.dementisimus.mapcreator.mapcreator: dev.dementisimus.mapcreator.mapcreator.*:
                         dev.dementisimus.mapcreator.commands: dev.dementisimus.mapcreator.commands.*:
                         dev.dementisimus.mapcreator.core: dev.dementisimus.mapcreator.core.*:
                         dev.dementisimus.mapcreator.listeners: dev.dementisimus.mapcreator.listeners.*:

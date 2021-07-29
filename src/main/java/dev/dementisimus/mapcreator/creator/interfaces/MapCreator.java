@@ -6,8 +6,7 @@ import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.plugin.config.WorldData;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.callback.EmptyCallback;
-import dev.dementisimus.mapcreator.creator.MapCreator;
-import dev.dementisimus.mapcreator.creator.MapCreatorMap;
+import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -16,16 +15,16 @@ import java.util.Map;
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
  *
- * Class IMapCreator @ MapCreatorPlugin
+ * Class CustomMapCreator @ MapCreatorPlugin
  *
  * @author dementisimus
  * @since 24.07.2021:19:28
  */
-public interface IMapCreator {
+public interface MapCreator {
 
     Map<String, SlimeWorld> slimeWorlds = new HashMap<>();
 
-    void perform(MapCreator.Action action, MapCreatorMap mapCreatorMap, Callback<Performance> performanceCallback);
+    void perform(Action action, CustomMapCreatorMap customMapCreatorMap, Callback<Performance> performanceCallback);
 
     SlimeLoader getSlimeLoader();
 
@@ -35,15 +34,15 @@ public interface IMapCreator {
 
     Map<String, SlimeWorld> getSlimeWorlds();
 
-    @Nullable SlimeWorld getSlimeWorld(MapCreatorMap mapCreatorMap);
+    @Nullable SlimeWorld getSlimeWorld(CustomMapCreatorMap customMapCreatorMap);
 
     void addSlimeWorld(String mapName, SlimeWorld slimeWorld);
 
     void removeSlimeWorld(String mapName);
 
-    void ensureNoPlayersLeftOnMap(Action action, MapCreatorMap mapCreatorMap, EmptyCallback emptyCallback);
+    void ensureNoPlayersLeftOnMap(Action action, CustomMapCreatorMap customMapCreatorMap, EmptyCallback emptyCallback);
 
-    void manageWorldConfig(Action action, MapCreatorMap mapCreatorMap);
+    void manageWorldConfig(Action action, CustomMapCreatorMap customMapCreatorMap);
 
     enum Action {
         CREATE,
