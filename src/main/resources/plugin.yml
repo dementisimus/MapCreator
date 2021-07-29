@@ -1,11 +1,12 @@
 name: MapCreator
-main: dev.dementisimus.mapcreator.MapCreator
+main: dev.dementisimus.mapcreator.MapCreatorPlugin
 author: dementisimus
 version: ${project.version}
 website: dementisimus.dev
-softdepend: [ CoreAPI, CoreAPIDependencies ]
+softdepend: [ CoreAPI, CoreAPIDependencies, SlimeWorldManager ]
 api-version: 1.17
 
 commands:
   mapcreator:
   mc:
+  test:

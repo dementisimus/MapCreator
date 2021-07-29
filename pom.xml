@@ -6,7 +6,7 @@
 
     <groupId>dev.dementisimus.mapcreator</groupId>
     <artifactId>MapCreator</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -14,6 +14,7 @@
         <paper-api.version>1.17.1-R0.1-SNAPSHOT</paper-api.version>
         <annotations.version>21.0.1</annotations.version>
         <guice.version>5.0.1</guice.version>
+        <slimeworldmanager-api.version>2.6.2-SNAPSHOT</slimeworldmanager-api.version>
     </properties>
 
     <dependencies>
@@ -41,12 +42,28 @@
             <version>${guice.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.grinderwolf</groupId>
+            <artifactId>slimeworldmanager-api</artifactId>
+            <version>${slimeworldmanager-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.grinderwolf</groupId>
+            <artifactId>slimeworldmanager-plugin</artifactId>
+            <version>${slimeworldmanager-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <repositories>
         <repository>
             <id>papermc</id>
             <url>https://papermc.io/repo/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>rapture-snapshots</id>
+            <url>https://repo.rapture.pw/repository/maven-snapshots/</url>
         </repository>
     </repositories>
 
@@ -61,7 +78,7 @@
                     <excludePackageNames>
                         dev.dementisimus.mapcreator:
                         dev.dementisimus.mapcreator.setup: dev.dementisimus.mapcreator.setup.*:
-                        dev.dementisimus.mapcreator.creator: dev.dementisimus.mapcreator.creator.*:
+                        dev.dementisimus.mapcreator.mapCreator: dev.dementisimus.mapcreator.mapCreator.*:
                         dev.dementisimus.mapcreator.commands: dev.dementisimus.mapcreator.commands.*:
                         dev.dementisimus.mapcreator.core: dev.dementisimus.mapcreator.core.*:
                         dev.dementisimus.mapcreator.listeners: dev.dementisimus.mapcreator.listeners.*:
