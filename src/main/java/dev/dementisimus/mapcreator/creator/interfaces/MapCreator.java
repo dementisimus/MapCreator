@@ -7,9 +7,12 @@ import com.grinderwolf.swm.plugin.config.WorldData;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.callback.EmptyCallback;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
+import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 /**
  * Copyright (c) by dementisimus,
@@ -33,6 +36,10 @@ public interface MapCreator {
     SlimePropertyMap getSlimePropertyMap();
 
     Map<String, SlimeWorld> getSlimeWorlds();
+
+    CustomMapCreatorInventory getCustomMapCreatorInventory();
+
+    List<String> getWorlds() throws IOException;
 
     @Nullable SlimeWorld getSlimeWorld(CustomMapCreatorMap customMapCreatorMap);
 

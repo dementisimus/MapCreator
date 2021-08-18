@@ -18,11 +18,13 @@ import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.capi.core.pools.ThreadPool;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
+import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 /**
@@ -36,12 +38,16 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class CustomMapCreator implements MapCreator {
 
+    private final MapCreatorPlugin mapCreatorPlugin;
     private final SlimePlugin slimePlugin;
     private final SlimeLoader slimeLoader;
+    private final CustomMapCreatorInventory customMapCreatorInventory;
 
-    public CustomMapCreator(SlimePlugin slimePlugin, String slimeDataSource) {
-        this.slimePlugin = slimePlugin;
+    public CustomMapCreator(MapCreatorPlugin mapCreatorPlugin, String slimeDataSource) {
+        this.mapCreatorPlugin = mapCreatorPlugin;
+        this.slimePlugin = this.mapCreatorPlugin.getSlimePlugin();
         this.slimeLoader = this.slimePlugin.getLoader(slimeDataSource);
+        this.customMapCreatorInventory = new CustomMapCreatorInventory(this);
     }
 
     @Override
@@ -76,7 +82,7 @@ public class CustomMapCreator implements MapCreator {
                     return;
                 }
                 performance.get().setAction(action);
-                BukkitSynchronousExecutor.execute(MapCreatorPlugin.getMapCreatorPlugin(), () -> {
+                BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> {
                     SlimeWorld slimeWorld = performance.get().getSlimeWorld();
                     if(slimeWorld != null) {
                         this.slimePlugin.generateWorld(slimeWorld);
@@ -117,6 +123,16 @@ public class CustomMapCreator implements MapCreator {
     @Override
     public Map<String, SlimeWorld> getSlimeWorlds() {
         return this.slimeWorlds;
+    }
+
+    @Override
+    public CustomMapCreatorInventory getCustomMapCreatorInventory() {
+        return this.customMapCreatorInventory;
+    }
+
+    @Override
+    public List<String> getWorlds() throws IOException {
+        return this.getSlimeLoader().listWorlds();
     }
 
     @Override

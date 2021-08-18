@@ -5,10 +5,12 @@ import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import dev.dementisimus.capi.core.CoreAPI;
 import dev.dementisimus.capi.core.config.Config;
 import dev.dementisimus.capi.core.core.BukkitCoreAPI;
+import dev.dementisimus.capi.core.databases.DataManagement;
 import dev.dementisimus.capi.core.setup.DefaultSetUpState;
 import dev.dementisimus.capi.core.setup.SetUpData;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.SlimeDataSource;
+import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -47,16 +49,20 @@ public class MapCreatorPlugin extends JavaPlugin {
         this.coreAPI = this.bukkitCoreAPI.getCoreAPI();
 
         this.coreAPI.prepareInit(new String[]{DefaultSetUpState.LANGUAGE.name(), MAPPOOL, DEFAULT_WORLD_FOR_USAGE, USE_API_MODE_ONLY}, () -> {
-            this.retrieveSlimePlugin();
-            this.customMapCreator = new CustomMapCreator(this.getSlimePlugin(), SlimeDataSource.MONGODB);
+            this.coreAPI.enableDatabaseUsage(new String[]{Storage.CATEGORIES}, new String[]{Storage.Rows.NAME});
+
+            this.slimePlugin = this.retrieveSlimePlugin();
+
+            this.customMapCreator = new CustomMapCreator(this, SlimeDataSource.MONGODB);
             this.slimeLoader = this.customMapCreator.getSlimeLoader();
 
             this.coreAPI.registerAdditionalModuleToInject(MapCreatorPlugin.class, this);
-            this.coreAPI.registerAdditionalModuleToInject(CoreAPI.class, this.coreAPI);
             this.coreAPI.registerAdditionalModuleToInject(BukkitCoreAPI.class, this.bukkitCoreAPI);
             this.coreAPI.registerAdditionalModuleToInject(SlimePlugin.class, this.getSlimePlugin());
             this.coreAPI.registerAdditionalModuleToInject(SlimeLoader.class, this.getSlimeLoader());
-            this.coreAPI.registerAdditionalModuleToInject(CustomMapCreator.class, this.getMapCreator());
+            this.coreAPI.registerAdditionalModuleToInject(CustomMapCreator.class, this.getCustomMapCreator());
+            this.coreAPI.registerAdditionalModuleToInject(CustomMapCreatorInventory.class, this.getCustomMapCreator().getCustomMapCreatorInventory());
+            this.coreAPI.registerAdditionalModuleToInject(DataManagement.class, this.bukkitCoreAPI.getCoreAPI().getDataManagement());
 
             this.coreAPI.init(initializedCoreAPI -> {
                 new Config(this.getCoreAPI().getConfigFile()).read(result -> {
@@ -90,7 +96,7 @@ public class MapCreatorPlugin extends JavaPlugin {
         Bukkit.getScheduler().runTask(this, () -> {
             SetUpData setUpData = this.getCoreAPI().getSetUpData();
             if(setUpData.getBoolean(SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
-                CustomMapCreator customMapCreator = new CustomMapCreator(this.getSlimePlugin(), "mongodb");
+                CustomMapCreator customMapCreator = new CustomMapCreator(this, "mongodb");
                 String mapEntry = setUpData.getString(DEFAULT_WORLD_FOR_USAGE);
                 String[] entry = (mapEntry.contains("/") ? mapEntry.split("/") : null);
                 String type;
@@ -120,12 +126,12 @@ public class MapCreatorPlugin extends JavaPlugin {
         });
     }
 
-    private void retrieveSlimePlugin() {
+    private SlimePlugin retrieveSlimePlugin() {
         SlimePlugin plugin = (SlimePlugin) Bukkit.getPluginManager().getPlugin("SlimeWorldManager");
         if(plugin == null) {
             throw new IllegalArgumentException("SlimePlugin is NULL");
         }
-        this.slimePlugin = plugin;
+        return plugin;
     }
 
     public CoreAPI getCoreAPI() {
@@ -144,7 +150,7 @@ public class MapCreatorPlugin extends JavaPlugin {
         return this.slimeLoader;
     }
 
-    public CustomMapCreator getMapCreator() {
+    public CustomMapCreator getCustomMapCreator() {
         return this.customMapCreator;
     }
 
@@ -154,5 +160,30 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String SET_DEFAULT_WORLD_INSTEAD_OF_WORLD = "SET_DEFAULT_WORLD_INSTEAD_OF_WORLD";
         public static final String DEFAULT_WORLD_FOR_USAGE = "DEFAULT_WORLD_FOR_USAGE";
         public static final String USE_API_MODE_ONLY = "USE_API_MODE_ONLY";
+    }
+
+    public static class Storage {
+
+        public static final String CATEGORIES = "categories";
+
+        public static class Rows {
+
+            public static final String NAME = "";
+        }
+
+        public static class Categories {
+
+            public static final String NAME = "name";
+            public static final String ICON = "icon";
+        }
+    }
+
+    public static class Translations {
+
+        public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY = "inventory.section.categories.add";
+        public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_SIGN_INSTRUCTION = "inventory.section.categories.add.sign.instruction";
+        public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP = "inventory.section.category.create.map";
+        public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1 = "inventory.section.category.create.map.map.icon.lore.instructions.1";
+        public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2 = "inventory.section.category.create.map.map.icon.lore.instructions.2";
     }
 }

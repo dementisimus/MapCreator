@@ -15,6 +15,7 @@ import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
@@ -28,14 +29,27 @@ import java.io.IOException;
  * @author dementisimus
  * @since 24.07.2021:21:48
  */
-public record CustomMapCreatorMap(String mapName, String mapCategory, SlimePlugin slimePlugin, SlimeLoader slimeLoader) implements MapCreatorMap {
+public class CustomMapCreatorMap implements MapCreatorMap {
+
+    @Getter private final String mapName;
+    @Getter private final String mapCategory;
+    @Getter private final SlimePlugin slimePlugin;
+    @Getter private final SlimeLoader slimeLoader;
+
+    public CustomMapCreatorMap(String mapName, String mapCategory) {
+        this.mapName = mapName;
+        this.mapCategory = mapCategory;
+
+        this.slimePlugin = MapCreatorPlugin.getMapCreatorPlugin().getSlimePlugin();
+        this.slimeLoader = MapCreatorPlugin.getMapCreatorPlugin().getSlimeLoader();
+    }
 
     @Override
     public void create(SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) throws IOException, WorldAlreadyExistsException, CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException {
         MapCreator.Performance performance = new MapCreator.Performance();
         if(!this.isLoaded()) {
             if(!this.exists()) {
-                performance.setSlimeWorld(this.slimePlugin().createEmptyWorld(this.slimeLoader(), this.getWorldFileName(), false, slimePropertyMap));
+                performance.setSlimeWorld(this.getSlimePlugin().createEmptyWorld(this.getSlimeLoader(), this.getWorldFileName(), false, slimePropertyMap));
                 performance.setSuccess();
             }else {
                 this.load(false, slimePropertyMap, performanceCallback);
@@ -52,7 +66,7 @@ public record CustomMapCreatorMap(String mapName, String mapCategory, SlimePlugi
         MapCreator.Performance performance = new MapCreator.Performance();
         if(!this.isLoaded()) {
             if(this.exists()) {
-                performance.setSlimeWorld(this.slimePlugin().loadWorld(this.slimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap));
+                performance.setSlimeWorld(this.getSlimePlugin().loadWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap));
                 performance.setSuccess();
             }else {
                 this.create(slimePropertyMap, performanceCallback);
@@ -70,7 +84,7 @@ public record CustomMapCreatorMap(String mapName, String mapCategory, SlimePlugi
         World world = Bukkit.getWorld(this.getWorldFileName());
         if(world != null) {
             if(this.exists()) {
-                if(save) this.slimeLoader().saveWorld(this.getWorldFileName(), ((CraftSlimeWorld) slimeWorld).serialize(), false);
+                if(save) this.getSlimeLoader().saveWorld(this.getWorldFileName(), ((CraftSlimeWorld) slimeWorld).serialize(), false);
                 if(world.getPlayers().isEmpty()) {
                     performance.setSuccess();
                     BukkitSynchronousExecutor.execute(MapCreatorPlugin.getMapCreatorPlugin(), () -> {
@@ -129,6 +143,6 @@ public record CustomMapCreatorMap(String mapName, String mapCategory, SlimePlugi
 
     @Override
     public String getWorldFileName() {
-        return this.mapCategory + "." + this.mapName;
+        return this.mapCategory.toUpperCase() + CATEGORY_MAP_SEPARATOR + this.mapName;
     }
 }

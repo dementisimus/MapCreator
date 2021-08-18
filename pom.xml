@@ -15,6 +15,8 @@
         <annotations.version>21.0.1</annotations.version>
         <guice.version>5.0.1</guice.version>
         <slimeworldmanager-api.version>2.6.2-SNAPSHOT</slimeworldmanager-api.version>
+        <bson.version>3.12.9</bson.version>
+        <lombok.version>1.18.20</lombok.version>
     </properties>
 
     <dependencies>
@@ -54,6 +56,18 @@
             <version>${slimeworldmanager-api.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>bson</artifactId>
+            <version>${bson.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -75,21 +89,12 @@
                 <version>3.2.0</version>
                 <configuration>
                     <source>16</source>
-                    <excludePackageNames>
-                        dev.dementisimus.mapcreator:
-                        dev.dementisimus.mapcreator.setup: dev.dementisimus.mapcreator.setup.*:
-                        dev.dementisimus.mapcreator.mapcreator: dev.dementisimus.mapcreator.mapcreator.*:
-                        dev.dementisimus.mapcreator.commands: dev.dementisimus.mapcreator.commands.*:
-                        dev.dementisimus.mapcreator.core: dev.dementisimus.mapcreator.core.*:
-                        dev.dementisimus.mapcreator.listeners: dev.dementisimus.mapcreator.listeners.*:
-                        dev.dementisimus.mapcreator.translation: dev.dementisimus.mapcreator.translation.*
-                    </excludePackageNames>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.4.3</version>
+                <version>3.2.4</version>
                 <configuration>
                 </configuration>
                 <executions>
@@ -104,10 +109,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.2</version>
+                <version>3.8.1</version>
                 <configuration>
                     <source>16</source>
                     <target>16</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>
