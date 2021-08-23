@@ -58,11 +58,10 @@ public class CustomMapCreator implements MapCreator {
                 AtomicReference<Performance> performance = new AtomicReference<>(new Performance((SlimeWorld) null));
                 try {
                     switch(action) {
-                        case CREATE -> customMapCreatorMap.create(this.getSlimePropertyMap(), performance :: set);
                         case LOAD -> customMapCreatorMap.load(false, this.getSlimePropertyMap(), performance :: set);
                         case SAVE -> customMapCreatorMap.save(true, this.getSlimeWorld(customMapCreatorMap), performance :: set);
-                        case DELETE -> customMapCreatorMap.delete(performance :: set);
                         case LEAVE -> customMapCreatorMap.leave(performance :: set);
+                        case DELETE -> customMapCreatorMap.delete(performance :: set);
                     }
                 }catch(IOException | WorldAlreadyExistsException | CorruptedWorldException | NewerFormatException | WorldInUseException | UnknownWorldException ex) {
                     if(ex instanceof IOException) {
@@ -158,7 +157,7 @@ public class CustomMapCreator implements MapCreator {
             return;
         }
         switch(action) {
-            case SAVE, DELETE, LEAVE -> {
+            case SAVE, LEAVE, DELETE -> {
                 world.getPlayers().forEach(player -> {
                     /*
                      * replace with previous location
@@ -179,7 +178,7 @@ public class CustomMapCreator implements MapCreator {
     public void manageWorldConfig(Action action, CustomMapCreatorMap customMapCreatorMap) {
         WorldsConfig worldsConfig = ConfigManager.getWorldConfig();
         switch(action) {
-            case SAVE, DELETE, LEAVE -> worldsConfig.getWorlds().remove(customMapCreatorMap.getWorldFileName());
+            case SAVE, LEAVE, DELETE -> worldsConfig.getWorlds().remove(customMapCreatorMap.getWorldFileName());
             default -> worldsConfig.getWorlds().put(customMapCreatorMap.getWorldFileName(), this.getWorldData());
         }
         worldsConfig.save();

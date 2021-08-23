@@ -178,6 +178,11 @@ public class MapCreatorPlugin extends JavaPlugin {
         }
     }
 
+    public static class ItemDataStorageKeys {
+
+        public static final String CATEGORY = "CATEGORY";
+    }
+
     public static class Translations {
 
         public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY = "inventory.section.categories.add";
@@ -185,5 +190,10 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP = "inventory.section.category.create.map";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1 = "inventory.section.category.create.map.map.icon.lore.instructions.1";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2 = "inventory.section.category.create.map.map.icon.lore.instructions.2";
+        public static final String BACK = "back";
+        public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_RIGHT_CLICK = "inventory.section.maps.map.action.right.click";
+        public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_LEFT_CLICK = "inventory.section.maps.map.action.left.click";
+        public static final String PLAYER_INVENTORY_MAP_MANAGEMENT = "player.inventory.map.management";
+
     }
 }

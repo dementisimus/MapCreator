@@ -1,5 +1,6 @@
 package dev.dementisimus.mapcreator.creator;
 
+import com.google.common.base.Preconditions;
 import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.exceptions.CorruptedWorldException;
 import com.grinderwolf.swm.api.exceptions.NewerFormatException;
@@ -16,6 +17,7 @@ import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
@@ -31,21 +33,31 @@ import java.io.IOException;
  */
 public class CustomMapCreatorMap implements MapCreatorMap {
 
-    @Getter private final String mapName;
-    @Getter private final String mapCategory;
     @Getter private final SlimePlugin slimePlugin;
     @Getter private final SlimeLoader slimeLoader;
+    @Getter
+    @Setter
+    private String mapName;
+    @Getter
+    @Setter
+    private String mapCategory;
 
-    public CustomMapCreatorMap(String mapName, String mapCategory) {
-        this.mapName = mapName;
-        this.mapCategory = mapCategory;
-
+    public CustomMapCreatorMap() {
         this.slimePlugin = MapCreatorPlugin.getMapCreatorPlugin().getSlimePlugin();
         this.slimeLoader = MapCreatorPlugin.getMapCreatorPlugin().getSlimeLoader();
     }
 
+    public CustomMapCreatorMap(String mapName, String mapCategory) {
+        this();
+
+        this.mapName = mapName;
+        this.mapCategory = mapCategory;
+    }
+
     @Override
     public void create(SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) throws IOException, WorldAlreadyExistsException, CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException {
+        this.checkArguments();
+
         MapCreator.Performance performance = new MapCreator.Performance();
         if(!this.isLoaded()) {
             if(!this.exists()) {
@@ -63,6 +75,8 @@ public class CustomMapCreatorMap implements MapCreatorMap {
 
     @Override
     public void load(boolean readOnly, SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) throws CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException, IOException, WorldAlreadyExistsException {
+        this.checkArguments();
+
         MapCreator.Performance performance = new MapCreator.Performance();
         if(!this.isLoaded()) {
             if(this.exists()) {
@@ -80,6 +94,8 @@ public class CustomMapCreatorMap implements MapCreatorMap {
 
     @Override
     public void save(boolean save, SlimeWorld slimeWorld, Callback<MapCreator.Performance> performanceCallback) throws IOException {
+        this.checkArguments();
+
         MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
         World world = Bukkit.getWorld(this.getWorldFileName());
         if(world != null) {
@@ -104,6 +120,8 @@ public class CustomMapCreatorMap implements MapCreatorMap {
 
     @Override
     public void delete(Callback<MapCreator.Performance> performanceCallback) throws UnknownWorldException, IOException {
+        this.checkArguments();
+
         MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
         if(this.isLoaded()) {
             if(this.exists()) {
@@ -120,6 +138,8 @@ public class CustomMapCreatorMap implements MapCreatorMap {
 
     @Override
     public void leave(Callback<MapCreator.Performance> performanceCallback) throws IOException {
+        this.checkArguments();
+
         this.save(false, null, performanceCallback);
     }
 
@@ -144,5 +164,23 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Override
     public String getWorldFileName() {
         return this.mapCategory.toUpperCase() + CATEGORY_MAP_SEPARATOR + this.mapName;
+    }
+
+    @Override
+    public void checkArguments() {
+        Preconditions.checkNotNull(this.mapName, "mapName == null");
+        Preconditions.checkNotNull(this.mapCategory, "mapCategory == null");
+        Preconditions.checkNotNull(this.slimePlugin, "slimePlugin == null");
+        Preconditions.checkNotNull(this.slimeLoader, "slimeLoader == null");
+    }
+
+    @Override
+    public String getCategoryIdentifier() {
+        return this.getMapCategory() + CATEGORY_MAP_SEPARATOR;
+    }
+
+    @Override
+    public String getFullMapName() {
+        return this.getCategoryIdentifier() + this.getMapName();
     }
 }

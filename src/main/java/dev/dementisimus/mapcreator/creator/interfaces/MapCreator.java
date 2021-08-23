@@ -7,7 +7,11 @@ import com.grinderwolf.swm.plugin.config.WorldData;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.callback.EmptyCallback;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
+import dev.dementisimus.mapcreator.creator.CustomPlayerMapActions;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
+import lombok.Getter;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -52,11 +56,21 @@ public interface MapCreator {
     void manageWorldConfig(Action action, CustomMapCreatorMap customMapCreatorMap);
 
     enum Action {
-        CREATE,
-        LOAD,
-        SAVE,
-        DELETE,
-        LEAVE
+
+        LOAD("mapcreator.action.item.load", 11, Material.SPYGLASS),
+        SAVE("mapcreator.action.item.save", 12, Material.CLOCK),
+        LEAVE("mapcreator.action.item.leave", 14, Material.GLASS_BOTTLE),
+        DELETE("mapcreator.action.item.delete", 15, Material.STRUCTURE_VOID);
+
+        @Getter String translationProperty;
+        @Getter int actionItemSlot;
+        @Getter Material actionItemMaterial;
+
+        Action(String translationProperty, int actionItemSlot, Material actionItemMaterial) {
+            this.translationProperty = translationProperty;
+            this.actionItemSlot = actionItemSlot;
+            this.actionItemMaterial = actionItemMaterial;
+        }
     }
 
     class Performance {
@@ -127,6 +141,19 @@ public interface MapCreator {
 
         public FailureReason getFailureReason() {
             return this.failureReason;
+        }
+
+        public void performCustomPlayerMapAction(Player player) {
+            if(this.getAction() != null) {
+                CustomPlayerMapActions customPlayerMapActions = new CustomPlayerMapActions(player, this.getSlimeWorld());
+                switch(this.getAction()) {
+                    case LOAD -> customPlayerMapActions.load();
+                    case SAVE -> customPlayerMapActions.save();
+                    case LEAVE -> customPlayerMapActions.leave();
+                    case DELETE -> customPlayerMapActions.delete();
+                }
+
+            }
         }
 
         public enum FailureReason {

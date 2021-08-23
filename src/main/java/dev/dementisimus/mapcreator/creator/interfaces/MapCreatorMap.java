@@ -38,4 +38,10 @@ public interface MapCreatorMap {
     boolean exists();
 
     String getWorldFileName();
+
+    void checkArguments();
+
+    String getCategoryIdentifier();
+
+    String getFullMapName();
 }
