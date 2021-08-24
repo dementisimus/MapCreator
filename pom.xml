@@ -12,10 +12,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <paper-api.version>1.17.1-R0.1-SNAPSHOT</paper-api.version>
-        <annotations.version>21.0.1</annotations.version>
+        <annotations.version>22.0.0</annotations.version>
         <guice.version>5.0.1</guice.version>
         <slimeworldmanager-api.version>2.6.2-SNAPSHOT</slimeworldmanager-api.version>
-        <bson.version>3.12.9</bson.version>
+        <bson.version>4.3.0</bson.version>
         <lombok.version>1.18.20</lombok.version>
     </properties>
 
@@ -78,6 +78,10 @@
         <repository>
             <id>rapture-snapshots</id>
             <url>https://repo.rapture.pw/repository/maven-snapshots/</url>
+        </repository>
+        <repository>
+            <id>dementisimus.dev</id>
+            <url>https://repo.dementisimus.dev</url>
         </repository>
     </repositories>
 
