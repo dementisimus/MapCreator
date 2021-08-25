@@ -1,5 +1,5 @@
 name: build
-on: [ push, pull_request ]
+on: [ push ]
 
 jobs:
   build:
@@ -12,4 +12,4 @@ jobs:
 
     steps:
       - name: clear caches
-        run: git rm --cached .
+        run: git rm --cached /home/runner/work/MapCreator/MapCreator
