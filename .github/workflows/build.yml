@@ -12,4 +12,4 @@ jobs:
 
     steps:
       - name: clear caches
-        run: git rm --cached /home/runner/work/MapCreator/MapCreator
+        run: git rm --cached /home/runner/work/MapCreator
