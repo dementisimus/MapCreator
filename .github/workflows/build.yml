@@ -29,6 +29,9 @@ jobs:
       - name: build
         run: mvn -U clean package --file pom.xml
         
+      - name: echo files
+        run: ls
+        
       - name: cache
         uses: actions/cache@v2
         with:
