@@ -5,6 +5,8 @@ env:
   name: MapCreator
   id: mapcreator
   version: 1.4.0
+  jar: MapCreator-1.4.0.jar
+  pom: MapCreator-1.4.0.pom
   stage: development
 
 jobs:
@@ -15,10 +17,6 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     name: on ${{ matrix.platform }}
-    
-    env: 
-      file: ${{ env.name }}-${{ env.version }}.jar
-      pom: ${{ env.name }}-${{ env.version }}.pom
     
     steps:
       - name: checkout
