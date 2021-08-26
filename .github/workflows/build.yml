@@ -1,18 +1,18 @@
 name: build
 on: [ push, workflow_dispatch ]
 
-env: 
-  name: MapCreator
-  id: mapcreator
-  version: 1.4.0
-  stage: development
-  file: ${{ env.name }}-${{ env.version }}.jar
-
 jobs:
   build:  
     strategy:
       matrix:
         platform: [ ubuntu-latest ]
+        
+    env: 
+      name: MapCreator
+      id: mapcreator
+      version: 1.4.0
+      stage: development
+      file: ${{ env.name }}-${{ env.version }}.jar
 
     runs-on: ${{ matrix.platform }}
     name: on ${{ matrix.platform }}
