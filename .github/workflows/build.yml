@@ -29,9 +29,6 @@ jobs:
       - name: build
         run: mvn -U clean package --file pom.xml
         
-      - name: echo files
-        run: ls
-        
       - name: cache
         uses: actions/cache@v2
         with:
@@ -44,7 +41,7 @@ jobs:
         env: 
           file: ${{ env.name }}-${{ env.version }}.jar
         with:
-            local: ./${{ env.file }}
+            local: ./target/${{ env.file }}
             remote: /home/repo-deployment/repository/repositories/${{ env.stage }}/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/${{ env.file }}
             host: ${{ secrets.SSH_HOST }}
             username: ${{ secrets.SSH_USERNAME }}
