@@ -3,6 +3,12 @@ on: [ push ]
 
 jobs:
   build:
+  
+    env: 
+      id: MapCreator
+      version: 1.4.0
+      file: ${{ env.id }}-${{ env.version }}.jar
+  
     strategy:
       matrix:
         platform: [ ubuntu-latest ]
@@ -31,7 +37,11 @@ jobs:
             restore-keys: ${{ runner.os }}-maven-
             
       - name: deploy
-        run: mvn --batch-mode deploy
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        uses: garygrossgarten/github-action-scp@v0.7.3
+        with:
+            local: ./${{ env.file }}
+            remote: /home/${{ env.file }}
+            host: ${{ secrets.SSH_HOST }}
+            username: ${{ secrets.SSH_USERNAME }}
+            password: ${{ secrets.SSH_PASSWORD }}
+            privateKey: ${{ secrets.PRIVATE_KEY}}
