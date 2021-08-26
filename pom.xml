@@ -80,8 +80,12 @@
             <url>https://repo.rapture.pw/repository/maven-snapshots/</url>
         </repository>
         <repository>
-            <id>dementisimus.dev</id>
-            <url>https://repo.dementisimus.dev</url>
+            <id>dementisimus-dev-release</id>
+            <url>https://repo.dementisimus.dev/release/</url>
+        </repository>
+        <repository>
+            <id>dementisimus-dev-development</id>
+            <url>https://repo.dementisimus.dev/development/</url>
         </repository>
     </repositories>
 
