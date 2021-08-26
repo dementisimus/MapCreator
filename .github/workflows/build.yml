@@ -5,7 +5,7 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [ ubuntu-latest, windows-latest ]
+        platform: [ ubuntu-latest ]
 
     runs-on: ${{ matrix.platform }}
     name: on ${{ matrix.platform }}
@@ -20,4 +20,4 @@ jobs:
           java-version: '16'
           
       - name: clean package
-        run: mvn clean package --file pom.xml
+        run: mvn -U clean package --file pom.xml
