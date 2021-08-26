@@ -6,7 +6,6 @@ env:
   id: mapcreator
   version: 1.4.0
   stage: development
-  file: ${{ env.name }}-${{ env.version }}.jar
 
 jobs:
   build:  
@@ -39,6 +38,8 @@ jobs:
             
       - name: deploy
         uses: garygrossgarten/github-action-scp@v0.7.3
+        env: 
+          file: ${{ env.name }}-${{ env.version }}.jar
         with:
             local: ./${{ env.file }}
             remote: /home/repo-deployment/repository/repositories/${{ env.stage }}/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/${{ env.file }}
