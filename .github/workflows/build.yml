@@ -48,7 +48,7 @@ jobs:
         uses: garygrossgarten/github-action-scp@v0.7.3
         with:
             local: ./to-deploy
-            remote: /home/repo-deployment/repository/repositories/${{ env.stage }}/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/${{ env.jar }}
+            remote: /home/repo-deployment/repository/repositories/${{ env.stage }}/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/
             host: ${{ secrets.SSH_HOST }}
             username: ${{ secrets.SSH_USERNAME }}
             password: ${{ secrets.SSH_PASSWORD }}
