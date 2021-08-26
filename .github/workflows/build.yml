@@ -11,11 +11,15 @@ jobs:
   build:  
     strategy:
       matrix:
-        platform: [ ubuntu-latest, windows-latest ]
+        platform: [ ubuntu-latest ]
 
     runs-on: ${{ matrix.platform }}
     name: on ${{ matrix.platform }}
-
+    
+    env: 
+      file: ${{ env.name }}-${{ env.version }}.jar
+      pom: ${{ env.name }}-${{ env.version }}.pom
+    
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -26,23 +30,27 @@ jobs:
           distribution: 'adopt'
           java-version: '16'
           
-      - name: build
-        run: mvn -U clean package --file pom.xml
-        
       - name: cache
         uses: actions/cache@v2
         with:
             path: ~/.m2/repository
             key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             restore-keys: ${{ runner.os }}-maven-
+          
+      - name: build
+        run: mvn -U clean package --file pom.xml
+            
+      - name: pre-deploy
+        run: |
+          mkdir ./to-deploy
+          cp ./target/${{ env.jar }} ./to-deploy/${{ env.jar }}
+          cp ./pom.xml ./to-deploy/${{ env.pom }}
             
       - name: deploy
         uses: garygrossgarten/github-action-scp@v0.7.3
-        env: 
-          file: ${{ env.name }}-${{ env.version }}.jar
         with:
-            local: ./target/${{ env.file }}
-            remote: /home/repo-deployment/repository/repositories/${{ env.stage }}/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/${{ env.file }}
+            local: ./to-deploy
+            remote: /home/repo-deployment/repository/repositories/${{ env.stage }}/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/${{ env.jar }}
             host: ${{ secrets.SSH_HOST }}
             username: ${{ secrets.SSH_USERNAME }}
             password: ${{ secrets.SSH_PASSWORD }}
