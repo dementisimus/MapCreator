@@ -1,25 +1,25 @@
-![](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/images/MapCreator.jpg)
+![](https://dementisimus.dev/img/MapCreator/MapCreator.jpg)
 
 ### *an easy && lightweight Plugin / and or API // for creating/loading custom maps for your custom needs!*
 ------------
 
 ## some impressions first
 
-![](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/images/commandOutput.jpg)
+![](https://dementisimus.dev/img/MapCreator/commandOutput.jpg)
 
-![](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/images/treeCommandOutput.jpg)
+![](https://dementisimus.dev/img/MapCreator/treeCommandOutput.jpg)
 
-![](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/images/loadExample.jpg)
+![](https://dementisimus.dev/img/MapCreator/loadExample.jpg)
 
-![](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/images/newlyCreatedMap.jpg)
+![](https://dementisimus.dev/img/MapCreator/newlyCreatedMap.jpg)
 
-![](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/images/loadedSuccessfully.jpg)
+![](https://dementisimus.dev/img/MapCreator/loadedSuccessfully.jpg)
 
 ![](https://repo.dementisimus.dev/dev/dementisimus/mrs/MapRatingSystem/images/server.png)
 
-![](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/images/savedSuccessfully.jpg)
+![](https://dementisimus.dev/img/MapCreator/savedSuccessfully.jpg)
 
-![](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/images/treeCommandOutputAfterSaving.jpg)
+![](https://dementisimus.dev/img/MapCreator/treeCommandOutputAfterSaving.jpg)
 
 ## Features
 
