@@ -9,4 +9,3 @@ api-version: 1.17
 commands:
   mapcreator:
   mc:
-  test:

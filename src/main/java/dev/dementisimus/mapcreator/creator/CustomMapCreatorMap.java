@@ -22,6 +22,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 
 import java.io.IOException;
+import java.util.Date;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -35,12 +36,26 @@ public class CustomMapCreatorMap implements MapCreatorMap {
 
     @Getter private final SlimePlugin slimePlugin;
     @Getter private final SlimeLoader slimeLoader;
+
     @Getter
     @Setter
     private String mapName;
+
     @Getter
     @Setter
     private String mapCategory;
+
+    @Getter
+    @Setter
+    private SlimeWorld slimeWorld;
+
+    @Getter
+    @Setter
+    private String loadedBy;
+
+    @Getter
+    @Setter
+    private Date loadedSince;
 
     public CustomMapCreatorMap() {
         this.slimePlugin = MapCreatorPlugin.getMapCreatorPlugin().getSlimePlugin();
@@ -55,39 +70,22 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
-    public void create(SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) throws IOException, WorldAlreadyExistsException, CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException {
-        this.checkArguments();
-
-        MapCreator.Performance performance = new MapCreator.Performance();
-        if(!this.isLoaded()) {
-            if(!this.exists()) {
-                performance.setSlimeWorld(this.getSlimePlugin().createEmptyWorld(this.getSlimeLoader(), this.getWorldFileName(), false, slimePropertyMap));
-                performance.setSuccess();
-            }else {
-                this.load(false, slimePropertyMap, performanceCallback);
-                return;
-            }
-        }else {
-            performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_ALREADY_LOADED);
-        }
-        performanceCallback.done(performance);
-    }
-
-    @Override
     public void load(boolean readOnly, SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) throws CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException, IOException, WorldAlreadyExistsException {
         this.checkArguments();
 
         MapCreator.Performance performance = new MapCreator.Performance();
-        if(!this.isLoaded()) {
+        if(!this.isLocked()) {
+            SlimeWorld slimeWorld;
             if(this.exists()) {
-                performance.setSlimeWorld(this.getSlimePlugin().loadWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap));
-                performance.setSuccess();
+                slimeWorld = this.getSlimePlugin().loadWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap);
             }else {
-                this.create(slimePropertyMap, performanceCallback);
-                return;
+                slimeWorld = this.getSlimePlugin().createEmptyWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap);
             }
+            performance.setSlimeWorld(slimeWorld);
+            performance.setSuccess();
+            this.setLoadedSince(new Date());
         }else {
-            performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_ALREADY_LOADED);
+            performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_LOCKED);
         }
         performanceCallback.done(performance);
     }
@@ -104,7 +102,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
                 if(world.getPlayers().isEmpty()) {
                     performance.setSuccess();
                     BukkitSynchronousExecutor.execute(MapCreatorPlugin.getMapCreatorPlugin(), () -> {
-                        Bukkit.unloadWorld(world, true);
+                        Bukkit.unloadWorld(world, save);
                     });
                 }else {
                     performance.setSuccess(MapCreator.Performance.FailureReason.PLAYERS_ON_MAP);
@@ -123,15 +121,11 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         this.checkArguments();
 
         MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
-        if(this.isLoaded()) {
-            if(this.exists()) {
-                this.slimeLoader.deleteWorld(this.getWorldFileName());
-                performance.setSuccess();
-            }else {
-                performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_DOES_NOT_EXIST);
-            }
+        if(this.exists()) {
+            this.slimeLoader.deleteWorld(this.getWorldFileName());
+            performance.setSuccess();
         }else {
-            performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_NOT_LOADED);
+            performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_DOES_NOT_EXIST);
         }
         performanceCallback.done(performance);
     }
@@ -144,7 +138,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
-    public boolean isLoaded() {
+    public boolean isLocked() {
         try {
             return this.slimeLoader.isWorldLocked(this.getWorldFileName());
         }catch(UnknownWorldException | IOException exception) {
@@ -182,5 +176,10 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Override
     public String getFullMapName() {
         return this.getCategoryIdentifier() + this.getMapName();
+    }
+
+    @Override
+    public String getNiceFullMapName() {
+        return "§c§l" + this.getMapCategory() + "§7/§7§l" + this.getMapName();
     }
 }

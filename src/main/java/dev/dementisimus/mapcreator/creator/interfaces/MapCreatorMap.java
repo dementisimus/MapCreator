@@ -23,8 +23,6 @@ public interface MapCreatorMap {
 
     String CATEGORY_MAP_SEPARATOR = "...";
 
-    void create(SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) throws IOException, WorldAlreadyExistsException, CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException;
-
     void load(boolean readOnly, SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) throws CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException, IOException, WorldAlreadyExistsException;
 
     void save(boolean save, SlimeWorld slimeWorld, Callback<MapCreator.Performance> performanceCallback) throws IOException;
@@ -33,7 +31,7 @@ public interface MapCreatorMap {
 
     void leave(Callback<MapCreator.Performance> performanceCallback) throws IOException;
 
-    boolean isLoaded();
+    boolean isLocked();
 
     boolean exists();
 
@@ -44,4 +42,6 @@ public interface MapCreatorMap {
     String getCategoryIdentifier();
 
     String getFullMapName();
+
+    String getNiceFullMapName();
 }

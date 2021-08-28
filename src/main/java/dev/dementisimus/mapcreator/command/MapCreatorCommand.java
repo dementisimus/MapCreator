@@ -14,13 +14,13 @@ import org.jetbrains.annotations.NotNull;
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
  *
- * Class TestCommand @ MapCreatorPlugin
+ * Class MapCreatorCommand @ MapCreatorPlugin
  *
  * @author dementisimus
  * @since 24.07.2021:22:06
  */
-@BukkitCommand(name = "test", additionalModulesToInject = {MapCreatorPlugin.class})
-public class TestCommand implements CommandExecutor {
+@BukkitCommand(name = "mapcreator", nameAliases = {"mc"}, additionalModulesToInject = {MapCreatorPlugin.class})
+public class MapCreatorCommand implements CommandExecutor {
 
     @Inject MapCreatorPlugin mapCreatorPlugin;
 
@@ -28,7 +28,7 @@ public class TestCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if(commandSender instanceof Player player) {
             CustomMapCreator customMapCreator = this.mapCreatorPlugin.getCustomMapCreator();
-            customMapCreator.getCustomMapCreatorInventory().open(player, MapCreatorInventory.MapCreatorInventorySection.CATEGORIES);
+            customMapCreator.getCustomMapCreatorInventory().open(player, MapCreatorInventory.Section.CATEGORIES);
         }
         return false;
     }

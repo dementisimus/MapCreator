@@ -59,7 +59,7 @@ public class CustomMapCreator implements MapCreator {
                 try {
                     switch(action) {
                         case LOAD -> customMapCreatorMap.load(false, this.getSlimePropertyMap(), performance :: set);
-                        case SAVE -> customMapCreatorMap.save(true, this.getSlimeWorld(customMapCreatorMap), performance :: set);
+                        case SAVE -> customMapCreatorMap.save(true, customMapCreatorMap.getSlimeWorld(), performance :: set);
                         case LEAVE -> customMapCreatorMap.leave(performance :: set);
                         case DELETE -> customMapCreatorMap.delete(performance :: set);
                     }
@@ -85,7 +85,9 @@ public class CustomMapCreator implements MapCreator {
                     SlimeWorld slimeWorld = performance.get().getSlimeWorld();
                     if(slimeWorld != null) {
                         this.slimePlugin.generateWorld(slimeWorld);
-                        this.addSlimeWorld(customMapCreatorMap.getWorldFileName(), slimeWorld);
+                        this.addMapCreatorMap(customMapCreatorMap);
+                    }else {
+                        this.removeMapCreatorMap(customMapCreatorMap);
                     }
                     performanceCallback.done(performance.get());
                 });
@@ -120,8 +122,8 @@ public class CustomMapCreator implements MapCreator {
     }
 
     @Override
-    public Map<String, SlimeWorld> getSlimeWorlds() {
-        return this.slimeWorlds;
+    public Map<String, CustomMapCreatorMap> getMapCreatorMaps() {
+        return MAP_CREATOR_MAPS;
     }
 
     @Override
@@ -130,23 +132,23 @@ public class CustomMapCreator implements MapCreator {
     }
 
     @Override
-    public List<String> getWorlds() throws IOException {
+    public List<String> getSlimeLoaderWorlds() throws IOException {
         return this.getSlimeLoader().listWorlds();
     }
 
     @Override
-    public @Nullable SlimeWorld getSlimeWorld(CustomMapCreatorMap customMapCreatorMap) {
-        return this.getSlimeWorlds().getOrDefault(customMapCreatorMap.getWorldFileName(), null);
+    public @Nullable CustomMapCreatorMap getMapCreatorMap(String mapName) {
+        return this.getMapCreatorMaps().get(mapName);
     }
 
     @Override
-    public void addSlimeWorld(String mapName, SlimeWorld slimeWorld) {
-        this.getSlimeWorlds().put(mapName, slimeWorld);
+    public void addMapCreatorMap(CustomMapCreatorMap customMapCreatorMap) {
+        this.getMapCreatorMaps().put(customMapCreatorMap.getFullMapName(), customMapCreatorMap);
     }
 
     @Override
-    public void removeSlimeWorld(String mapName) {
-        this.getSlimeWorlds().remove(mapName);
+    public void removeMapCreatorMap(CustomMapCreatorMap customMapCreatorMap) {
+        this.getMapCreatorMaps().remove(customMapCreatorMap.getFullMapName());
     }
 
     @Override

@@ -29,7 +29,7 @@ import java.util.Map;
  */
 public interface MapCreator {
 
-    Map<String, SlimeWorld> slimeWorlds = new HashMap<>();
+    Map<String, CustomMapCreatorMap> MAP_CREATOR_MAPS = new HashMap<>();
 
     void perform(Action action, CustomMapCreatorMap customMapCreatorMap, Callback<Performance> performanceCallback);
 
@@ -39,17 +39,17 @@ public interface MapCreator {
 
     SlimePropertyMap getSlimePropertyMap();
 
-    Map<String, SlimeWorld> getSlimeWorlds();
+    Map<String, CustomMapCreatorMap> getMapCreatorMaps();
 
     CustomMapCreatorInventory getCustomMapCreatorInventory();
 
-    List<String> getWorlds() throws IOException;
+    List<String> getSlimeLoaderWorlds() throws IOException;
 
-    @Nullable SlimeWorld getSlimeWorld(CustomMapCreatorMap customMapCreatorMap);
+    @Nullable CustomMapCreatorMap getMapCreatorMap(String mapName);
 
-    void addSlimeWorld(String mapName, SlimeWorld slimeWorld);
+    void addMapCreatorMap(CustomMapCreatorMap customMapCreatorMap);
 
-    void removeSlimeWorld(String mapName);
+    void removeMapCreatorMap(CustomMapCreatorMap customMapCreatorMap);
 
     void ensureNoPlayersLeftOnMap(Action action, CustomMapCreatorMap customMapCreatorMap, EmptyCallback emptyCallback);
 
@@ -57,19 +57,37 @@ public interface MapCreator {
 
     enum Action {
 
-        LOAD("mapcreator.action.item.load", 11, Material.SPYGLASS),
-        SAVE("mapcreator.action.item.save", 12, Material.CLOCK),
-        LEAVE("mapcreator.action.item.leave", 14, Material.GLASS_BOTTLE),
-        DELETE("mapcreator.action.item.delete", 15, Material.STRUCTURE_VOID);
+        LOAD("mapcreator.action.item.load", 11, Material.SPYGLASS, true),
+        SAVE("mapcreator.action.item.save", 13, Material.CLOCK, true),
+        LEAVE("mapcreator.action.item.leave", 14, Material.GLASS_BOTTLE, false),
+        DELETE("mapcreator.action.item.delete", 15, Material.STRUCTURE_VOID, false);
 
         @Getter String translationProperty;
         @Getter int actionItemSlot;
         @Getter Material actionItemMaterial;
+        @Getter boolean preActionRequired;
 
-        Action(String translationProperty, int actionItemSlot, Material actionItemMaterial) {
+        Action(String translationProperty, int actionItemSlot, Material actionItemMaterial, boolean preActionRequired) {
             this.translationProperty = translationProperty;
             this.actionItemSlot = actionItemSlot;
             this.actionItemMaterial = actionItemMaterial;
+            this.preActionRequired = preActionRequired;
+        }
+
+        public enum Player {
+
+            TELEPORT("inventory.section.category.maps.map.management.teleport", 12, Material.ENDER_EYE),
+            BACK("back", 18, Material.RED_DYE);
+
+            @Getter String translationProperty;
+            @Getter int actionItemSlot;
+            @Getter Material actionItemMaterial;
+
+            Player(String translationProperty, int actionItemSlot, Material actionItemMaterial) {
+                this.translationProperty = translationProperty;
+                this.actionItemSlot = actionItemSlot;
+                this.actionItemMaterial = actionItemMaterial;
+            }
         }
     }
 
@@ -167,7 +185,7 @@ public interface MapCreator {
             WORLD_USES_NEWER_VERSION_OF_SRF("mapcreator.performance.failure.reason.world.uses.newer.version.of.srf"),
             WORLD_IS_ALREADY_BEING_USED_BY_ANOTHER_SERVER("mapcreator.performance.failure.reason.world.is.already.being.used.by.another.server"),
             WORLD_NOT_FOUND("mapcreator.performance.failure.reason.world.not.found"),
-            WORLD_ALREADY_LOADED("mapcreator.performance.failure.reason.world.already.loaded");
+            WORLD_LOCKED("mapcreator.performance.failure.reason.world.locked");
 
             String translationProperty;
 

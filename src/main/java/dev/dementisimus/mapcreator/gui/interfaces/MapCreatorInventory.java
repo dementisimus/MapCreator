@@ -2,6 +2,7 @@ package dev.dementisimus.mapcreator.gui.interfaces;
 
 import com.grinderwolf.swm.api.exceptions.UnknownWorldException;
 import dev.dementisimus.capi.core.callback.BiCallback;
+import dev.dementisimus.capi.core.creators.InventoryCreator;
 import dev.dementisimus.capi.core.creators.ItemCreator;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
@@ -13,9 +14,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.PLAYER_INVENTORY_MAP_MANAGEMENT;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -27,28 +28,39 @@ import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.PLAYER_I
  */
 public interface MapCreatorInventory {
 
-    static void setMapManagementItem(Player player, String mapName) {
-        player.getInventory().setItem(8, new ItemCreator(Material.MOJANG_BANNER_PATTERN).setDisplayName(new BukkitTranslation(PLAYER_INVENTORY_MAP_MANAGEMENT).get(player, "$map$", mapName)).addAllFlags().apply());
+    SimpleDateFormat LOADED_SINCE_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy, HH:mm");
+
+    static void setMapManagementItem(Player player) {
+        player.getInventory().setItem(8, new ItemCreator(Material.MOJANG_BANNER_PATTERN).setDisplayName(new BukkitTranslation(Section.CATEGORY_MAPS_MAP_MANAGEMENT.getTitleTranslationProperty()).get(player)).addAllFlags().apply());
     }
 
-    void open(Player player, MapCreatorInventorySection inventorySection);
+    void open(Player player, Section inventorySection);
 
-    void fetch(Player player, MapCreatorInventorySection inventorySection, BiCallback<List<Document>, List<ItemStack>> fetchedItems) throws IOException, UnknownWorldException;
+    void fetch(Player player, Section inventorySection, CustomMapCreatorMap currentPlayerMap, BiCallback<List<Document>, List<ItemStack>> fetchedItems) throws IOException, UnknownWorldException;
 
-    void setCurrentPlayerMapCategory(Player player, String categoryName);
+    void setCurrentlyLoadedPlayerMap(Player player, String mapName);
 
-    void setCurrentPlayerMap(Player player, String mapName);
-
-    CustomMapCreatorMap getCurrentPlayerMap(Player player);
+    CustomMapCreatorMap getCurrentlyLoadedPlayerMap(Player player);
 
     CustomMapCreator getCustomMapCreator();
 
-    boolean worldAlreadyLoadedOnServer(Player player, String playerMap);
+    boolean worldAlreadyLoadedOnServer(String playerMap);
 
-    enum MapCreatorInventorySection {
+    CustomMapCreatorMap getCurrentlyViewedPlayerMap(Player player);
+
+    void setCurrentlyViewedPlayerMap(Player player, String mapName);
+
+    void setCurrentlyLoadedMap(Player player, CustomMapCreatorMap mapCreatorMap);
+
+    CustomMapCreatorMap getAppropriateSectionPlayerMap(Section inventorySection, Player player);
+
+    void setMapManagementActionItems(Player player, CustomMapCreatorMap mapCreatorMap, InventoryCreator inventoryCreator, Enum action, String translationProperty, int actionItemSlot, Material actionItemMaterial);
+
+    enum Section {
 
         CATEGORIES("map.creator.inventory.section.categories", Material.WHITE_STAINED_GLASS_PANE, 54, 28),
         CATEGORY_MAPS("map.creator.inventory.section.category.maps", Material.GREEN_STAINED_GLASS_PANE, 54, 28),
+        CATEGORY_MAPS_MAP_CHOOSE_ACTION("player.inventory.map.choose.action", Material.ORANGE_STAINED_GLASS_PANE, 27, 28),
         CATEGORY_MAPS_MAP_MANAGEMENT("player.inventory.map.management", Material.ORANGE_STAINED_GLASS_PANE, 27, 28);
 
         @Getter String titleTranslationProperty;
@@ -56,7 +68,7 @@ public interface MapCreatorInventory {
         @Getter int inventorySize;
         @Getter int maxItemsOnPage;
 
-        MapCreatorInventorySection(String titleTranslationProperty, Material inventoryPlaceholderMaterial, int inventorySize, int maxItemsOnPage) {
+        Section(String titleTranslationProperty, Material inventoryPlaceholderMaterial, int inventorySize, int maxItemsOnPage) {
             this.titleTranslationProperty = titleTranslationProperty;
             this.inventoryPlaceholderMaterial = inventoryPlaceholderMaterial;
             this.inventorySize = inventorySize;

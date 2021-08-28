@@ -30,7 +30,7 @@ public class CustomPlayerMapActions implements PlayerMapActions {
     public CustomPlayerMapActions(Player player, SlimeWorld slimeWorld) {
         this.player = player;
         this.slimeWorld = slimeWorld;
-        this.customMapCreatorMap = MapCreatorPlugin.getMapCreatorPlugin().getCustomMapCreator().getCustomMapCreatorInventory().getCurrentPlayerMap(player);
+        this.customMapCreatorMap = MapCreatorPlugin.getMapCreatorPlugin().getCustomMapCreator().getCustomMapCreatorInventory().getCurrentlyLoadedPlayerMap(player);
         this.getPlayer().getInventory().clear();
     }
 
@@ -42,9 +42,11 @@ public class CustomPlayerMapActions implements PlayerMapActions {
         int spawnY = slimePropertyMap.getValue(SlimeProperties.SPAWN_Y);
         int spawnZ = slimePropertyMap.getValue(SlimeProperties.SPAWN_Z);
         if(world != null) {
-            MapCreatorInventory.setMapManagementItem(this.player, this.customMapCreatorMap.getMapName());
+            MapCreatorInventory.setMapManagementItem(this.player);
             this.player.setGameMode(GameMode.CREATIVE);
             this.player.teleport(new Location(world, spawnX, spawnY, spawnZ));
+            this.player.setAllowFlight(true);
+            this.player.setFlying(true);
         }
     }
 

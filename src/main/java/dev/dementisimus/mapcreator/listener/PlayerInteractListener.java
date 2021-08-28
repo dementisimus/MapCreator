@@ -33,14 +33,14 @@ public class PlayerInteractListener implements Listener {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
         Action action = event.getAction();
-        CustomMapCreatorMap customMapCreatorMap = this.customMapCreatorInventory.getCurrentPlayerMap(player);
+        CustomMapCreatorMap customMapCreatorMap = this.customMapCreatorInventory.getCurrentlyLoadedPlayerMap(player);
 
         if(item != null && item.getItemMeta() != null) {
             String displayName = item.getItemMeta().getDisplayName();
             if(action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
                 if(customMapCreatorMap.getMapName() != null) {
-                    if(new BukkitTranslation(MapCreatorPlugin.Translations.PLAYER_INVENTORY_MAP_MANAGEMENT).matches(displayName, "$map$", customMapCreatorMap.getMapName())) {
-                        this.customMapCreatorInventory.open(player, MapCreatorInventory.MapCreatorInventorySection.CATEGORY_MAPS_MAP_MANAGEMENT);
+                    if(new BukkitTranslation(MapCreatorInventory.Section.CATEGORY_MAPS_MAP_MANAGEMENT.getTitleTranslationProperty()).matches(displayName)) {
+                        this.customMapCreatorInventory.open(player, MapCreatorInventory.Section.CATEGORY_MAPS_MAP_MANAGEMENT);
                     }
                 }
             }
