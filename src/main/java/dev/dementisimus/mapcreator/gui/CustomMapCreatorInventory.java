@@ -1,7 +1,6 @@
 package dev.dementisimus.mapcreator.gui;
 
 import com.grinderwolf.swm.api.exceptions.UnknownWorldException;
-import dev.dementisimus.capi.core.annotations.ToDo;
 import dev.dementisimus.capi.core.callback.BiCallback;
 import dev.dementisimus.capi.core.creators.InventoryCreator;
 import dev.dementisimus.capi.core.creators.ItemCreator;
@@ -48,7 +47,6 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
         this.customMapCreator = customMapCreator;
     }
 
-    @ToDo(tasks = {"add sign item on management/choose action page to display current map (category/mapname)"})
     @Override
     public void open(Player player, Section inventorySection) {
         List<ItemStack> items = new ArrayList<>();

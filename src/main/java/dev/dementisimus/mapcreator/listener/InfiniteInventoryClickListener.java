@@ -182,7 +182,11 @@ public class InfiniteInventoryClickListener implements Listener {
         }
     }
 
-    @ToDo(task = "handle performance failure reasons properly")
+    /*
+    *
+    * ToDo: handle performance failure reasons properly
+    *
+    * */
     private void handlePerformance(MapCreator.Action action, boolean closeInventory, CustomMapCreatorMap customMapCreatorMap, Player player) {
         if(closeInventory) player.closeInventory();
 
