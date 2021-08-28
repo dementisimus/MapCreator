@@ -36,19 +36,34 @@ jobs:
             restore-keys: ${{ runner.os }}-maven-
           
       - name: build
-        run: mvn -U clean package --file pom.xml
+        run: mvn -U clean package javadoc:javadoc --file pom.xml
             
       - name: pre-deploy
         run: |
-          mkdir ./to-deploy
-          cp ./target/${{ env.jar }} ./to-deploy/${{ env.jar }}
-          cp ./pom.xml ./to-deploy/${{ env.pom }}
+          mkdir ./artifacts
+          mkdir ./javadocs
+          cp ./target/${{ env.jar }} ./artifacts/${{ env.jar }}
+          cp ./pom.xml ./artifacts/${{ env.pom }}
+          cp -R ./target/site/apidocs/. ./javadocs
             
-      - name: deploy
+      - name: deploy artifacts
         uses: garygrossgarten/github-action-scp@v0.7.3
         with:
-            local: ./to-deploy
+            local: ./artifacts
             remote: /home/repo-deployment/repository/repositories/${{ env.stage }}/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/
+            concurrency: 5
+            host: ${{ secrets.SSH_HOST }}
+            username: ${{ secrets.SSH_USERNAME }}
+            password: ${{ secrets.SSH_PASSWORD }}
+            privateKey: ${{ secrets.PRIVATE_KEY}}
+            passphrase: ${{ secrets.PRIVATE_KEY_PASSPHRASE }}
+            
+      - name: deploy javadocs
+        uses: garygrossgarten/github-action-scp@v0.7.3
+        with:
+            local: ./javadocs
+            remote: /var/www/dementisimus.dev/html/docs/${{ env.stage }}/${{ env.name }}/${{ env.version }}/
+            concurrency: 5
             host: ${{ secrets.SSH_HOST }}
             username: ${{ secrets.SSH_USERNAME }}
             password: ${{ secrets.SSH_PASSWORD }}
