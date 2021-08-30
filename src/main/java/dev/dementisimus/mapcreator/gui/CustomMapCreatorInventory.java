@@ -73,10 +73,11 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                         customInfiniteInventory.open(inventoryCreator -> {
                             switch(inventorySection) {
                                 case CATEGORIES -> {
-                                    inventoryCreator.setItem(49, new ItemCreator(Material.LIME_DYE).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY).addLores(new String[]{" ", new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1).get(player), new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2).get(player)}).apply());
+                                    inventoryCreator.setItem(49, new ItemCreator(Material.GLOWSTONE_DUST).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY).addLores(new String[]{" ", new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1).get(player), new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2).get(player)}).apply());
                                 }
                                 case CATEGORY_MAPS -> {
                                     inventoryCreator.setItem(48, new ItemCreator(Material.RED_DYE).setDisplayName(player, MapCreatorPlugin.Translations.BACK).apply());
+                                    inventoryCreator.setItem(49, new ItemCreator(Material.SUGAR).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_IMPORT_MAP).apply());
                                     inventoryCreator.setItem(50, new ItemCreator(Material.LIME_DYE).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP).apply());
                                 }
                                 case CATEGORY_MAPS_MAP_CHOOSE_ACTION, CATEGORY_MAPS_MAP_MANAGEMENT -> {

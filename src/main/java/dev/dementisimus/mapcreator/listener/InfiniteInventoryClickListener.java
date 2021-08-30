@@ -1,7 +1,6 @@
 package dev.dementisimus.mapcreator.listener;
 
 import com.google.inject.Inject;
-import dev.dementisimus.capi.core.annotations.ToDo;
 import dev.dementisimus.capi.core.annotations.bukkit.BukkitListener;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.creators.infiniteinventory.events.InfiniteInventoryClickEvent;
@@ -183,10 +182,11 @@ public class InfiniteInventoryClickListener implements Listener {
     }
 
     /*
-    *
-    * ToDo: handle performance failure reasons properly
-    *
-    * */
+     *
+     * ToDo: handle performance failure reasons properly
+     * ToDO: handle pre-action & post-action messages/actions
+     *
+     * */
     private void handlePerformance(MapCreator.Action action, boolean closeInventory, CustomMapCreatorMap customMapCreatorMap, Player player) {
         if(closeInventory) player.closeInventory();
 

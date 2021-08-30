@@ -3,22 +3,26 @@ package dev.dementisimus.mapcreator;
 import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import dev.dementisimus.capi.core.CoreAPI;
-import dev.dementisimus.capi.core.config.Config;
 import dev.dementisimus.capi.core.core.BukkitCoreAPI;
 import dev.dementisimus.capi.core.databases.DataManagement;
-import dev.dementisimus.capi.core.setup.DefaultSetUpState;
-import dev.dementisimus.capi.core.setup.SetUpData;
+import dev.dementisimus.capi.core.language.Translation;
+import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
+import dev.dementisimus.capi.core.setup.SetupManager;
+import dev.dementisimus.capi.core.setup.states.type.SetupStateBoolean;
+import dev.dementisimus.capi.core.setup.states.type.SetupStateString;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.SlimeDataSource;
+import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
+import lombok.Getter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.SetupStates.DEFAULT_WORLD_FOR_USAGE;
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.SetupStates.MAPPOOL;
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.SetupStates.SET_DEFAULT_WORLD_INSTEAD_OF_WORLD;
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.SetupStates.USE_API_MODE_ONLY;
+import java.util.Locale;
+
+import static dev.dementisimus.mapcreator.MapCreatorPlugin.ExtraSetupStates.*;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -30,17 +34,14 @@ import static dev.dementisimus.mapcreator.MapCreatorPlugin.SetupStates.USE_API_M
  */
 public class MapCreatorPlugin extends JavaPlugin {
 
-    private static MapCreatorPlugin mapCreatorPlugin;
+    @Getter private static MapCreatorPlugin mapCreatorPlugin;
 
-    private CoreAPI coreAPI;
-    private BukkitCoreAPI bukkitCoreAPI;
-    private SlimePlugin slimePlugin;
-    private SlimeLoader slimeLoader;
-    private CustomMapCreator customMapCreator;
-
-    public static MapCreatorPlugin getMapCreatorPlugin() {
-        return mapCreatorPlugin;
-    }
+    @Getter private CoreAPI coreAPI;
+    @Getter private BukkitCoreAPI bukkitCoreAPI;
+    @Getter private SlimePlugin slimePlugin;
+    @Getter private SlimeLoader slimeLoader;
+    @Getter private CustomMapCreator customMapCreator;
+    @Getter private SetupManager setupManager;
 
     @Override
     public void onEnable() {
@@ -48,8 +49,18 @@ public class MapCreatorPlugin extends JavaPlugin {
         this.bukkitCoreAPI = new BukkitCoreAPI(this, true);
         this.coreAPI = this.bukkitCoreAPI.getCoreAPI();
 
-        this.coreAPI.prepareInit(new String[]{DefaultSetUpState.LANGUAGE.name(), MAPPOOL, DEFAULT_WORLD_FOR_USAGE, USE_API_MODE_ONLY}, () -> {
-            this.coreAPI.enableDatabaseUsage(new String[]{Storage.CATEGORIES}, new String[]{Storage.Rows.NAME});
+        this.coreAPI.prepareInit(() -> {
+            this.coreAPI.enableDatabase(new String[]{Storage.CATEGORIES}, new String[]{Storage.Rows.NAME});
+
+            this.setupManager = this.coreAPI.getSetupManager();
+
+            this.coreAPI.enableMainSetupStates();
+
+            this.coreAPI.enableExtraSetupState(WORLD_IMPORT_NEEDED);
+            this.coreAPI.enableExtraSetupState(WORLD_IMPORT_FOLDER_LOCATION);
+            this.coreAPI.enableExtraSetupState(API_MODE);
+            this.coreAPI.enableExtraSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS);
+            this.coreAPI.enableExtraSetupState(DEFAULT_WORLD);
 
             this.slimePlugin = this.retrieveSlimePlugin();
 
@@ -64,68 +75,42 @@ public class MapCreatorPlugin extends JavaPlugin {
             this.coreAPI.registerAdditionalModuleToInject(CustomMapCreatorInventory.class, this.getCustomMapCreator().getCustomMapCreatorInventory());
             this.coreAPI.registerAdditionalModuleToInject(DataManagement.class, this.bukkitCoreAPI.getCoreAPI().getDataManagement());
 
+            if(!this.setupManager.getSetupState(WORLD_IMPORT_NEEDED).isPresentInConfig(this.getCoreAPI())) {
+                if(this.getCoreAPI().getConfigFile().delete()) {
+                    System.out.println(new Translation(Translations.SETUP_OLD_VERSION_FOUND_RESTART_SETUP).get(Locale.ENGLISH, true));
+                }
+            }
+
             this.coreAPI.init(initializedCoreAPI -> {
-                new Config(this.getCoreAPI().getConfigFile()).read(result -> {
-                    if(result != null) {
-                        /*AbstractCreator.setWorldPoolFolder(result.getString(MAPPOOL.name()));
-                        SetUpData setUpData = this.getCoreAPI().getSetUpData();
-                        setUpData.setData(SET_DEFAULT_WORLD_INSTEAD_OF_WORLD, Boolean.parseBoolean(result.getString(SET_DEFAULT_WORLD_INSTEAD_OF_WORLD.name())));
-                        setUpData.setData(USE_API_MODE_ONLY, Boolean.parseBoolean(result.getString(USE_API_MODE_ONLY.name())));
-                        if(setUpData.getBoolean(SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
-                            setUpData.setData(DEFAULT_WORLD_FOR_USAGE, result.getString(DEFAULT_WORLD_FOR_USAGE.name()));
-                        }*/
-                    }
-                    this.registerOptionalCommands();
-                    this.setMapCreatorSettings();
-                });
+                if(!this.setupManager.getSetupState(API_MODE).getBoolean()) {
+                    this.getCoreAPI().setRegisterOptionalCommands(true);
+
+                    Bukkit.getScheduler().runTaskTimer(this, () -> {
+                        for(Player player : Bukkit.getOnlinePlayers()) {
+                            if(player != null) {
+                                String mapName = player.getWorld().getName();
+                                if(mapName.contains(MapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
+                                    player.sendActionBar(Component.text(new BukkitTranslation(Translations.PLAYER_ACTIONBAR_CURRENT_WORLD).get(player, "$world$", mapName)));
+                                }
+                            }
+                        }
+                    }, 30, 30);
+                }else {
+                    System.out.println(new Translation(Translations.API_MODE_ENABLED).get(true));
+                }
+                if(this.setupManager.getSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS).getBoolean()) {
+                    this.getCoreAPI().setRegisterOptionalListeners(true);
+                }
             });
         });
     }
 
-    private void registerOptionalCommands() {
-        SetUpData setUpData = this.getCoreAPI().getSetUpData();
-        if(!setUpData.getBoolean(USE_API_MODE_ONLY)) {
-            this.getCoreAPI().registerOptionalCommands(true);
-        }
-        if(setUpData.getBoolean(SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
-            this.getCoreAPI().registerOptionalListeners(true);
-        }
-    }
-
-    private void setMapCreatorSettings() {
-        Bukkit.getScheduler().runTask(this, () -> {
-            SetUpData setUpData = this.getCoreAPI().getSetUpData();
-            if(setUpData.getBoolean(SET_DEFAULT_WORLD_INSTEAD_OF_WORLD)) {
-                CustomMapCreator customMapCreator = new CustomMapCreator(this, "mongodb");
-                String mapEntry = setUpData.getString(DEFAULT_WORLD_FOR_USAGE);
-                String[] entry = (mapEntry.contains("/") ? mapEntry.split("/") : null);
-                String type;
-                String map;
-                if(entry == null) {
-                    type = "DEFAULTMAPS";
-                    map = mapEntry;
-                }else {
-                    type = entry[0];
-                    map = entry[1];
-                }
-            }
-            if(!setUpData.getBoolean(USE_API_MODE_ONLY)) {
-                Bukkit.getScheduler().runTaskTimer(this, () -> {
-                    for(Player player : Bukkit.getOnlinePlayers()) {
-                        if(player != null) {
-                            String mapName = player.getWorld().getName();
-                            /*if(!mapName.equalsIgnoreCase(CreatorConstants.DEFAULT_WORLD)) {
-                                player.sendActionBar(new BukkitTranslation(Translations.PLAYER_ACTIONBAR_CURRENTWORLD).get(player, "$world$", mapName));
-                            }*/
-                        }
-                    }
-                }, 30, 30);
-            }else {
-                //out.println(new BukkitTranslation(Translations.CONSOLE_API_ENABLED).get(true));
-            }
-        });
-    }
-
+    /*
+     *
+     * ToDO (before release): instead of throwing an Exception, print a "warning" message, download
+       the latest version of AdvancedSlimeWorldManager, load it as a plugin & set it up with the database credentials given!
+     *
+     * */
     private SlimePlugin retrieveSlimePlugin() {
         SlimePlugin plugin = (SlimePlugin) Bukkit.getPluginManager().getPlugin("SlimeWorldManager");
         if(plugin == null) {
@@ -134,32 +119,14 @@ public class MapCreatorPlugin extends JavaPlugin {
         return plugin;
     }
 
-    public CoreAPI getCoreAPI() {
-        return this.coreAPI;
-    }
+    public static class ExtraSetupStates {
 
-    public BukkitCoreAPI getBukkitCoreAPI() {
-        return this.bukkitCoreAPI;
-    }
+        public static final SetupStateBoolean WORLD_IMPORT_NEEDED = new SetupStateBoolean("WORLD_IMPORT_NEEDED", "setup.extra.state.world.import.needed");
+        public static final SetupStateString WORLD_IMPORT_FOLDER_LOCATION = new SetupStateString("WORLD_IMPORT_FOLDER_LOCATION", "setup.extra.state.world.import.folder.location");
+        public static final SetupStateBoolean API_MODE = new SetupStateBoolean("API_MODE", "setup.extra.state.api.mode");
+        public static final SetupStateBoolean USE_DEFAULT_WORLD_FOR_PLAYERS = new SetupStateBoolean("USE_DEFAULT_WORLD_FOR_PLAYERS", "setup.extra.state.use.default.world.for.players");
+        public static final SetupStateString DEFAULT_WORLD = new SetupStateString("DEFAULT_WORLD", "setup.extra.state.default.world");
 
-    public SlimePlugin getSlimePlugin() {
-        return this.slimePlugin;
-    }
-
-    public SlimeLoader getSlimeLoader() {
-        return this.slimeLoader;
-    }
-
-    public CustomMapCreator getCustomMapCreator() {
-        return this.customMapCreator;
-    }
-
-    public static class SetupStates {
-
-        public static final String MAPPOOL = "MAPPOOL";
-        public static final String SET_DEFAULT_WORLD_INSTEAD_OF_WORLD = "SET_DEFAULT_WORLD_INSTEAD_OF_WORLD";
-        public static final String DEFAULT_WORLD_FOR_USAGE = "DEFAULT_WORLD_FOR_USAGE";
-        public static final String USE_API_MODE_ONLY = "USE_API_MODE_ONLY";
     }
 
     public static class Storage {
@@ -185,6 +152,10 @@ public class MapCreatorPlugin extends JavaPlugin {
 
     public static class Translations {
 
+        public static final String SETUP_OLD_VERSION_FOUND_RESTART_SETUP = "setup.old.version.found.restart.setup";
+
+        public static final String API_MODE_ENABLED = "api.mode.enabled";
+
         public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY = "inventory.section.categories.add";
         public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_SIGN_INSTRUCTION = "inventory.section.categories.add.sign.instruction";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP = "inventory.section.category.create.map";
@@ -195,5 +166,9 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_LEFT_CLICK = "inventory.section.maps.map.action.left.click";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_LOADED_BY = "inventory.section.category.maps.map.loaded.by";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_LOADED_SINCE = "inventory.section.category.maps.map.loaded.since";
+        public static final String INVENTORY_SECTION_CATEGORY_MAPS_IMPORT_MAP = "inventory.section.category.maps.import.map";
+
+        public static final String PLAYER_ACTIONBAR_CURRENT_WORLD = "player.actionbar.current.world";
+
     }
 }
