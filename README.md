@@ -3,7 +3,7 @@
 ### *an easy && lightweight Plugin / and or API // for creating/loading custom maps for your custom needs!*
 ------------
 
-## some impressions first
+## some impressions first (outdated)
 
 ![](https://dementisimus.dev/img/MapCreator/commandOutput.jpg)
 
@@ -21,7 +21,7 @@
 
 ![](https://dementisimus.dev/img/MapCreator/treeCommandOutputAfterSaving.jpg)
 
-## Features
+## Features (outdated)
 
 - **easy** installation && setup via **console** on server startup
 - possibility to **choose** between **MongoDB**, **MariaDB** or **SQLite**
@@ -37,25 +37,7 @@
 - **issues** can be **reported** [here](https://discord.gg/sTRg8A7 "here")
 - [have a look at upcoming features on GitHub!](https://github.com/dementisimus/MapCreator/projects "have a look at upcoming features on GitHub!")
 
-## default world settings:
-
-+ ### load worlds by adding 'true' to the command to apply these options (GameRules):
-
-  » **autoSave** = _true_;
-  <br>
-  » **RANDOM_TICK_SPEED** = _0_;
-  <br>
-  » **DO_FIRE_TICK** = _false_;
-  <br>
-  » **DO_DAYLIGHT_CYCLE** = _false_;
-  <br>
-  » **DO_WEATHER_CYCLE** = _false_;
-  <br>
-  » **DO_MOB_SPAWNING** = _false_;
-  <br>
-  » **MOB_GRIEFING** = _false_;
-
-## API-Usage
+## API-Usage (outdated)
 
 ```xml
 <!-- dementisimus.dev-Repository -->
@@ -96,9 +78,15 @@ mapCreatorAPI#load(boolean useDefaultWorldSettings); //(use loadSync for using w
 # !!! read this carefully before downloading !!!
 > **- in order to use this plugin properly, you need to use Java >16 & [Paper by PaperMC](https://papermc.io/downloads "Paper by PaperMC") >1.17! (Paper is an extension/fork of Spigot by SpigotMC, which implements many useful features!)**
 
+## Credits
+
+**special thanks** goes to
+  - the **team & community** of [Advanced-Slime-World-Manager](https://github.com/Paul19988/Advanced-Slime-World-Manager)
+    - for creating such awesome software!
+
 ## installation
 
-### » **you can find an example for your defaultWorld [here](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/DEFAULTMAPS/defaultWorld.zip "here")!**
+###  (outdated) » **you can find an example for your defaultWorld [here](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/DEFAULTMAPS/defaultWorld.zip "here")!**
 
 - **[If your server is currently running, make sure you stop him, do NOT reload your server!]**
 - **put this plugin** into the **plugin folder** of **your** **server**.
