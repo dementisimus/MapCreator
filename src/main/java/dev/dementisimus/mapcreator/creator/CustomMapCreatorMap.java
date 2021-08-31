@@ -2,11 +2,7 @@ package dev.dementisimus.mapcreator.creator;
 
 import com.google.common.base.Preconditions;
 import com.grinderwolf.swm.api.SlimePlugin;
-import com.grinderwolf.swm.api.exceptions.CorruptedWorldException;
-import com.grinderwolf.swm.api.exceptions.NewerFormatException;
 import com.grinderwolf.swm.api.exceptions.UnknownWorldException;
-import com.grinderwolf.swm.api.exceptions.WorldAlreadyExistsException;
-import com.grinderwolf.swm.api.exceptions.WorldInUseException;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
@@ -21,6 +17,7 @@ import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 /**
@@ -36,6 +33,10 @@ public class CustomMapCreatorMap implements MapCreatorMap {
 
     @Getter private final SlimePlugin slimePlugin;
     @Getter private final SlimeLoader slimeLoader;
+
+    @Getter
+    @Setter
+    private File importableWorldFile;
 
     @Getter
     @Setter
@@ -70,20 +71,26 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
-    public void load(boolean readOnly, SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) throws CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException, IOException, WorldAlreadyExistsException {
+    public void load(boolean readOnly, SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
         MapCreator.Performance performance = new MapCreator.Performance();
         if(!this.isLocked()) {
-            SlimeWorld slimeWorld;
-            if(this.exists()) {
-                slimeWorld = this.getSlimePlugin().loadWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap);
-            }else {
-                slimeWorld = this.getSlimePlugin().createEmptyWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap);
+            SlimeWorld slimeWorld = null;
+            try {
+                if(this.exists()) {
+                    slimeWorld = this.getSlimePlugin().loadWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap);
+                }else {
+                    slimeWorld = this.getSlimePlugin().createEmptyWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap);
+                }
+            }catch(Exception exception) {
+                performance.setSuccess(exception);
             }
-            performance.setSlimeWorld(slimeWorld);
-            performance.setSuccess();
-            this.setLoadedSince(new Date());
+            if(slimeWorld != null) {
+                performance.setSlimeWorld(slimeWorld);
+                performance.setSuccess();
+                this.setLoadedSince(new Date());
+            }
         }else {
             performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_LOCKED);
         }
@@ -91,21 +98,25 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
-    public void save(boolean save, SlimeWorld slimeWorld, Callback<MapCreator.Performance> performanceCallback) throws IOException {
+    public void save(boolean save, SlimeWorld slimeWorld, Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
         MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
         World world = Bukkit.getWorld(this.getWorldFileName());
         if(world != null) {
             if(this.exists()) {
-                if(save) this.getSlimeLoader().saveWorld(this.getWorldFileName(), ((CraftSlimeWorld) slimeWorld).serialize(), false);
-                if(world.getPlayers().isEmpty()) {
-                    performance.setSuccess();
-                    BukkitSynchronousExecutor.execute(MapCreatorPlugin.getMapCreatorPlugin(), () -> {
-                        Bukkit.unloadWorld(world, save);
-                    });
-                }else {
-                    performance.setSuccess(MapCreator.Performance.FailureReason.PLAYERS_ON_MAP);
+                try {
+                    if(save) this.getSlimeLoader().saveWorld(this.getWorldFileName(), ((CraftSlimeWorld) slimeWorld).serialize(), false);
+                    if(world.getPlayers().isEmpty()) {
+                        performance.setSuccess();
+                        BukkitSynchronousExecutor.execute(MapCreatorPlugin.getMapCreatorPlugin(), () -> {
+                            Bukkit.unloadWorld(world, save);
+                        });
+                    }else {
+                        performance.setSuccess(MapCreator.Performance.FailureReason.PLAYERS_ON_MAP);
+                    }
+                }catch(Exception exception) {
+                    performance.setSuccess(exception);
                 }
             }else {
                 performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_DOES_NOT_EXIST);
@@ -117,13 +128,17 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
-    public void delete(Callback<MapCreator.Performance> performanceCallback) throws UnknownWorldException, IOException {
+    public void delete(Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
         MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
         if(this.exists()) {
-            this.slimeLoader.deleteWorld(this.getWorldFileName());
-            performance.setSuccess();
+            try {
+                this.slimeLoader.deleteWorld(this.getWorldFileName());
+                performance.setSuccess();
+            }catch(Exception exception) {
+                performance.setSuccess(exception);
+            }
         }else {
             performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_DOES_NOT_EXIST);
         }
@@ -131,10 +146,32 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
-    public void leave(Callback<MapCreator.Performance> performanceCallback) throws IOException {
+    public void leave(Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
         this.save(false, null, performanceCallback);
+    }
+
+    @Override
+    public void importWorld(Callback<MapCreator.Performance> performanceCallback) {
+        this.checkArguments();
+
+        MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
+        if(this.getImportableWorldFile() != null) {
+            if(!this.exists()) {
+                try {
+                    this.slimePlugin.importWorld(this.getImportableWorldFile(), this.getFileName(), this.slimeLoader);
+                    performance.setSuccess();
+                }catch(Exception exception) {
+                    performance.setSuccess(exception);
+                }
+            }else {
+                performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_ALREADY_EXISTS_IN_DATA_SOURCE);
+            }
+        }else {
+            performance.setSuccess(MapCreator.Performance.FailureReason.NO_IMPORTABLE_WORLD);
+        }
+        performanceCallback.done(performance);
     }
 
     @Override
@@ -174,12 +211,12 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
-    public String getFullMapName() {
+    public String getFileName() {
         return this.getCategoryIdentifier() + this.getMapName();
     }
 
     @Override
-    public String getNiceFullMapName() {
+    public String getPrettyFileName() {
         return "§c§l" + this.getMapCategory() + "§7/§7§l" + this.getMapName();
     }
 }

@@ -1,7 +1,7 @@
 package dev.dementisimus.mapcreator.command;
 
 import com.google.inject.Inject;
-import dev.dementisimus.capi.core.annotations.bukkit.BukkitCommand;
+import dev.dementisimus.capi.core.annotations.bukkit.OptionalBukkitCommand;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
  * @author dementisimus
  * @since 24.07.2021:22:06
  */
-@BukkitCommand(name = "mapcreator", nameAliases = {"mc"}, additionalModulesToInject = {MapCreatorPlugin.class})
+@OptionalBukkitCommand(name = "mapcreator", nameAliases = {"mc"}, additionalModulesToInject = {MapCreatorPlugin.class})
 public class MapCreatorCommand implements CommandExecutor {
 
     @Inject MapCreatorPlugin mapCreatorPlugin;

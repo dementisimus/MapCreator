@@ -58,21 +58,24 @@ public interface MapCreatorInventory {
 
     enum Section {
 
-        CATEGORIES("map.creator.inventory.section.categories", Material.WHITE_STAINED_GLASS_PANE, 54, 28),
-        CATEGORY_MAPS("map.creator.inventory.section.category.maps", Material.GREEN_STAINED_GLASS_PANE, 54, 28),
-        CATEGORY_MAPS_MAP_CHOOSE_ACTION("player.inventory.map.choose.action", Material.ORANGE_STAINED_GLASS_PANE, 27, 28),
-        CATEGORY_MAPS_MAP_MANAGEMENT("player.inventory.map.management", Material.ORANGE_STAINED_GLASS_PANE, 27, 28);
+        CATEGORIES("map.creator.inventory.section.categories", Material.WHITE_STAINED_GLASS_PANE, 54, 28, false),
+        CATEGORY_MAPS("map.creator.inventory.section.category.maps", Material.GREEN_STAINED_GLASS_PANE, 54, 28, true),
+        CATEGORY_MAPS_MAP_CHOOSE_ACTION("player.inventory.map.choose.action", Material.ORANGE_STAINED_GLASS_PANE, 27, 28, true),
+        CATEGORY_MAPS_MAP_MANAGEMENT("player.inventory.map.management", Material.ORANGE_STAINED_GLASS_PANE, 27, 28, false),
+        WORLDS_IMPORTER_CATEGORIES("worlds.importer.categories", Material.YELLOW_STAINED_GLASS_PANE, 54, 28, true);
 
         @Getter String titleTranslationProperty;
         @Getter Material inventoryPlaceholderMaterial;
         @Getter int inventorySize;
         @Getter int maxItemsOnPage;
+        @Getter boolean requiresViewableMapInfo;
 
-        Section(String titleTranslationProperty, Material inventoryPlaceholderMaterial, int inventorySize, int maxItemsOnPage) {
+        Section(String titleTranslationProperty, Material inventoryPlaceholderMaterial, int inventorySize, int maxItemsOnPage, boolean requiresViewableMapInfo) {
             this.titleTranslationProperty = titleTranslationProperty;
             this.inventoryPlaceholderMaterial = inventoryPlaceholderMaterial;
             this.inventorySize = inventorySize;
             this.maxItemsOnPage = maxItemsOnPage;
+            this.requiresViewableMapInfo = requiresViewableMapInfo;
         }
     }
 }

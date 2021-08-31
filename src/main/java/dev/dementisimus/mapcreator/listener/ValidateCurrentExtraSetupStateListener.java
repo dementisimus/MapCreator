@@ -9,7 +9,7 @@ import org.bukkit.event.Listener;
 import java.io.File;
 
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.ExtraSetupStates.DEFAULT_WORLD;
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.ExtraSetupStates.WORLD_IMPORT_FOLDER_LOCATION;
+import static dev.dementisimus.mapcreator.MapCreatorPlugin.ExtraSetupStates.WORLD_IMPORTER_FOLDER_LOCATION;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -27,7 +27,7 @@ public class ValidateCurrentExtraSetupStateListener implements Listener {
         SetupState currentSetupState = event.getCurrentSetupState();
         String input = event.getInput();
 
-        if(currentSetupState.equals(WORLD_IMPORT_FOLDER_LOCATION)) {
+        if(currentSetupState.equals(WORLD_IMPORTER_FOLDER_LOCATION)) {
             File worldImportFolder = new File(input);
             if(!worldImportFolder.exists() || !worldImportFolder.isDirectory()) {
                 event.setValidInput(false);

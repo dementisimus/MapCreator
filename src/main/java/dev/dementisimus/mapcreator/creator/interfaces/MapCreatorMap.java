@@ -1,15 +1,8 @@
 package dev.dementisimus.mapcreator.creator.interfaces;
 
-import com.grinderwolf.swm.api.exceptions.CorruptedWorldException;
-import com.grinderwolf.swm.api.exceptions.NewerFormatException;
-import com.grinderwolf.swm.api.exceptions.UnknownWorldException;
-import com.grinderwolf.swm.api.exceptions.WorldAlreadyExistsException;
-import com.grinderwolf.swm.api.exceptions.WorldInUseException;
 import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import dev.dementisimus.capi.core.callback.Callback;
-
-import java.io.IOException;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -23,13 +16,15 @@ public interface MapCreatorMap {
 
     String CATEGORY_MAP_SEPARATOR = "...";
 
-    void load(boolean readOnly, SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) throws CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException, IOException, WorldAlreadyExistsException;
+    void load(boolean readOnly, SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback);
 
-    void save(boolean save, SlimeWorld slimeWorld, Callback<MapCreator.Performance> performanceCallback) throws IOException;
+    void save(boolean save, SlimeWorld slimeWorld, Callback<MapCreator.Performance> performanceCallback);
 
-    void delete(Callback<MapCreator.Performance> performanceCallback) throws UnknownWorldException, IOException;
+    void delete(Callback<MapCreator.Performance> performanceCallback);
 
-    void leave(Callback<MapCreator.Performance> performanceCallback) throws IOException;
+    void leave(Callback<MapCreator.Performance> performanceCallback);
+
+    void importWorld(Callback<MapCreator.Performance> performanceCallback);
 
     boolean isLocked();
 
@@ -41,7 +36,7 @@ public interface MapCreatorMap {
 
     String getCategoryIdentifier();
 
-    String getFullMapName();
+    String getFileName();
 
-    String getNiceFullMapName();
+    String getPrettyFileName();
 }

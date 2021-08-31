@@ -25,9 +25,9 @@ public class SetNextExtraSetupStateListener implements Listener {
         SetupManager setupManager = event.getSetupManager();
         SetupState currentSetupState = event.getCurrentSetupState();
 
-        if(currentSetupState.equals(WORLD_IMPORT_NEEDED)) {
-            if(setupManager.getSetupState(WORLD_IMPORT_NEEDED).getBoolean()) {
-                event.setNextSetupState(WORLD_IMPORT_FOLDER_LOCATION);
+        if(currentSetupState.equals(WORLD_IMPORTER_REQUIRED)) {
+            if(setupManager.getSetupState(WORLD_IMPORTER_REQUIRED).getBoolean()) {
+                event.setNextSetupState(WORLD_IMPORTER_FOLDER_LOCATION);
             }else {
                 event.setNextSetupState(API_MODE);
             }

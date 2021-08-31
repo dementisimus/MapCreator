@@ -1,5 +1,6 @@
 package dev.dementisimus.mapcreator.creator.interfaces;
 
+import com.grinderwolf.swm.api.exceptions.*;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
@@ -60,7 +61,8 @@ public interface MapCreator {
         LOAD("mapcreator.action.item.load", 11, Material.SPYGLASS, true),
         SAVE("mapcreator.action.item.save", 13, Material.CLOCK, true),
         LEAVE("mapcreator.action.item.leave", 14, Material.GLASS_BOTTLE, false),
-        DELETE("mapcreator.action.item.delete", 15, Material.STRUCTURE_VOID, false);
+        DELETE("mapcreator.action.item.delete", 15, Material.STRUCTURE_VOID, false),
+        IMPORT("", -1, Material.AIR, false);
 
         @Getter String translationProperty;
         @Getter int actionItemSlot;
@@ -152,6 +154,29 @@ public interface MapCreator {
             return this;
         }
 
+        public Performance setSuccess(Exception exception) {
+            if(exception instanceof UnknownWorldException) {
+                this.failureReason = FailureReason.WORLD_NOT_FOUND;
+            }else if(exception instanceof IOException) {
+                this.failureReason = FailureReason.NOT_ABLE_TO_OBTAIN_FROM_DATA_SOURCE;
+            }else if(exception instanceof CorruptedWorldException) {
+                this.failureReason = FailureReason.CORRUPTED_WORLD;
+            }else if(exception instanceof NewerFormatException) {
+                this.failureReason = FailureReason.WORLD_USES_NEWER_VERSION_OF_SRF;
+            }else if(exception instanceof WorldInUseException) {
+                this.failureReason = FailureReason.WORLD_IS_ALREADY_BEING_USED_BY_ANOTHER_SERVER;
+            }else if(exception instanceof WorldAlreadyExistsException) {
+                this.failureReason = FailureReason.WORLD_ALREADY_EXISTS_IN_DATA_SOURCE;
+            }else if(exception instanceof InvalidWorldException) {
+                this.failureReason = FailureReason.INVALID_WORLD;
+            }else if(exception instanceof WorldLoadedException) {
+                this.failureReason = FailureReason.WORLD_ALREADY_LOADED;
+            }else if(exception instanceof WorldTooBigException) {
+                this.failureReason = FailureReason.WORLD_TOO_BIG;
+            }
+            return this;
+        }
+
         public Performance setSuccess() {
             this.success = true;
             return this;
@@ -185,7 +210,11 @@ public interface MapCreator {
             WORLD_USES_NEWER_VERSION_OF_SRF("mapcreator.performance.failure.reason.world.uses.newer.version.of.srf"),
             WORLD_IS_ALREADY_BEING_USED_BY_ANOTHER_SERVER("mapcreator.performance.failure.reason.world.is.already.being.used.by.another.server"),
             WORLD_NOT_FOUND("mapcreator.performance.failure.reason.world.not.found"),
-            WORLD_LOCKED("mapcreator.performance.failure.reason.world.locked");
+            WORLD_LOCKED("mapcreator.performance.failure.reason.world.locked"),
+            INVALID_WORLD("mapcreator.performance.failure.reason.invalid.world"),
+            WORLD_ALREADY_LOADED("mapcreator.performance.failure.reason.world.already.loaded"),
+            WORLD_TOO_BIG("mapcreator.performance.failure.reason.world.too.big"),
+            NO_IMPORTABLE_WORLD("mapcreator.performance.failure.reason.no.importable.world");
 
             String translationProperty;
 

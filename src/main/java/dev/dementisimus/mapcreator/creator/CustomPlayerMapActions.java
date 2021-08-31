@@ -31,6 +31,9 @@ public class CustomPlayerMapActions implements PlayerMapActions {
         this.player = player;
         this.slimeWorld = slimeWorld;
         this.customMapCreatorMap = MapCreatorPlugin.getMapCreatorPlugin().getCustomMapCreator().getCustomMapCreatorInventory().getCurrentlyLoadedPlayerMap(player);
+        /*
+         * ToDo: check if player is in slimeWorld, if false, do not clear inventory
+         * */
         this.getPlayer().getInventory().clear();
     }
 

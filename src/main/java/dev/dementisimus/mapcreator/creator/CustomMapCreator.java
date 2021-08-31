@@ -1,11 +1,6 @@
 package dev.dementisimus.mapcreator.creator;
 
 import com.grinderwolf.swm.api.SlimePlugin;
-import com.grinderwolf.swm.api.exceptions.CorruptedWorldException;
-import com.grinderwolf.swm.api.exceptions.NewerFormatException;
-import com.grinderwolf.swm.api.exceptions.UnknownWorldException;
-import com.grinderwolf.swm.api.exceptions.WorldAlreadyExistsException;
-import com.grinderwolf.swm.api.exceptions.WorldInUseException;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
@@ -17,8 +12,11 @@ import dev.dementisimus.capi.core.callback.EmptyCallback;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.capi.core.pools.ThreadPool;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
+import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +41,10 @@ public class CustomMapCreator implements MapCreator {
     private final SlimeLoader slimeLoader;
     private final CustomMapCreatorInventory customMapCreatorInventory;
 
+    @Getter
+    @Setter
+    private CustomWorldImporter customWorldImporter;
+
     public CustomMapCreator(MapCreatorPlugin mapCreatorPlugin, String slimeDataSource) {
         this.mapCreatorPlugin = mapCreatorPlugin;
         this.slimePlugin = this.mapCreatorPlugin.getSlimePlugin();
@@ -56,29 +58,12 @@ public class CustomMapCreator implements MapCreator {
         this.ensureNoPlayersLeftOnMap(action, customMapCreatorMap, () -> {
             ThreadPool.execute(() -> {
                 AtomicReference<Performance> performance = new AtomicReference<>(new Performance((SlimeWorld) null));
-                try {
-                    switch(action) {
-                        case LOAD -> customMapCreatorMap.load(false, this.getSlimePropertyMap(), performance :: set);
-                        case SAVE -> customMapCreatorMap.save(true, customMapCreatorMap.getSlimeWorld(), performance :: set);
-                        case LEAVE -> customMapCreatorMap.leave(performance :: set);
-                        case DELETE -> customMapCreatorMap.delete(performance :: set);
-                    }
-                }catch(IOException | WorldAlreadyExistsException | CorruptedWorldException | NewerFormatException | WorldInUseException | UnknownWorldException ex) {
-                    if(ex instanceof IOException) {
-                        performance.get().setSuccess(Performance.FailureReason.NOT_ABLE_TO_OBTAIN_FROM_DATA_SOURCE);
-                    }else if(ex instanceof WorldAlreadyExistsException) {
-                        performance.get().setSuccess(Performance.FailureReason.WORLD_ALREADY_EXISTS_IN_DATA_SOURCE);
-                    }else if(ex instanceof CorruptedWorldException) {
-                        performance.get().setSuccess(Performance.FailureReason.CORRUPTED_WORLD);
-                    }else if(ex instanceof NewerFormatException) {
-                        performance.get().setSuccess(Performance.FailureReason.WORLD_USES_NEWER_VERSION_OF_SRF);
-                    }else if(ex instanceof WorldInUseException) {
-                        performance.get().setSuccess(Performance.FailureReason.WORLD_IS_ALREADY_BEING_USED_BY_ANOTHER_SERVER);
-                    }else if(ex instanceof UnknownWorldException) {
-                        performance.get().setSuccess(Performance.FailureReason.WORLD_NOT_FOUND);
-                    }
-                    performanceCallback.done(performance.get());
-                    return;
+                switch(action) {
+                    case LOAD -> customMapCreatorMap.load(false, this.getSlimePropertyMap(), performance :: set);
+                    case SAVE -> customMapCreatorMap.save(true, customMapCreatorMap.getSlimeWorld(), performance :: set);
+                    case LEAVE -> customMapCreatorMap.leave(performance :: set);
+                    case DELETE -> customMapCreatorMap.delete(performance :: set);
+                    case IMPORT -> customMapCreatorMap.importWorld(performance :: set);
                 }
                 performance.get().setAction(action);
                 BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> {
@@ -143,12 +128,12 @@ public class CustomMapCreator implements MapCreator {
 
     @Override
     public void addMapCreatorMap(CustomMapCreatorMap customMapCreatorMap) {
-        this.getMapCreatorMaps().put(customMapCreatorMap.getFullMapName(), customMapCreatorMap);
+        this.getMapCreatorMaps().put(customMapCreatorMap.getFileName(), customMapCreatorMap);
     }
 
     @Override
     public void removeMapCreatorMap(CustomMapCreatorMap customMapCreatorMap) {
-        this.getMapCreatorMaps().remove(customMapCreatorMap.getFullMapName());
+        this.getMapCreatorMaps().remove(customMapCreatorMap.getFileName());
     }
 
     @Override
