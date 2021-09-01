@@ -13,6 +13,7 @@ import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
+import dev.dementisimus.mapcreator.creator.templates.interfaces.MapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
 import org.bson.Document;
@@ -68,30 +69,37 @@ public class InfiniteInventoryClickListener implements Listener {
             switch(currentSection) {
                 case CATEGORIES -> {
                     if(isInRange) {
-                        this.customMapCreatorInventory.getCurrentlyViewedPlayerMap(player).setMapCategory(displayName);
-                        this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
+                        if(!new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND).matches(displayName)) {
+                            this.customMapCreatorInventory.getCurrentlyViewedPlayerMap(player).setMapCategory(displayName);
+                            this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
+                        }
                     }else {
                         if(new BukkitTranslation(INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY).matches(displayName)) {
                             Material icon = player.getItemOnCursor().getType().equals(Material.AIR) ? Material.PAPER : player.getItemOnCursor().getType();
                             player.setItemOnCursor(null);
                             this.fetchInput(player, true, newCategory -> {
                                 if(newCategory != null) {
-                                    newCategory = newCategory.toUpperCase();
-                                    this.dataManagement.setRequirements(MapCreatorPlugin.Storage.CATEGORIES, MapCreatorPlugin.Storage.Categories.NAME, newCategory);
+                                    if(!newCategory.equalsIgnoreCase(MapTemplates.CATEGORY_TEMPLATES)) {
+                                        newCategory = newCategory.toUpperCase();
+                                        this.dataManagement.setRequirements(MapCreatorPlugin.Storage.CATEGORIES, MapCreatorPlugin.Storage.Categories.NAME, newCategory);
 
-                                    Document document = new Document();
-                                    document.append(MapCreatorPlugin.Storage.Categories.NAME, newCategory);
-                                    document.append(MapCreatorPlugin.Storage.Categories.ICON, icon.name());
+                                        Document document = new Document();
+                                        document.append(MapCreatorPlugin.Storage.Categories.NAME, newCategory);
+                                        document.append(MapCreatorPlugin.Storage.Categories.ICON, icon.name());
 
-                                    this.dataManagement.update(document, updated -> {
-                                        if(!updated) {
-                                            this.dataManagement.write(document, done -> {
+                                        this.dataManagement.update(document, updated -> {
+                                            if(!updated) {
+                                                this.dataManagement.write(document, done -> {
+                                                    this.customMapCreatorInventory.open(player, CATEGORIES);
+                                                });
+                                            }else {
                                                 this.customMapCreatorInventory.open(player, CATEGORIES);
-                                            });
-                                        }else {
-                                            this.customMapCreatorInventory.open(player, CATEGORIES);
-                                        }
-                                    });
+                                            }
+                                        });
+                                    }else {
+                                        player.playSound(player.getLocation(), Sound.ENTITY_PIGLIN_BRUTE_ANGRY, 10, 1);
+                                        this.customMapCreatorInventory.open(player, CATEGORIES);
+                                    }
                                 }else {
                                     this.customMapCreatorInventory.open(player, CATEGORIES);
                                 }
@@ -104,20 +112,22 @@ public class InfiniteInventoryClickListener implements Listener {
 
                     if(currentlyViewedPlayerMap != null) {
                         if(isInRange) {
-                            this.customMapCreatorInventory.setCurrentlyViewedPlayerMap(player, displayName);
+                            if(!new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND).matches(displayName)) {
+                                this.customMapCreatorInventory.setCurrentlyViewedPlayerMap(player, displayName);
 
-                            MapCreatorInventory.Section section = null;
-                            if(event.isRightClick()) {
-                                if(!this.customMapCreatorInventory.worldAlreadyLoadedOnServer(currentlyViewedPlayerMap.getFileName())) {
-                                    this.handlePerformance(MapCreator.Action.LOAD, true, currentlyViewedPlayerMap, player);
-                                }else {
-                                    section = MapCreatorInventory.Section.CATEGORY_MAPS_MAP_CHOOSE_ACTION;
+                                MapCreatorInventory.Section section = null;
+                                if(event.isRightClick()) {
+                                    if(!this.customMapCreatorInventory.worldAlreadyLoadedOnServer(currentlyViewedPlayerMap.getFileName())) {
+                                        this.handlePerformance(MapCreator.Action.LOAD, true, currentlyViewedPlayerMap, player);
+                                    }else {
+                                        section = MapCreatorInventory.Section.CATEGORY_MAPS_MAP_CHOOSE_ACTION;
+                                    }
+                                }else if(event.isLeftClick()) {
+                                    section = CATEGORY_MAPS_MAP_CHOOSE_ACTION;
                                 }
-                            }else if(event.isLeftClick()) {
-                                section = CATEGORY_MAPS_MAP_CHOOSE_ACTION;
-                            }
-                            if(section != null) {
-                                this.customMapCreatorInventory.open(player, section);
+                                if(section != null) {
+                                    this.customMapCreatorInventory.open(player, section);
+                                }
                             }
                         }else {
                             if(new BukkitTranslation(INVENTORY_SECTION_CATEGORY_CREATE_MAP).matches(displayName)) {
@@ -227,7 +237,6 @@ public class InfiniteInventoryClickListener implements Listener {
 
     /*
      *
-     * ToDo: handle performance failure reasons properly
      * ToDO: handle pre-action & post-action messages/actions
      *
      * */
@@ -252,7 +261,7 @@ public class InfiniteInventoryClickListener implements Listener {
                 }
                 player.sendMessage("post-action");
             }else {
-                player.sendMessage("FAILURE_REASON: " + performance.getFailureReason());
+                performance.announceFailure(player);
                 player.playSound(player.getLocation(), Sound.ENTITY_CHICKEN_DEATH, 20, 1);
             }
         });

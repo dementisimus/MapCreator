@@ -7,18 +7,22 @@ import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.plugin.config.WorldData;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.callback.EmptyCallback;
+import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
+import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.CustomPlayerMapActions;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -99,6 +103,7 @@ public interface MapCreator {
         private SlimeWorld slimeWorld;
         private boolean success;
         private FailureReason failureReason;
+        private FailureAnnouncement failureAnnouncement;
 
         public Performance() {
 
@@ -151,28 +156,35 @@ public interface MapCreator {
         public Performance setSuccess(FailureReason failureReason) {
             this.success = false;
             this.failureReason = failureReason;
+
+            BukkitTranslation message = new BukkitTranslation(MapCreatorPlugin.Translations.MAPCREATOR_PERFORMANCE_FAILURE);
+            BukkitTranslation failureMessage = new BukkitTranslation(this.failureReason.getTranslationProperty());
+            String[] targets = new String[]{"$action$", "$failureReason$"};
+
+            this.failureAnnouncement = new FailureAnnouncement(message, failureMessage, targets);
+
             return this;
         }
 
         public Performance setSuccess(Exception exception) {
             if(exception instanceof UnknownWorldException) {
-                this.failureReason = FailureReason.WORLD_NOT_FOUND;
+                this.setSuccess(FailureReason.WORLD_NOT_FOUND);
             }else if(exception instanceof IOException) {
-                this.failureReason = FailureReason.NOT_ABLE_TO_OBTAIN_FROM_DATA_SOURCE;
+                this.setSuccess(FailureReason.NOT_ABLE_TO_OBTAIN_FROM_DATA_SOURCE);
             }else if(exception instanceof CorruptedWorldException) {
-                this.failureReason = FailureReason.CORRUPTED_WORLD;
+                this.setSuccess(FailureReason.CORRUPTED_WORLD);
             }else if(exception instanceof NewerFormatException) {
-                this.failureReason = FailureReason.WORLD_USES_NEWER_VERSION_OF_SRF;
+                this.setSuccess(FailureReason.WORLD_USES_NEWER_VERSION_OF_SRF);
             }else if(exception instanceof WorldInUseException) {
-                this.failureReason = FailureReason.WORLD_IS_ALREADY_BEING_USED_BY_ANOTHER_SERVER;
+                this.setSuccess(FailureReason.WORLD_IS_ALREADY_BEING_USED_BY_ANOTHER_SERVER);
             }else if(exception instanceof WorldAlreadyExistsException) {
-                this.failureReason = FailureReason.WORLD_ALREADY_EXISTS_IN_DATA_SOURCE;
+                this.setSuccess(FailureReason.WORLD_ALREADY_EXISTS_IN_DATA_SOURCE);
             }else if(exception instanceof InvalidWorldException) {
-                this.failureReason = FailureReason.INVALID_WORLD;
+                this.setSuccess(FailureReason.INVALID_WORLD);
             }else if(exception instanceof WorldLoadedException) {
-                this.failureReason = FailureReason.WORLD_ALREADY_LOADED;
+                this.setSuccess(FailureReason.WORLD_ALREADY_LOADED);
             }else if(exception instanceof WorldTooBigException) {
-                this.failureReason = FailureReason.WORLD_TOO_BIG;
+                this.setSuccess(FailureReason.WORLD_TOO_BIG);
             }
             return this;
         }
@@ -185,6 +197,19 @@ public interface MapCreator {
         public FailureReason getFailureReason() {
             return this.failureReason;
         }
+
+        public void announceFailure(@NotNull Player player) {
+            if(this.failureReason != null) {
+                player.sendMessage(MapCreatorPlugin.Strings.PREFIX + this.failureAnnouncement.message().get(player, this.failureAnnouncement.targets(), new String[]{this.getAction().name(), this.failureAnnouncement.failureMessage().get(player)}));
+            }
+        }
+
+        public void announceFailure() {
+            if(this.failureReason != null) {
+                MapCreatorPlugin.getMapCreatorPlugin().getLogger().log(Level.WARNING, this.failureAnnouncement.message().get(this.failureAnnouncement.targets(), new String[]{this.getAction().name(), this.failureAnnouncement.failureMessage().get(true)}, true));
+            }
+        }
+
 
         public void performCustomPlayerMapAction(Player player) {
             if(this.getAction() != null) {
@@ -216,11 +241,13 @@ public interface MapCreator {
             WORLD_TOO_BIG("mapcreator.performance.failure.reason.world.too.big"),
             NO_IMPORTABLE_WORLD("mapcreator.performance.failure.reason.no.importable.world");
 
-            String translationProperty;
+            @Getter String translationProperty;
 
             FailureReason(String translationProperty) {
                 this.translationProperty = translationProperty;
             }
         }
+
+        record FailureAnnouncement(BukkitTranslation message, BukkitTranslation failureMessage, String[] targets) {}
     }
 }

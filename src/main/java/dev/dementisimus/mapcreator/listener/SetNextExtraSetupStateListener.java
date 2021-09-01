@@ -35,7 +35,13 @@ public class SetNextExtraSetupStateListener implements Listener {
             if(setupManager.getSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS).getBoolean()) {
                 event.setNextSetupState(DEFAULT_WORLD);
             }else {
+                event.setNextSetupState(SIMPLE_TEMPLATE_MAP_WANTED);
+            }
+        }else if(currentSetupState.equals(API_MODE)) {
+            if(setupManager.getSetupState(API_MODE).getBoolean()) {
                 event.setCancelled(true);
+            }else {
+                event.setNextSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS);
             }
         }
     }

@@ -108,12 +108,7 @@ public class CustomWorldImporter implements WorldImporter {
                 this.customMapCreatorInventory.open(player, MapCreatorInventory.Section.CATEGORY_MAPS);
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 10, 1);
             }else {
-                /*
-                 *
-                 * ToDo: handle performance failure reasons properly
-                 *
-                 * */
-                player.sendMessage("FAILURE_REASON: " + performance.getFailureReason());
+                performance.announceFailure(player);
             }
         });
     }

@@ -14,6 +14,7 @@ import dev.dementisimus.capi.core.pools.ThreadPool;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
+import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,6 +45,10 @@ public class CustomMapCreator implements MapCreator {
     @Getter
     @Setter
     private CustomWorldImporter customWorldImporter;
+
+    @Getter
+    @Setter
+    private CustomMapTemplates customMapTemplates;
 
     public CustomMapCreator(MapCreatorPlugin mapCreatorPlugin, String slimeDataSource) {
         this.mapCreatorPlugin = mapCreatorPlugin;
@@ -165,7 +170,7 @@ public class CustomMapCreator implements MapCreator {
     public void manageWorldConfig(Action action, CustomMapCreatorMap customMapCreatorMap) {
         WorldsConfig worldsConfig = ConfigManager.getWorldConfig();
         switch(action) {
-            case SAVE, LEAVE, DELETE -> worldsConfig.getWorlds().remove(customMapCreatorMap.getWorldFileName());
+            case SAVE, LEAVE, DELETE, IMPORT -> worldsConfig.getWorlds().remove(customMapCreatorMap.getWorldFileName());
             default -> worldsConfig.getWorlds().put(customMapCreatorMap.getWorldFileName(), this.getWorldData());
         }
         worldsConfig.save();

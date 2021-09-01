@@ -29,6 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND;
+import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND;
+import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_NO_IMPORTABLE_WORLDS_FOUND;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -90,6 +94,9 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                             switch(inventorySection) {
                                 case CATEGORIES -> {
                                     inventoryCreator.setItem(49, new ItemCreator(Material.GLOWSTONE_DUST).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY).addLores(new String[]{" ", new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1).get(player), new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2).get(player)}).apply());
+                                    if(fetchedCategories.isEmpty()) {
+                                        this.setNothingFoundItem(player, inventoryCreator, inventorySection);
+                                    }
                                 }
                                 case CATEGORY_MAPS -> {
                                     inventoryCreator.setItem(48, new ItemCreator(Material.RED_DYE).setDisplayName(player, MapCreatorPlugin.Translations.BACK).apply());
@@ -97,6 +104,9 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                         inventoryCreator.setItem(49, new ItemCreator(Material.SUGAR).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_IMPORT_WORLD).apply());
                                     }
                                     inventoryCreator.setItem(50, new ItemCreator(Material.LIME_DYE).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP).apply());
+                                    if(fetchedItems.isEmpty()) {
+                                        this.setNothingFoundItem(player, inventoryCreator, inventorySection);
+                                    }
                                 }
                                 case CATEGORY_MAPS_MAP_CHOOSE_ACTION, CATEGORY_MAPS_MAP_MANAGEMENT -> {
                                     if(currentPlayerMap != null && currentPlayerMap.getMapName() != null) {
@@ -119,7 +129,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                 }
                                 case WORLDS_IMPORTER_CATEGORIES -> {
                                     if(importableWorlds.get().isEmpty()) {
-                                        inventoryCreator.setItem(22, new ItemCreator(Material.BARRIER).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_NO_IMPORTABLE_WORLDS_FOUND).apply());
+                                        this.setNothingFoundItem(player, inventoryCreator, inventorySection);
                                     }
                                     inventoryCreator.setItem(45, new ItemCreator(Material.RED_DYE).setDisplayName(player, MapCreatorPlugin.Translations.BACK).apply());
                                 }
@@ -246,5 +256,17 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
         }
         actionItemCreator.setDisplayName(new BukkitTranslation(translationProperty).get(player, "$disabled$", disabledActionColorCodes));
         inventoryCreator.setItem(actionItemSlot, actionItemCreator.apply());
+    }
+
+    private void setNothingFoundItem(Player player, InventoryCreator inventoryCreator, Section section) {
+        String translationProperty = switch(section) {
+            case CATEGORIES -> INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND;
+            case CATEGORY_MAPS -> INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND;
+            case WORLDS_IMPORTER_CATEGORIES -> INVENTORY_SECTION_CATEGORY_MAPS_NO_IMPORTABLE_WORLDS_FOUND;
+            default -> null;
+        };
+        if(translationProperty != null) {
+            inventoryCreator.setItem(22, new ItemCreator(Material.BARRIER).setDisplayName(player, translationProperty).apply());
+        }
     }
 }
