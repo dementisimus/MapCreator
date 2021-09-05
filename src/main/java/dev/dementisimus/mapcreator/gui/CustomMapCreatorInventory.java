@@ -14,6 +14,7 @@ import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
+import dev.dementisimus.mapcreator.creator.templates.interfaces.MapTemplates;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
 import org.bson.Document;
 import org.bukkit.Bukkit;
@@ -28,11 +29,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND;
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND;
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_NO_IMPORTABLE_WORLDS_FOUND;
+import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Section.CATEGORY_MAPS_MAP_CHOOSE_ACTION;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -47,18 +48,20 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
     public static final String DISABLED_ACTION_COLOR_CODES = "§7§l§m";
 
     private final CustomMapCreator customMapCreator;
-    private final Map<Player, CustomMapCreatorMap> currentlyLoadedPlayerMaps = new HashMap<>();
-    private final Map<Player, CustomMapCreatorMap> currentlyViewedPlayerMaps = new HashMap<>();
+    private final SetupManager setupManager;
+    private final Map<Player, CustomMapCreatorMap> currentPlayerMap = new HashMap<>();
 
     public CustomMapCreatorInventory(CustomMapCreator customMapCreator) {
         this.customMapCreator = customMapCreator;
+        this.setupManager = customMapCreator.getSetupManager();
     }
 
     @Override
     public void open(Player player, Section inventorySection) {
         List<ItemStack> items = new ArrayList<>();
 
-        CustomMapCreatorMap currentPlayerMap = this.getAppropriateSectionPlayerMap(inventorySection, player);
+        CustomMapCreatorMap loadedPlayerMap = this.getLoadedPlayerMap(player);
+
         SetupManager setupManager = MapCreatorPlugin.getMapCreatorPlugin().getSetupManager();
         AtomicReference<List<CustomMapCreatorMap>> importableWorlds = new AtomicReference<>();
 
@@ -70,8 +73,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                 infiniteInventoryObject.setTitleTranslationProperty(inventorySection.getTitleTranslationProperty());
                 infiniteInventoryObject.setPlaceholderMaterial(inventorySection.getInventoryPlaceholderMaterial());
                 try {
-                    this.fetch(player, inventorySection, currentPlayerMap, (fetchedCategories, fetchedItems) -> {
-
+                    this.fetch(player, inventorySection, loadedPlayerMap, (fetchedCategories, fetchedItems) -> {
                         for(Document item : fetchedCategories) {
                             String name = item.getString(MapCreatorPlugin.Storage.Categories.NAME);
                             String icon = item.getString(MapCreatorPlugin.Storage.Categories.ICON);
@@ -79,12 +81,12 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                         }
                         items.addAll(fetchedItems);
 
-                        if(inventorySection.equals(Section.WORLDS_IMPORTER_CATEGORIES)) {
+                        if(inventorySection.equals(Section.IMPORTER_WORLDS_AVAILABLE)) {
                             CustomWorldImporter customWorldImporter = this.customMapCreator.getCustomWorldImporter();
-                            importableWorlds.set(customWorldImporter.getImportableWorldsByCategory(currentPlayerMap.getMapCategory()));
+                            importableWorlds.set(customWorldImporter.getImportableWorldsByCategory(loadedPlayerMap.getRecentlyViewed().getMapCategory()));
 
                             for(CustomMapCreatorMap importableWorld : importableWorlds.get()) {
-                                items.add(new ItemCreator(Material.PAPER).setDisplayName("§c§l" + importableWorld.getMapCategory() + "§7/§7§l" + importableWorld.getMapName()).apply());
+                                items.add(new ItemCreator(Material.PAPER).setDisplayName(importableWorld.getPrettyName()).apply());
                             }
                         }
 
@@ -99,7 +101,6 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                     }
                                 }
                                 case CATEGORY_MAPS -> {
-                                    inventoryCreator.setItem(48, new ItemCreator(Material.RED_DYE).setDisplayName(player, MapCreatorPlugin.Translations.BACK).apply());
                                     if(setupManager.getSetupState(MapCreatorPlugin.ExtraSetupStates.WORLD_IMPORTER_REQUIRED).getBoolean()) {
                                         inventoryCreator.setItem(49, new ItemCreator(Material.SUGAR).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_IMPORT_WORLD).apply());
                                     }
@@ -107,31 +108,49 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                     if(fetchedItems.isEmpty()) {
                                         this.setNothingFoundItem(player, inventoryCreator, inventorySection);
                                     }
+                                    this.setBackItem(inventoryCreator, 48, player);
                                 }
                                 case CATEGORY_MAPS_MAP_CHOOSE_ACTION, CATEGORY_MAPS_MAP_MANAGEMENT -> {
-                                    if(currentPlayerMap != null && currentPlayerMap.getMapName() != null) {
+                                    CustomMapCreatorMap mapCreatorMap = inventorySection.equals(CATEGORY_MAPS_MAP_CHOOSE_ACTION) ? loadedPlayerMap.getRecentlyViewed() : loadedPlayerMap;
+                                    if(mapCreatorMap != null && mapCreatorMap.getMapName() != null) {
                                         for(MapCreator.Action action : MapCreator.Action.values()) {
-                                            if(!action.equals(MapCreator.Action.IMPORT)) {
-                                                this.setMapManagementActionItems(player, currentPlayerMap, inventoryCreator, action, action.getTranslationProperty(), action.getActionItemSlot(), action.getActionItemMaterial());
+                                            if(!action.equals(MapCreator.Action.IMPORT) && !action.equals(MapCreator.Action.CLONE)) {
+                                                this.setMapManagementActionItems(player, mapCreatorMap, inventoryCreator, action, action.getTranslationProperty(), action.getActionItemSlot(), action.getActionItemMaterial());
                                             }
                                         }
-                                        for(MapCreator.Action.Player playerAction : MapCreator.Action.Player.values()) {
+                                        for(MapCreator.Action.User userAction : MapCreator.Action.User.values()) {
                                             if(inventorySection.equals(Section.CATEGORY_MAPS_MAP_MANAGEMENT)) {
-                                                if(!playerAction.equals(MapCreator.Action.Player.BACK)) {
-                                                    this.setMapManagementActionItems(player, currentPlayerMap, inventoryCreator, playerAction, playerAction.getTranslationProperty(), playerAction.getActionItemSlot(), playerAction.getActionItemMaterial());
+                                                if(!userAction.equals(MapCreator.Action.User.BACK)) {
+                                                    this.setMapManagementActionItems(player, mapCreatorMap, inventoryCreator, userAction, userAction.getTranslationProperty(), userAction.getActionItemSlot(), userAction.getActionItemMaterial());
                                                 }
                                             }else {
-                                                this.setMapManagementActionItems(player, currentPlayerMap, inventoryCreator, playerAction, playerAction.getTranslationProperty(), playerAction.getActionItemSlot(), playerAction.getActionItemMaterial());
+                                                this.setMapManagementActionItems(player, mapCreatorMap, inventoryCreator, userAction, userAction.getTranslationProperty(), userAction.getActionItemSlot(), userAction.getActionItemMaterial());
                                             }
                                         }
-                                        inventoryCreator.setItem(4, new ItemCreator(Material.OAK_SIGN).setDisplayName(currentPlayerMap.getPrettyFileName()).apply());
+                                        inventoryCreator.setItem(4, new ItemCreator(Material.OAK_SIGN).setDisplayName(mapCreatorMap.getPrettyName()).apply());
                                     }
                                 }
-                                case WORLDS_IMPORTER_CATEGORIES -> {
+                                case IMPORTER_WORLDS_AVAILABLE -> {
                                     if(importableWorlds.get().isEmpty()) {
                                         this.setNothingFoundItem(player, inventoryCreator, inventorySection);
                                     }
-                                    inventoryCreator.setItem(45, new ItemCreator(Material.RED_DYE).setDisplayName(player, MapCreatorPlugin.Translations.BACK).apply());
+                                    this.setBackItem(inventoryCreator, 45, player);
+                                }
+                                /*
+                                 * ToDo: delete this code here when users can create own template maps
+                                 * */
+                                case MAP_TEMPLATES_CHOOSE_TEMPLATE -> {
+                                    CustomMapCreatorMap customMapCreatorMap = new CustomMapCreatorMap(MapTemplates.SIMPLE_TEMPLATE_NAME, MapTemplates.CATEGORY_TEMPLATES);
+
+                                    int blankTemplateSlot = 13;
+                                    if(this.setupManager.getSetupState(MapCreatorPlugin.ExtraSetupStates.SIMPLE_TEMPLATE_MAP_WANTED).getBoolean()) {
+                                        inventoryCreator.setItem(14, new ItemCreator(Material.FILLED_MAP).setDisplayName(customMapCreatorMap.getPrettyName()).apply());
+                                        blankTemplateSlot = 12;
+                                    }
+                                    inventoryCreator.setItem(blankTemplateSlot, new ItemCreator(Material.MAP).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_TEMPLATES_EMPTY).apply());
+
+
+                                    this.setBackItem(inventoryCreator, 18, player);
                                 }
                             }
                             inventoryCreator.apply(player);
@@ -156,8 +175,9 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                 dataManagement.listDocuments(MapCreatorPlugin.Storage.Categories.NAME, fetchedCategories -> fetchedItems.done(fetchedCategories, items));
             }
             case CATEGORY_MAPS -> {
-                for(String world : this.customMapCreator.getSlimeLoader().listWorlds().stream().filter(world -> world.startsWith(currentPlayerMap.getCategoryIdentifier())).collect(Collectors.toList())) {
-                    ItemCreator worldItemCreator = new ItemCreator(Material.FILLED_MAP).setDisplayName(world.split(currentPlayerMap.getCategoryIdentifier())[1]).addAllFlags();
+                CustomMapCreatorMap recentlyViewed = currentPlayerMap.getRecentlyViewed();
+                for(String world : this.customMapCreator.listWorldsByCategory(recentlyViewed.getMapCategory())) {
+                    ItemCreator worldItemCreator = new ItemCreator(Material.FILLED_MAP).setDisplayName(world.split(recentlyViewed.getCategoryIdentifier())[1]).addAllFlags();
                     worldItemCreator.addLore(" ");
 
                     if(this.worldAlreadyLoadedOnServer(world)) {
@@ -178,7 +198,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                         worldItemCreator.addLore(new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_RIGHT_CLICK).get(player));
                     }
                     worldItemCreator.addLore(new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_LEFT_CLICK).get(player));
-                    worldItemCreator.addHiddenString(MapCreatorPlugin.getMapCreatorPlugin(), MapCreatorPlugin.ItemDataStorageKeys.CATEGORY, currentPlayerMap.getMapCategory());
+                    worldItemCreator.addHiddenString(MapCreatorPlugin.getMapCreatorPlugin(), MapCreatorPlugin.ItemDataStorageKeys.CATEGORY, recentlyViewed.getMapCategory());
                     items.add(worldItemCreator.apply());
 
                     if(player.getWorld().getName().equalsIgnoreCase(world)) {
@@ -187,18 +207,18 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                 }
                 fetchedItems.done(documents, items);
             }
+            /*
+             * ToDo: use this code here when users can create own template maps
+             * */
+            /*case MAP_TEMPLATES_CHOOSE_TEMPLATE -> {
+                for(String world : this.customMapCreator.listWorldsByCategory(currentPlayerMap.getMapCategory())) {
+                    world = world.replace("...", "/").split("/")[1];
+                    items.add(new ItemCreator(Material.FILLED_MAP).setDisplayName("§c§l" + world).apply());
+                }
+                fetchedItems.done(documents, items);
+            }*/
             default -> fetchedItems.done(documents, items);
         }
-    }
-
-    @Override
-    public void setCurrentlyLoadedPlayerMap(Player player, String mapName) {
-        this.getCurrentlyLoadedPlayerMap(player).setMapName(mapName);
-    }
-
-    @Override
-    public CustomMapCreatorMap getCurrentlyLoadedPlayerMap(Player player) {
-        return this.currentlyLoadedPlayerMaps.computeIfAbsent(player, pl -> new CustomMapCreatorMap());
     }
 
     @Override
@@ -218,39 +238,19 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
     }
 
     @Override
-    public CustomMapCreatorMap getCurrentlyViewedPlayerMap(Player player) {
-        return this.currentlyViewedPlayerMaps.computeIfAbsent(player, pl -> new CustomMapCreatorMap());
-    }
-
-    @Override
-    public void setCurrentlyViewedPlayerMap(Player player, String mapName) {
-        this.getCurrentlyViewedPlayerMap(player).setMapName(mapName);
-    }
-
-    @Override
-    public void setCurrentlyLoadedMap(Player player, CustomMapCreatorMap mapCreatorMap) {
-        this.currentlyLoadedPlayerMaps.put(player, mapCreatorMap);
-    }
-
-    @Override
-    public CustomMapCreatorMap getAppropriateSectionPlayerMap(Section inventorySection, Player player) {
-        return inventorySection.isRequiresViewableMapInfo() ? this.getCurrentlyViewedPlayerMap(player) : this.getCurrentlyLoadedPlayerMap(player);
-    }
-
-    @Override
     public void setMapManagementActionItems(Player player, CustomMapCreatorMap mapCreatorMap, InventoryCreator inventoryCreator, Enum action, String translationProperty, int actionItemSlot, Material actionItemMaterial) {
         ItemCreator actionItemCreator = new ItemCreator(actionItemMaterial).addAllFlags();
         String disabledActionColorCodes = "";
         if(this.worldAlreadyLoadedOnServer(mapCreatorMap.getFileName())) {
             if(action.equals(MapCreator.Action.LOAD)) {
                 disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
-            }else if(action.equals(MapCreator.Action.Player.TELEPORT)) {
+            }else if(action.equals(MapCreator.Action.User.TELEPORT)) {
                 if(player.getWorld().getName().equals(mapCreatorMap.getFileName())) {
                     disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
                 }
             }
         }else {
-            if(action.equals(MapCreator.Action.SAVE) || action.equals(MapCreator.Action.LEAVE) || action.equals(MapCreator.Action.Player.TELEPORT)) {
+            if(action.equals(MapCreator.Action.SAVE) || action.equals(MapCreator.Action.LEAVE_WITHOUT_SAVING) || action.equals(MapCreator.Action.User.TELEPORT)) {
                 disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
             }
         }
@@ -258,15 +258,32 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
         inventoryCreator.setItem(actionItemSlot, actionItemCreator.apply());
     }
 
+    @Override
+    public void setLoadedPlayerMap(Player player, CustomMapCreatorMap customMapCreatorMap) {
+        this.currentPlayerMap.put(player, customMapCreatorMap);
+    }
+
+    @Override
+    public CustomMapCreatorMap getLoadedPlayerMap(Player player) {
+        if(this.currentPlayerMap.get(player) == null) {
+            this.currentPlayerMap.put(player, new CustomMapCreatorMap());
+        }
+        return this.currentPlayerMap.get(player);
+    }
+
     private void setNothingFoundItem(Player player, InventoryCreator inventoryCreator, Section section) {
         String translationProperty = switch(section) {
             case CATEGORIES -> INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND;
             case CATEGORY_MAPS -> INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND;
-            case WORLDS_IMPORTER_CATEGORIES -> INVENTORY_SECTION_CATEGORY_MAPS_NO_IMPORTABLE_WORLDS_FOUND;
+            case IMPORTER_WORLDS_AVAILABLE -> INVENTORY_SECTION_CATEGORY_MAPS_NO_IMPORTABLE_WORLDS_FOUND;
             default -> null;
         };
         if(translationProperty != null) {
             inventoryCreator.setItem(22, new ItemCreator(Material.BARRIER).setDisplayName(player, translationProperty).apply());
         }
+    }
+
+    private void setBackItem(InventoryCreator inventoryCreator, int slot, Player player) {
+        inventoryCreator.setItem(slot, new ItemCreator(Material.RED_DYE).setDisplayName(player, MapCreatorPlugin.Translations.BACK).apply());
     }
 }

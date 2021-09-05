@@ -26,6 +26,8 @@ public interface MapCreatorMap {
 
     void importWorld(Callback<MapCreator.Performance> performanceCallback);
 
+    void clone(Callback<MapCreator.Performance> performanceCallback);
+
     boolean isLocked();
 
     boolean exists();
@@ -38,5 +40,5 @@ public interface MapCreatorMap {
 
     String getFileName();
 
-    String getPrettyFileName();
+    String getPrettyName();
 }

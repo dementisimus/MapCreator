@@ -10,28 +10,37 @@ import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
+import dev.dementisimus.mapcreator.creator.CustomPlayerMapActions;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
+import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.creator.templates.interfaces.MapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
+import net.kyori.adventure.text.Component;
 import org.bson.Document;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.BACK;
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY;
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_SIGN_INSTRUCTION;
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP;
-import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Section.CATEGORIES;
-import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Section.CATEGORY_MAPS;
-import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Section.CATEGORY_MAPS_MAP_CHOOSE_ACTION;
-import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Section.WORLDS_IMPORTER_CATEGORIES;
+import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Section.*;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -66,11 +75,20 @@ public class InfiniteInventoryClickListener implements Listener {
         }
 
         if(currentSection != null) {
+            CustomMapCreatorMap loadedPlayerMap = this.customMapCreatorInventory.getLoadedPlayerMap(player);
+
             switch(currentSection) {
                 case CATEGORIES -> {
                     if(isInRange) {
                         if(!new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND).matches(displayName)) {
-                            this.customMapCreatorInventory.getCurrentlyViewedPlayerMap(player).setMapCategory(displayName);
+                            if(loadedPlayerMap.getMapCategory() == null) {
+                                loadedPlayerMap.setMapCategory(displayName);
+                            }
+                            CustomMapCreatorMap recentlyViewed = loadedPlayerMap.getRecentlyViewed();
+                            if(recentlyViewed == null) {
+                                recentlyViewed = new CustomMapCreatorMap();
+                            }
+                            loadedPlayerMap.setRecentlyViewed(recentlyViewed.setMapCategory(displayName));
                             this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
                         }
                     }else {
@@ -79,26 +97,31 @@ public class InfiniteInventoryClickListener implements Listener {
                             player.setItemOnCursor(null);
                             this.fetchInput(player, true, newCategory -> {
                                 if(newCategory != null) {
-                                    if(!newCategory.equalsIgnoreCase(MapTemplates.CATEGORY_TEMPLATES)) {
-                                        newCategory = newCategory.toUpperCase();
-                                        this.dataManagement.setRequirements(MapCreatorPlugin.Storage.CATEGORIES, MapCreatorPlugin.Storage.Categories.NAME, newCategory);
+                                    if(!newCategory.isEmpty()) {
+                                        if(!newCategory.equalsIgnoreCase(MapTemplates.CATEGORY_TEMPLATES)) {
+                                            newCategory = newCategory.toUpperCase();
+                                            this.dataManagement.setRequirements(MapCreatorPlugin.Storage.CATEGORIES, MapCreatorPlugin.Storage.Categories.NAME, newCategory);
 
-                                        Document document = new Document();
-                                        document.append(MapCreatorPlugin.Storage.Categories.NAME, newCategory);
-                                        document.append(MapCreatorPlugin.Storage.Categories.ICON, icon.name());
+                                            Document document = new Document();
+                                            document.append(MapCreatorPlugin.Storage.Categories.NAME, newCategory);
+                                            document.append(MapCreatorPlugin.Storage.Categories.ICON, icon.name());
 
-                                        this.dataManagement.update(document, updated -> {
-                                            if(!updated) {
-                                                this.dataManagement.write(document, done -> {
+                                            this.dataManagement.update(document, updated -> {
+                                                if(!updated) {
+                                                    this.dataManagement.write(document, done -> {
+                                                        this.customMapCreatorInventory.open(player, CATEGORIES);
+                                                    });
+                                                }else {
                                                     this.customMapCreatorInventory.open(player, CATEGORIES);
-                                                });
-                                            }else {
-                                                this.customMapCreatorInventory.open(player, CATEGORIES);
-                                            }
-                                        });
+                                                }
+                                            });
+                                        }else {
+                                            player.playSound(player.getLocation(), Sound.ENTITY_PIGLIN_BRUTE_ANGRY, 10, 1);
+                                            this.customMapCreatorInventory.open(player, CATEGORIES);
+                                        }
                                     }else {
-                                        player.playSound(player.getLocation(), Sound.ENTITY_PIGLIN_BRUTE_ANGRY, 10, 1);
                                         this.customMapCreatorInventory.open(player, CATEGORIES);
+                                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
                                     }
                                 }else {
                                     this.customMapCreatorInventory.open(player, CATEGORIES);
@@ -108,17 +131,21 @@ public class InfiniteInventoryClickListener implements Listener {
                     }
                 }
                 case CATEGORY_MAPS -> {
-                    CustomMapCreatorMap currentlyViewedPlayerMap = this.customMapCreatorInventory.getCurrentlyViewedPlayerMap(player);
-
-                    if(currentlyViewedPlayerMap != null) {
+                    CustomMapCreatorMap recentlyViewedMap = loadedPlayerMap.getRecentlyViewed();
+                    if(recentlyViewedMap != null) {
                         if(isInRange) {
                             if(!new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND).matches(displayName)) {
-                                this.customMapCreatorInventory.setCurrentlyViewedPlayerMap(player, displayName);
+                                recentlyViewedMap.setMapName(displayName);
+
+                                CustomMapCreatorMap loadedMap = this.customMapCreator.getMapCreatorMap(recentlyViewedMap.getFileName());
+                                if(loadedMap != null) {
+                                    recentlyViewedMap.setSlimeWorld(loadedMap.getSlimeWorld());
+                                }
 
                                 MapCreatorInventory.Section section = null;
                                 if(event.isRightClick()) {
-                                    if(!this.customMapCreatorInventory.worldAlreadyLoadedOnServer(currentlyViewedPlayerMap.getFileName())) {
-                                        this.handlePerformance(MapCreator.Action.LOAD, true, currentlyViewedPlayerMap, player);
+                                    if(!this.customMapCreatorInventory.worldAlreadyLoadedOnServer(recentlyViewedMap.getFileName())) {
+                                        this.handlePerformance(MapCreator.Action.LOAD, recentlyViewedMap, player);
                                     }else {
                                         section = MapCreatorInventory.Section.CATEGORY_MAPS_MAP_CHOOSE_ACTION;
                                     }
@@ -131,87 +158,94 @@ public class InfiniteInventoryClickListener implements Listener {
                             }
                         }else {
                             if(new BukkitTranslation(INVENTORY_SECTION_CATEGORY_CREATE_MAP).matches(displayName)) {
-                                this.fetchInput(player, true, newMap -> {
-                                    if(newMap != null) {
-                                        currentlyViewedPlayerMap.setMapName(newMap);
-                                        this.handlePerformance(MapCreator.Action.LOAD, true, currentlyViewedPlayerMap, player);
-                                    }else {
-                                        this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
+                                try {
+                                    List<String> availableTemplates = this.customMapCreator.listWorldsByCategory(CustomMapTemplates.CATEGORY_TEMPLATES);
+                                    if(availableTemplates != null && !availableTemplates.isEmpty()) {
+                                        this.customMapCreatorInventory.open(player, MapCreatorInventory.Section.MAP_TEMPLATES_CHOOSE_TEMPLATE);
+                                        return;
                                     }
-                                });
+                                }catch(IOException ignored) {}
+
+                                this.handleMapCreation(player, MapCreator.Action.LOAD, recentlyViewedMap);
                             }else if(new BukkitTranslation(BACK).matches(displayName)) {
                                 this.customMapCreatorInventory.open(player, CATEGORIES);
                             }else if(new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_IMPORT_WORLD).matches(displayName)) {
-                                this.customMapCreatorInventory.open(player, WORLDS_IMPORTER_CATEGORIES);
+                                this.customMapCreatorInventory.open(player, IMPORTER_WORLDS_AVAILABLE);
                             }
                         }
                     }
                 }
                 case CATEGORY_MAPS_MAP_CHOOSE_ACTION, CATEGORY_MAPS_MAP_MANAGEMENT -> {
+                    CustomMapCreatorMap mapCreatorMap = currentSection.equals(CATEGORY_MAPS_MAP_CHOOSE_ACTION) ? loadedPlayerMap.getRecentlyViewed() : loadedPlayerMap;
+
                     MapCreator.Action clickedAction = null;
-                    MapCreator.Action.Player clickedPlayerAction = null;
+                    MapCreator.Action.User clickedUserAction = null;
 
-                    CustomMapCreatorMap currentPlayerMap = this.customMapCreatorInventory.getAppropriateSectionPlayerMap(currentSection, player);
+                    for(MapCreator.Action action : MapCreator.Action.values()) {
+                        if(this.matchesAction(player, displayName, action.getTranslationProperty())) {
+                            clickedAction = action;
+                            break;
+                        }
+                    }
+                    for(MapCreator.Action.User userAction : MapCreator.Action.User.values()) {
+                        if(this.matchesAction(player, displayName, userAction.getTranslationProperty())) {
+                            clickedUserAction = userAction;
+                            break;
+                        }
+                    }
+                    if(clickedAction != null) {
+                        mapCreatorMap.setRecentlyViewed(new CustomMapCreatorMap(mapCreatorMap.getMapName(), mapCreatorMap.getMapCategory()));
 
-                    if(currentPlayerMap.getMapName() != null) {
-                        for(MapCreator.Action action : MapCreator.Action.values()) {
-                            if(this.matchesAction(player, displayName, action.getTranslationProperty())) {
-                                clickedAction = action;
-                                break;
-                            }
-                        }
-                        for(MapCreator.Action.Player playerAction : MapCreator.Action.Player.values()) {
-                            if(this.matchesAction(player, displayName, playerAction.getTranslationProperty())) {
-                                clickedPlayerAction = playerAction;
-                                break;
-                            }
-                        }
-                        if(clickedAction != null) {
-                            if(clickedAction.equals(MapCreator.Action.DELETE)) {
-                                MapCreator.Action finalClickedAction = clickedAction;
-                                MapCreatorInventory.Section finalCurrentSection = currentSection;
-                                this.fetchInput(player, true, mapInput -> {
-                                    if(mapInput != null && mapInput.equals(currentPlayerMap.getMapName())) {
-                                        this.handlePerformance(finalClickedAction, false, currentPlayerMap, player);
-                                    }else {
-                                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
-                                        this.customMapCreatorInventory.open(player, finalCurrentSection);
-                                    }
-                                });
+                        if(clickedAction.equals(MapCreator.Action.DELETE)) {
+                            MapCreator.Action finalClickedAction = clickedAction;
+                            MapCreatorInventory.Section finalCurrentSection = currentSection;
+                            this.fetchInput(player, true, mapInput -> {
+                                if(mapInput != null && mapInput.equals(mapCreatorMap.getMapName())) {
+                                    this.handlePerformance(finalClickedAction, mapCreatorMap, player);
+                                }else {
+                                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
+                                    this.customMapCreatorInventory.open(player, finalCurrentSection);
+                                }
+                            });
+                        }else {
+                            if(this.customMapCreatorInventory.worldAlreadyLoadedOnServer(mapCreatorMap.getFileName())) {
+                                if(clickedAction.equals(MapCreator.Action.SAVE) || clickedAction.equals(MapCreator.Action.LEAVE_WITHOUT_SAVING)) {
+                                    this.handlePerformance(clickedAction, mapCreatorMap, player);
+                                }else {
+                                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
+                                }
                             }else {
-                                if(this.customMapCreatorInventory.worldAlreadyLoadedOnServer(currentPlayerMap.getFileName())) {
-                                    if(clickedAction.equals(MapCreator.Action.SAVE) || clickedAction.equals(MapCreator.Action.LEAVE)) {
-                                        this.handlePerformance(clickedAction, true, currentPlayerMap, player);
+                                if(clickedAction.equals(MapCreator.Action.LOAD)) {
+                                    this.handlePerformance(clickedAction, mapCreatorMap, player);
+                                }else {
+                                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
+                                }
+                            }
+                        }
+                    }else if(clickedUserAction != null) {
+                        switch(clickedUserAction) {
+                            case TELEPORT -> {
+                                if(this.customMapCreatorInventory.worldAlreadyLoadedOnServer(mapCreatorMap.getFileName())) {
+                                    if(!player.getWorld().getName().equalsIgnoreCase(mapCreatorMap.getFileName())) {
+                                        this.customMapCreatorInventory.setLoadedPlayerMap(player, mapCreatorMap);
+
+                                        CustomPlayerMapActions customPlayerMapActions = new CustomPlayerMapActions(player, mapCreatorMap.getSlimeWorld());
+                                        customPlayerMapActions.load();
+
+                                        player.playSound(player.getLocation(), Sound.ENTITY_STRIDER_HAPPY, 10, 1);
+                                        clickedUserAction.sendActionMessage(player, mapCreatorMap);
                                     }else {
                                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
                                     }
                                 }else {
-                                    if(clickedAction.equals(MapCreator.Action.LOAD)) {
-                                        this.handlePerformance(clickedAction, true, currentPlayerMap, player);
-                                    }else {
-                                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
-                                    }
+                                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
                                 }
                             }
-                        }else if(clickedPlayerAction != null) {
-                            switch(clickedPlayerAction) {
-                                case TELEPORT -> {
-                                    if(this.customMapCreatorInventory.worldAlreadyLoadedOnServer(currentPlayerMap.getFileName())) {
-                                        if(!player.getWorld().getName().equalsIgnoreCase(currentPlayerMap.getFileName())) {
-                                            player.sendMessage("teleport to " + currentPlayerMap.getFileName());
-                                        }else {
-                                            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
-                                        }
-                                    }else {
-                                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
-                                    }
-                                }
-                                case BACK -> this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
-                            }
+                            case BACK -> this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
                         }
                     }
                 }
-                case WORLDS_IMPORTER_CATEGORIES -> {
+                case IMPORTER_WORLDS_AVAILABLE -> {
                     CustomWorldImporter customWorldImporter = this.customMapCreator.getCustomWorldImporter();
 
                     if(isInRange) {
@@ -220,10 +254,30 @@ public class InfiniteInventoryClickListener implements Listener {
                             CustomMapCreatorMap importableWorld = customWorldImporter.getImportableWorldByFileName(fileName);
 
                             if(importableWorld != null) {
-                                customWorldImporter.importWorld(player, importableWorld);
+                                this.handlePerformance(MapCreator.Action.IMPORT, importableWorld, player);
                             }else {
                                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
                             }
+                        }
+                    }else {
+                        if(new BukkitTranslation(BACK).matches(displayName)) {
+                            this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
+                        }
+                    }
+                }
+                case MAP_TEMPLATES_CHOOSE_TEMPLATE -> {
+                    CustomMapCreatorMap recentlyViewed = loadedPlayerMap.getRecentlyViewed();
+
+                    if(isInRange) {
+                        CustomMapCreatorMap cloneFrom = new CustomMapCreatorMap();
+                        cloneFrom.setMapCategory(MapTemplates.CATEGORY_TEMPLATES);
+                        if(!new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_TEMPLATES_EMPTY).matches(displayName)) {
+                            cloneFrom.setMapName(MapTemplates.SIMPLE_TEMPLATE_NAME);
+
+                            recentlyViewed.setCloneFrom(cloneFrom);
+                            this.handleMapCreation(player, MapCreator.Action.CLONE, recentlyViewed);
+                        }else {
+                            this.handleMapCreation(player, MapCreator.Action.LOAD, recentlyViewed);
                         }
                     }else {
                         if(new BukkitTranslation(BACK).matches(displayName)) {
@@ -235,31 +289,62 @@ public class InfiniteInventoryClickListener implements Listener {
         }
     }
 
-    /*
-     *
-     * ToDO: handle pre-action & post-action messages/actions
-     *
-     * */
-    private void handlePerformance(MapCreator.Action action, boolean closeInventory, CustomMapCreatorMap customMapCreatorMap, Player player) {
-        if(closeInventory) player.closeInventory();
-
+    private void handlePerformance(MapCreator.Action action, CustomMapCreatorMap customMapCreatorMap, Player player) {
         if(action.isPreActionRequired()) {
-            player.sendMessage("pre-action");
+            action.sendActionMessage(player, customMapCreatorMap, "", false);
         }
+
+        long started = System.currentTimeMillis();
+
+        AtomicInteger actionBarStatusTaskId = new AtomicInteger(-1);
+
+        if(action.isUseLoadingActionBar()) {
+            player.closeInventory();
+
+            String mapName = action.equals(MapCreator.Action.CLONE) ? customMapCreatorMap.getCloneFrom().getPrettyName() : customMapCreatorMap.getPrettyName();
+            Component message = Component.text(new BukkitTranslation(action.getLoadingActionBarActionTranslationProperty()).get(player, "$map$", mapName));
+
+            BukkitTask bukkitTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this.mapCreatorPlugin, () -> {
+                player.sendActionBar(message);
+            }, 0, 5);
+            actionBarStatusTaskId.set(bukkitTask.getTaskId());
+
+            if(action.equals(MapCreator.Action.LOAD)) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 999999, 10, false, false, false));
+            }
+        }
+
         this.customMapCreator.perform(action, customMapCreatorMap, performance -> {
             if(performance.isSuccess()) {
                 if(performance.getSlimeWorld() != null) {
                     customMapCreatorMap.setSlimeWorld(performance.getSlimeWorld());
-                    this.customMapCreatorInventory.getCurrentlyLoadedPlayerMap(player).setSlimeWorld(performance.getSlimeWorld());
                     customMapCreatorMap.setLoadedBy(player.getName());
+                    customMapCreatorMap.setLoadedSince(new Date());
+
+                    this.customMapCreatorInventory.setLoadedPlayerMap(player, customMapCreatorMap);
                 }
-                this.customMapCreatorInventory.setCurrentlyLoadedMap(player, customMapCreatorMap);
+
+                if(action.equals(MapCreator.Action.IMPORT)) {
+                    this.customMapCreator.getCustomWorldImporter().scanForImportableWorlds();
+                }
+
                 performance.performCustomPlayerMapAction(player);
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 10, 1);
-                if(!action.equals(MapCreator.Action.LOAD)) {
+                if(!action.equals(MapCreator.Action.LOAD) && !action.equals(MapCreator.Action.CLONE)) {
                     this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
                 }
-                player.sendMessage("post-action");
+
+                if(action.isUseLoadingActionBar()) {
+                    Bukkit.getScheduler().cancelTask(actionBarStatusTaskId.get());
+                    player.sendActionBar(Component.empty());
+
+                    if(action.equals(MapCreator.Action.LOAD)) {
+                        player.removePotionEffect(PotionEffectType.BLINDNESS);
+                    }
+                }
+
+                String elapsed = String.format("%.3fs", (System.currentTimeMillis() - started) / 1000.0f);
+                action.sendActionMessage(player, customMapCreatorMap, elapsed, true);
             }else {
                 performance.announceFailure(player);
                 player.playSound(player.getLocation(), Sound.ENTITY_CHICKEN_DEATH, 20, 1);
@@ -269,14 +354,30 @@ public class InfiniteInventoryClickListener implements Listener {
 
     private void fetchInput(Player player, boolean allowBlankInput, Callback<String> stringCallback) {
         new SignInputCreator(player, this.mapCreatorPlugin).listen(SignInputCreator.getAdditionalSignLines(player, INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_SIGN_INSTRUCTION), newMap -> {
-            if(!newMap.isBlank() && !newMap.isEmpty()) {
-                stringCallback.done(newMap.replaceAll(" ", ""));
-            }else {
-                if(allowBlankInput) {
-                    stringCallback.done(null);
+            if(newMap.matches("[A-Za-z0-9]+")) {
+                if(!newMap.isBlank() && !newMap.isEmpty()) {
+                    stringCallback.done(newMap.replaceAll(" ", ""));
                 }else {
-                    this.fetchInput(player, false, stringCallback);
+                    if(allowBlankInput) {
+                        stringCallback.done(null);
+                    }else {
+                        this.fetchInput(player, false, stringCallback);
+                    }
                 }
+            }else {
+                stringCallback.done("");
+            }
+        });
+    }
+
+    private void handleMapCreation(Player player, MapCreator.Action action, CustomMapCreatorMap currentPlayerMap) {
+        this.fetchInput(player, true, newMap -> {
+            if(newMap != null && !newMap.isEmpty()) {
+                currentPlayerMap.setMapName(newMap);
+                this.handlePerformance(action, currentPlayerMap, player);
+            }else {
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
+                this.customMapCreatorInventory.open(player, MAP_TEMPLATES_CHOOSE_TEMPLATE);
             }
         });
     }

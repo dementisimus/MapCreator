@@ -19,4 +19,6 @@ public interface PlayerMapActions {
 
     void leave();
 
+    void worldImport();
+
 }

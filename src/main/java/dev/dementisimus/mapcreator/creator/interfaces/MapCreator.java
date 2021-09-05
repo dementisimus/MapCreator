@@ -48,7 +48,7 @@ public interface MapCreator {
 
     CustomMapCreatorInventory getCustomMapCreatorInventory();
 
-    List<String> getSlimeLoaderWorlds() throws IOException;
+    List<String> listWorldsByCategory(String categoryName) throws IOException;
 
     @Nullable CustomMapCreatorMap getMapCreatorMap(String mapName);
 
@@ -62,37 +62,66 @@ public interface MapCreator {
 
     enum Action {
 
-        LOAD("mapcreator.action.item.load", 11, Material.SPYGLASS, true),
-        SAVE("mapcreator.action.item.save", 13, Material.CLOCK, true),
-        LEAVE("mapcreator.action.item.leave", 14, Material.GLASS_BOTTLE, false),
-        DELETE("mapcreator.action.item.delete", 15, Material.STRUCTURE_VOID, false),
-        IMPORT("", -1, Material.AIR, false);
+        LOAD("mapcreator.action.item.load", "mapcreator.action.message.load", 11, Material.SPYGLASS, true, true, "mapcreator.action.loading.actionbar.load"),
+        SAVE("mapcreator.action.item.save", "mapcreator.action.message.save", 13, Material.CLOCK, true, false, ""),
+        LEAVE_WITHOUT_SAVING("mapcreator.action.item.leave.without.saving", "mapcreator.action.message.leave.without.saving", 14, Material.GLASS_BOTTLE, false, false, ""),
+        DELETE("mapcreator.action.item.delete", "mapcreator.action.message.delete", 15, Material.STRUCTURE_VOID, false, false, ""),
+        IMPORT("", "mapcreator.action.message.import", -1, Material.AIR, true, true, "mapcreator.action.loading.actionbar.import"),
+        CLONE("", "mapcreator.action.message.clone", -1, Material.AIR, true, true, "mapcreator.action.loading.actionbar.clone");
 
         @Getter String translationProperty;
+        @Getter String actionMessageTranslationProperty;
         @Getter int actionItemSlot;
         @Getter Material actionItemMaterial;
         @Getter boolean preActionRequired;
+        @Getter boolean useLoadingActionBar;
+        @Getter String loadingActionBarActionTranslationProperty;
 
-        Action(String translationProperty, int actionItemSlot, Material actionItemMaterial, boolean preActionRequired) {
+
+        Action(String translationProperty, String actionMessageTranslationProperty, int actionItemSlot, Material actionItemMaterial, boolean preActionRequired, boolean useLoadingActionBar, String loadingActionBarActionTranslationProperty) {
             this.translationProperty = translationProperty;
+            this.actionMessageTranslationProperty = actionMessageTranslationProperty;
             this.actionItemSlot = actionItemSlot;
             this.actionItemMaterial = actionItemMaterial;
             this.preActionRequired = preActionRequired;
+            this.useLoadingActionBar = useLoadingActionBar;
+            this.loadingActionBarActionTranslationProperty = loadingActionBarActionTranslationProperty;
         }
 
-        public enum Player {
+        private static String getActionMessage(Player player, CustomMapCreatorMap map, String actionMessageTranslationProperty, String elapsed, boolean isPostAction) {
+            String cloneFrom = map.getCloneFrom() == null ? "" : map.getCloneFrom().getPrettyName();
 
-            TELEPORT("inventory.section.category.maps.map.management.teleport", 12, Material.ENDER_EYE),
-            BACK("back", 18, Material.RED_DYE);
+            String basicActionMessageProperty = isPostAction ? MapCreatorPlugin.Translations.BASIC_POST_ACTION_MESSAGE : MapCreatorPlugin.Translations.BASIC_PRE_ACTION_MESSAGE;
+            return new BukkitTranslation(basicActionMessageProperty).get(player, new String[]{"$prefix$", "$map$", "$action$", "$elapsed$"}, new String[]{MapCreatorPlugin.Strings.PREFIX, map.getPrettyName(), new BukkitTranslation(actionMessageTranslationProperty).get(player, "$clone$", cloneFrom), elapsed});
+        }
+
+        public void sendActionMessage(Player player, CustomMapCreatorMap map, String elapsed, boolean isPostAction) {
+            player.sendMessage(Action.getActionMessage(player, map, this.getActionMessageTranslationProperty(), elapsed, isPostAction));
+        }
+
+        public enum User {
+
+            TELEPORT("mapcreator.action.player.item.teleport", "mapcreator.action.message.player.teleport", 12, Material.ENDER_EYE),
+            BACK("back", "back", 18, Material.RED_DYE);
 
             @Getter String translationProperty;
+            @Getter String actionMessageTranslationProperty;
             @Getter int actionItemSlot;
             @Getter Material actionItemMaterial;
 
-            Player(String translationProperty, int actionItemSlot, Material actionItemMaterial) {
+            User(String translationProperty, String actionMessageTranslationProperty, int actionItemSlot, Material actionItemMaterial) {
                 this.translationProperty = translationProperty;
+                this.actionMessageTranslationProperty = actionMessageTranslationProperty;
                 this.actionItemSlot = actionItemSlot;
                 this.actionItemMaterial = actionItemMaterial;
+            }
+
+            public void sendActionMessage(Player player, CustomMapCreatorMap map) {
+                if(!this.equals(TELEPORT)) {
+                    player.sendMessage(Action.getActionMessage(player, map, this.getActionMessageTranslationProperty(), "", true));
+                    return;
+                }
+                player.sendMessage(new BukkitTranslation(this.getActionMessageTranslationProperty()).get(player, new String[]{"$prefix$", "$map$"}, new String[]{MapCreatorPlugin.Strings.PREFIX, map.getPrettyName()}));
             }
         }
     }
@@ -215,12 +244,14 @@ public interface MapCreator {
             if(this.getAction() != null) {
                 CustomPlayerMapActions customPlayerMapActions = new CustomPlayerMapActions(player, this.getSlimeWorld());
                 switch(this.getAction()) {
-                    case LOAD -> customPlayerMapActions.load();
+                    case LOAD, CLONE -> {
+                        customPlayerMapActions.load();
+                    }
                     case SAVE -> customPlayerMapActions.save();
-                    case LEAVE -> customPlayerMapActions.leave();
+                    case LEAVE_WITHOUT_SAVING -> customPlayerMapActions.leave();
                     case DELETE -> customPlayerMapActions.delete();
+                    case IMPORT -> customPlayerMapActions.worldImport();
                 }
-
             }
         }
 
@@ -239,7 +270,8 @@ public interface MapCreator {
             INVALID_WORLD("mapcreator.performance.failure.reason.invalid.world"),
             WORLD_ALREADY_LOADED("mapcreator.performance.failure.reason.world.already.loaded"),
             WORLD_TOO_BIG("mapcreator.performance.failure.reason.world.too.big"),
-            NO_IMPORTABLE_WORLD("mapcreator.performance.failure.reason.no.importable.world");
+            NO_IMPORTABLE_WORLD("mapcreator.performance.failure.reason.no.importable.world"),
+            NO_CLONEABLE_MAP("mapcreator.performance.failure.reason.no.cloneable.map");
 
             @Getter String translationProperty;
 

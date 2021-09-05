@@ -11,9 +11,11 @@ import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.callback.EmptyCallback;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.capi.core.pools.ThreadPool;
+import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
+import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
@@ -25,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -38,6 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class CustomMapCreator implements MapCreator {
 
     private final MapCreatorPlugin mapCreatorPlugin;
+    @Getter private final SetupManager setupManager;
     private final SlimePlugin slimePlugin;
     private final SlimeLoader slimeLoader;
     private final CustomMapCreatorInventory customMapCreatorInventory;
@@ -52,6 +55,7 @@ public class CustomMapCreator implements MapCreator {
 
     public CustomMapCreator(MapCreatorPlugin mapCreatorPlugin, String slimeDataSource) {
         this.mapCreatorPlugin = mapCreatorPlugin;
+        this.setupManager = mapCreatorPlugin.getSetupManager();
         this.slimePlugin = this.mapCreatorPlugin.getSlimePlugin();
         this.slimeLoader = this.slimePlugin.getLoader(slimeDataSource);
         this.customMapCreatorInventory = new CustomMapCreatorInventory(this);
@@ -59,30 +63,37 @@ public class CustomMapCreator implements MapCreator {
 
     @Override
     public void perform(Action action, CustomMapCreatorMap customMapCreatorMap, Callback<Performance> performanceCallback) {
-        this.manageWorldConfig(action, customMapCreatorMap);
-        this.ensureNoPlayersLeftOnMap(action, customMapCreatorMap, () -> {
-            ThreadPool.execute(() -> {
-                AtomicReference<Performance> performance = new AtomicReference<>(new Performance((SlimeWorld) null));
-                switch(action) {
-                    case LOAD -> customMapCreatorMap.load(false, this.getSlimePropertyMap(), performance :: set);
-                    case SAVE -> customMapCreatorMap.save(true, customMapCreatorMap.getSlimeWorld(), performance :: set);
-                    case LEAVE -> customMapCreatorMap.leave(performance :: set);
-                    case DELETE -> customMapCreatorMap.delete(performance :: set);
-                    case IMPORT -> customMapCreatorMap.importWorld(performance :: set);
-                }
-                performance.get().setAction(action);
-                BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> {
-                    SlimeWorld slimeWorld = performance.get().getSlimeWorld();
+        this.awaitPerformance(action, customMapCreatorMap, performance -> {
+            BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> {
+                SlimeWorld slimeWorld = performance.getSlimeWorld();
+
+                if(!action.equals(Action.CLONE)) {
                     if(slimeWorld != null) {
                         this.slimePlugin.generateWorld(slimeWorld);
                         this.addMapCreatorMap(customMapCreatorMap);
                     }else {
                         this.removeMapCreatorMap(customMapCreatorMap);
                     }
-                    performanceCallback.done(performance.get());
-                });
+                }
+
+                performance.setAction(action);
+                performanceCallback.done(performance);
             });
         });
+    }
+
+    public void awaitPerformance(Action action, CustomMapCreatorMap customMapCreatorMap, Callback<Performance> performanceCallback) {
+        this.manageWorldConfig(action, customMapCreatorMap);
+        this.ensureNoPlayersLeftOnMap(action, customMapCreatorMap, () -> ThreadPool.execute(() -> {
+            switch(action) {
+                case LOAD -> customMapCreatorMap.load(false, this.getSlimePropertyMap(), performanceCallback);
+                case SAVE -> customMapCreatorMap.save(true, customMapCreatorMap.getSlimeWorld(), performanceCallback);
+                case LEAVE_WITHOUT_SAVING -> customMapCreatorMap.leave(performanceCallback);
+                case DELETE -> customMapCreatorMap.delete(performanceCallback);
+                case IMPORT -> customMapCreatorMap.importWorld(performanceCallback);
+                case CLONE -> customMapCreatorMap.clone(performanceCallback);
+            }
+        }));
     }
 
     @Override
@@ -122,8 +133,8 @@ public class CustomMapCreator implements MapCreator {
     }
 
     @Override
-    public List<String> getSlimeLoaderWorlds() throws IOException {
-        return this.getSlimeLoader().listWorlds();
+    public List<String> listWorldsByCategory(String categoryName) throws IOException {
+        return this.slimeLoader.listWorlds().stream().filter(world -> world.startsWith(categoryName + MapCreatorMap.CATEGORY_MAP_SEPARATOR)).collect(Collectors.toList());
     }
 
     @Override
@@ -149,7 +160,7 @@ public class CustomMapCreator implements MapCreator {
             return;
         }
         switch(action) {
-            case SAVE, LEAVE, DELETE -> {
+            case SAVE, LEAVE_WITHOUT_SAVING, DELETE -> {
                 world.getPlayers().forEach(player -> {
                     /*
                      * replace with previous location
@@ -170,7 +181,7 @@ public class CustomMapCreator implements MapCreator {
     public void manageWorldConfig(Action action, CustomMapCreatorMap customMapCreatorMap) {
         WorldsConfig worldsConfig = ConfigManager.getWorldConfig();
         switch(action) {
-            case SAVE, LEAVE, DELETE, IMPORT -> worldsConfig.getWorlds().remove(customMapCreatorMap.getWorldFileName());
+            case SAVE, LEAVE_WITHOUT_SAVING, DELETE, IMPORT -> worldsConfig.getWorlds().remove(customMapCreatorMap.getWorldFileName());
             default -> worldsConfig.getWorlds().put(customMapCreatorMap.getWorldFileName(), this.getWorldData());
         }
         worldsConfig.save();

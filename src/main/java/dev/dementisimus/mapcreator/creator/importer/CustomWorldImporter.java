@@ -7,13 +7,9 @@ import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.importer.interfaces.WorldImporter;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
-import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
 import lombok.Getter;
-import org.bukkit.Sound;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -97,20 +93,6 @@ public class CustomWorldImporter implements WorldImporter {
         }
 
         return importableWorldsByCategory;
-    }
-
-    @Override
-    public void importWorld(Player player, CustomMapCreatorMap importableWorld) {
-        this.customMapCreator.perform(MapCreator.Action.IMPORT, importableWorld, performance -> {
-            if(performance.isSuccess()) {
-                this.scanForImportableWorlds();
-
-                this.customMapCreatorInventory.open(player, MapCreatorInventory.Section.CATEGORY_MAPS);
-                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 10, 1);
-            }else {
-                performance.announceFailure(player);
-            }
-        });
     }
 
     @Override

@@ -30,7 +30,7 @@ public class CustomPlayerMapActions implements PlayerMapActions {
     public CustomPlayerMapActions(Player player, SlimeWorld slimeWorld) {
         this.player = player;
         this.slimeWorld = slimeWorld;
-        this.customMapCreatorMap = MapCreatorPlugin.getMapCreatorPlugin().getCustomMapCreator().getCustomMapCreatorInventory().getCurrentlyLoadedPlayerMap(player);
+        this.customMapCreatorMap = MapCreatorPlugin.getMapCreatorPlugin().getCustomMapCreator().getCustomMapCreatorInventory().getLoadedPlayerMap(player);
         /*
          * ToDo: check if player is in slimeWorld, if false, do not clear inventory
          * */
@@ -65,6 +65,11 @@ public class CustomPlayerMapActions implements PlayerMapActions {
 
     @Override
     public void leave() {
+
+    }
+
+    @Override
+    public void worldImport() {
 
     }
 }

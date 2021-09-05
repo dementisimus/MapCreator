@@ -6,7 +6,6 @@ import dev.dementisimus.capi.core.CoreAPI;
 import dev.dementisimus.capi.core.core.BukkitCoreAPI;
 import dev.dementisimus.capi.core.databases.DataManagement;
 import dev.dementisimus.capi.core.language.Translation;
-import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.capi.core.logger.CoreAPILogger;
 import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.capi.core.setup.states.type.SetupStateBoolean;
@@ -18,6 +17,7 @@ import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -68,17 +68,8 @@ public class MapCreatorPlugin extends JavaPlugin {
             this.coreAPI.enableExtraSetupState(DEFAULT_WORLD);
             this.coreAPI.enableExtraSetupState(SIMPLE_TEMPLATE_MAP_WANTED);
 
-            this.slimePlugin = this.retrieveSlimePlugin();
-
-            this.customMapCreator = new CustomMapCreator(this, SlimeDataSource.MONGODB);
-            this.slimeLoader = this.customMapCreator.getSlimeLoader();
-
             this.coreAPI.registerAdditionalModuleToInject(MapCreatorPlugin.class, this);
             this.coreAPI.registerAdditionalModuleToInject(BukkitCoreAPI.class, this.bukkitCoreAPI);
-            this.coreAPI.registerAdditionalModuleToInject(SlimePlugin.class, this.getSlimePlugin());
-            this.coreAPI.registerAdditionalModuleToInject(SlimeLoader.class, this.getSlimeLoader());
-            this.coreAPI.registerAdditionalModuleToInject(CustomMapCreator.class, this.getCustomMapCreator());
-            this.coreAPI.registerAdditionalModuleToInject(CustomMapCreatorInventory.class, this.getCustomMapCreator().getCustomMapCreatorInventory());
             this.coreAPI.registerAdditionalModuleToInject(DataManagement.class, this.bukkitCoreAPI.getCoreAPI().getDataManagement());
 
             if(!this.setupManager.getSetupState(WORLD_IMPORTER_REQUIRED).isPresentInConfig(this.getCoreAPI())) {
@@ -88,6 +79,16 @@ public class MapCreatorPlugin extends JavaPlugin {
             }
 
             this.coreAPI.init(initializedCoreAPI -> {
+                this.slimePlugin = this.retrieveSlimePlugin();
+
+                this.customMapCreator = new CustomMapCreator(this, SlimeDataSource.MONGODB);
+                this.slimeLoader = this.customMapCreator.getSlimeLoader();
+
+                this.coreAPI.registerAdditionalModuleToInject(SlimePlugin.class, this.getSlimePlugin());
+                this.coreAPI.registerAdditionalModuleToInject(SlimeLoader.class, this.getSlimeLoader());
+                this.coreAPI.registerAdditionalModuleToInject(CustomMapCreator.class, this.getCustomMapCreator());
+                this.coreAPI.registerAdditionalModuleToInject(CustomMapCreatorInventory.class, this.getCustomMapCreator().getCustomMapCreatorInventory());
+
                 if(!this.setupManager.getSetupState(API_MODE).getBoolean()) {
                     this.getCoreAPI().setRegisterOptionalCommands(true);
 
@@ -101,15 +102,21 @@ public class MapCreatorPlugin extends JavaPlugin {
 
                     this.customMapCreator.setCustomMapTemplates(customMapTemplates);
 
+                    BossBar bossBar = BossBar.bossBar(Component.text(""), 1, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_12);
                     Bukkit.getScheduler().runTaskTimer(this, () -> {
                         for(Player player : Bukkit.getOnlinePlayers()) {
                             if(player != null) {
                                 String fullMapName = player.getWorld().getName();
                                 if(fullMapName.contains(MapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
                                     String[] fullMapNameSplitted = fullMapName.replace(MapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
-                                    String[] targets = new String[]{"$category$", "$mapName$"};
-                                    String[] replacements = new String[]{fullMapNameSplitted[0], fullMapNameSplitted[1]};
-                                    player.sendActionBar(Component.text(new BukkitTranslation(Translations.PLAYER_ACTIONBAR_CURRENT_WORLD).get(player, targets, replacements)));
+                                    String category = fullMapNameSplitted[0];
+                                    String name = fullMapNameSplitted[1];
+
+                                    bossBar.name(Component.text("§c§l" + category + "§7/§f§l" + name));
+
+                                    player.showBossBar(bossBar);
+                                }else {
+                                    player.hideBossBar(bossBar);
                                 }
                             }
                         }
@@ -196,13 +203,15 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_NO_IMPORTABLE_WORLDS_FOUND = "inventory.section.category.maps.no.importable.worlds.found";
         public static final String INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND = "inventory.section.categories.noting.found";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND = "inventory.section.category.maps.noting.found";
-
-        public static final String PLAYER_ACTIONBAR_CURRENT_WORLD = "player.actionbar.current.world";
+        public static final String INVENTORY_SECTION_CATEGORY_MAPS_TEMPLATES_EMPTY = "inventory.section.category.maps.templates.empty";
 
         public static final String TEMPLATES_DOWNLOAD_FAILURE = "templates.download.failure";
         public static final String TEMPLATES_IMPORT_SUCCESS = "templates.import.success";
 
         public static final String MAPCREATOR_PERFORMANCE_FAILURE = "mapcreator.performance.failure";
+
+        public static final String BASIC_PRE_ACTION_MESSAGE = "basic.pre.action.message";
+        public static final String BASIC_POST_ACTION_MESSAGE = "basic.post.action.message";
 
     }
 }

@@ -8,6 +8,7 @@ import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.nms.CraftSlimeWorld;
 import dev.dementisimus.capi.core.callback.Callback;
+import dev.dementisimus.capi.core.logger.CoreAPILogger;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
@@ -33,34 +34,34 @@ public class CustomMapCreatorMap implements MapCreatorMap {
 
     @Getter private final SlimePlugin slimePlugin;
     @Getter private final SlimeLoader slimeLoader;
-
+    @Getter private final CustomMapCreator customMapCreator;
+    @Getter private final CoreAPILogger coreAPILogger;
+    @Getter
+    @Setter
+    CustomMapCreatorMap recentlyViewed;
     @Getter
     @Setter
     private File importableWorldFile;
-
-    @Getter
-    @Setter
-    private String mapName;
-
-    @Getter
-    @Setter
-    private String mapCategory;
-
-    @Getter
-    @Setter
-    private SlimeWorld slimeWorld;
-
+    @Getter private String mapName;
+    @Getter private String mapCategory;
+    @Getter private SlimeWorld slimeWorld;
     @Getter
     @Setter
     private String loadedBy;
-
     @Getter
     @Setter
     private Date loadedSince;
+    @Getter
+    @Setter
+    private CustomMapCreatorMap cloneFrom;
 
     public CustomMapCreatorMap() {
-        this.slimePlugin = MapCreatorPlugin.getMapCreatorPlugin().getSlimePlugin();
-        this.slimeLoader = MapCreatorPlugin.getMapCreatorPlugin().getSlimeLoader();
+        MapCreatorPlugin mapCreatorPlugin = MapCreatorPlugin.getMapCreatorPlugin();
+
+        this.slimePlugin = mapCreatorPlugin.getSlimePlugin();
+        this.slimeLoader = mapCreatorPlugin.getSlimeLoader();
+        this.customMapCreator = mapCreatorPlugin.getCustomMapCreator();
+        this.coreAPILogger = mapCreatorPlugin.getCoreAPILogger();
     }
 
     public CustomMapCreatorMap(String mapName, String mapCategory) {
@@ -175,6 +176,43 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
+    public void clone(Callback<MapCreator.Performance> performanceCallback) {
+        this.checkArguments();
+
+        MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
+        if(this.getCloneFrom() != null) {
+            if(this.getCloneFrom().exists()) {
+                this.customMapCreator.perform(MapCreator.Action.LOAD, this.getCloneFrom(), loadClonePerformance -> {
+                    if(loadClonePerformance.isSuccess()) {
+                        try {
+                            loadClonePerformance.getSlimeWorld().clone(this.getFileName(), this.slimeLoader, false);
+                            this.customMapCreator.perform(MapCreator.Action.LOAD, this, loadPerformance -> {
+                                performance.setSlimeWorld(loadPerformance.getSlimeWorld());
+                                this.customMapCreator.perform(MapCreator.Action.LEAVE_WITHOUT_SAVING, this.getCloneFrom(), leavePerformance -> {
+                                    performance.setSuccess();
+                                    performanceCallback.done(performance);
+                                });
+                            });
+                        }catch(Exception exception) {
+                            performance.setSuccess(exception);
+                            performanceCallback.done(performance);
+                        }
+                    }else {
+                        performance.setSuccess(MapCreator.Performance.FailureReason.NO_CLONEABLE_MAP);
+                        performanceCallback.done(performance);
+                    }
+                });
+            }else {
+                performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_DOES_NOT_EXIST);
+                performanceCallback.done(performance);
+            }
+        }else {
+            performance.setSuccess(MapCreator.Performance.FailureReason.NO_CLONEABLE_MAP);
+            performanceCallback.done(performance);
+        }
+    }
+
+    @Override
     public boolean isLocked() {
         try {
             return this.slimeLoader.isWorldLocked(this.getWorldFileName());
@@ -205,6 +243,21 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         Preconditions.checkNotNull(this.slimeLoader, "slimeLoader == null");
     }
 
+    public CustomMapCreatorMap setMapName(String mapName) {
+        this.mapName = mapName;
+        return this;
+    }
+
+    public CustomMapCreatorMap setSlimeWorld(SlimeWorld slimeWorld) {
+        this.slimeWorld = slimeWorld;
+        return this;
+    }
+
+    public CustomMapCreatorMap setMapCategory(String mapCategory) {
+        this.mapCategory = mapCategory;
+        return this;
+    }
+
     @Override
     public String getCategoryIdentifier() {
         return this.getMapCategory() + CATEGORY_MAP_SEPARATOR;
@@ -216,7 +269,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
-    public String getPrettyFileName() {
-        return "§c§l" + this.getMapCategory() + "§7/§7§l" + this.getMapName();
+    public String getPrettyName() {
+        return "§c§l" + this.getMapCategory() + "§7/§f§l" + this.getMapName();
     }
 }

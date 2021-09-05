@@ -38,44 +38,42 @@ public interface MapCreatorInventory {
 
     void fetch(Player player, Section inventorySection, CustomMapCreatorMap currentPlayerMap, BiCallback<List<Document>, List<ItemStack>> fetchedItems) throws IOException, UnknownWorldException;
 
-    void setCurrentlyLoadedPlayerMap(Player player, String mapName);
-
-    CustomMapCreatorMap getCurrentlyLoadedPlayerMap(Player player);
-
     CustomMapCreator getCustomMapCreator();
 
     boolean worldAlreadyLoadedOnServer(String playerMap);
 
-    CustomMapCreatorMap getCurrentlyViewedPlayerMap(Player player);
-
-    void setCurrentlyViewedPlayerMap(Player player, String mapName);
-
-    void setCurrentlyLoadedMap(Player player, CustomMapCreatorMap mapCreatorMap);
-
-    CustomMapCreatorMap getAppropriateSectionPlayerMap(Section inventorySection, Player player);
-
     void setMapManagementActionItems(Player player, CustomMapCreatorMap mapCreatorMap, InventoryCreator inventoryCreator, Enum action, String translationProperty, int actionItemSlot, Material actionItemMaterial);
+
+    void setLoadedPlayerMap(Player player, CustomMapCreatorMap customMapCreatorMap);
+
+    CustomMapCreatorMap getLoadedPlayerMap(Player player);
+
+    enum CurrentMapInfoDataState {
+        LOADED,
+        VIEWED
+    }
 
     enum Section {
 
-        CATEGORIES("map.creator.inventory.section.categories", Material.WHITE_STAINED_GLASS_PANE, 54, 28, false),
-        CATEGORY_MAPS("map.creator.inventory.section.category.maps", Material.GREEN_STAINED_GLASS_PANE, 54, 28, true),
-        CATEGORY_MAPS_MAP_CHOOSE_ACTION("player.inventory.map.choose.action", Material.ORANGE_STAINED_GLASS_PANE, 27, 28, true),
-        CATEGORY_MAPS_MAP_MANAGEMENT("player.inventory.map.management", Material.ORANGE_STAINED_GLASS_PANE, 27, 28, false),
-        WORLDS_IMPORTER_CATEGORIES("worlds.importer.categories", Material.YELLOW_STAINED_GLASS_PANE, 54, 28, true);
+        CATEGORIES("map.creator.inventory.section.categories", Material.WHITE_STAINED_GLASS_PANE, 54, 28, CurrentMapInfoDataState.VIEWED),
+        CATEGORY_MAPS("map.creator.inventory.section.category.maps", Material.GREEN_STAINED_GLASS_PANE, 54, 28, CurrentMapInfoDataState.VIEWED),
+        CATEGORY_MAPS_MAP_CHOOSE_ACTION("player.inventory.map.choose.action", Material.ORANGE_STAINED_GLASS_PANE, 27, 28, CurrentMapInfoDataState.VIEWED),
+        CATEGORY_MAPS_MAP_MANAGEMENT("player.inventory.map.management", Material.ORANGE_STAINED_GLASS_PANE, 27, 28, CurrentMapInfoDataState.LOADED),
+        IMPORTER_WORLDS_AVAILABLE("importer.worlds.available", Material.YELLOW_STAINED_GLASS_PANE, 54, 28, CurrentMapInfoDataState.VIEWED),
+        MAP_TEMPLATES_CHOOSE_TEMPLATE("map.templates.choose.template", Material.CYAN_STAINED_GLASS_PANE, 27, 28, CurrentMapInfoDataState.VIEWED);
 
         @Getter String titleTranslationProperty;
         @Getter Material inventoryPlaceholderMaterial;
         @Getter int inventorySize;
         @Getter int maxItemsOnPage;
-        @Getter boolean requiresViewableMapInfo;
+        @Getter CurrentMapInfoDataState currentMapInfoDataState;
 
-        Section(String titleTranslationProperty, Material inventoryPlaceholderMaterial, int inventorySize, int maxItemsOnPage, boolean requiresViewableMapInfo) {
+        Section(String titleTranslationProperty, Material inventoryPlaceholderMaterial, int inventorySize, int maxItemsOnPage, CurrentMapInfoDataState currentMapInfoDataState) {
             this.titleTranslationProperty = titleTranslationProperty;
             this.inventoryPlaceholderMaterial = inventoryPlaceholderMaterial;
             this.inventorySize = inventorySize;
             this.maxItemsOnPage = maxItemsOnPage;
-            this.requiresViewableMapInfo = requiresViewableMapInfo;
+            this.currentMapInfoDataState = currentMapInfoDataState;
         }
     }
 }

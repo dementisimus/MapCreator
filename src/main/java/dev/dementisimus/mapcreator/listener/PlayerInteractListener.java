@@ -33,7 +33,7 @@ public class PlayerInteractListener implements Listener {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
         Action action = event.getAction();
-        CustomMapCreatorMap customMapCreatorMap = this.customMapCreatorInventory.getCurrentlyLoadedPlayerMap(player);
+        CustomMapCreatorMap customMapCreatorMap = this.customMapCreatorInventory.getLoadedPlayerMap(player);
 
         if(item != null && item.getItemMeta() != null) {
             String displayName = item.getItemMeta().getDisplayName();
