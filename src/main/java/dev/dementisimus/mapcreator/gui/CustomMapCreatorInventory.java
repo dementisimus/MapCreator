@@ -6,7 +6,7 @@ import dev.dementisimus.capi.core.creators.InventoryCreator;
 import dev.dementisimus.capi.core.creators.ItemCreator;
 import dev.dementisimus.capi.core.creators.infiniteinventory.CustomInfiniteInventory;
 import dev.dementisimus.capi.core.creators.infiniteinventory.InfiniteInventoryObject;
-import dev.dementisimus.capi.core.databases.DataManagement;
+import dev.dementisimus.capi.core.database.Database;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
@@ -75,8 +75,8 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                 try {
                     this.fetch(player, inventorySection, loadedPlayerMap, (fetchedCategories, fetchedItems) -> {
                         for(Document item : fetchedCategories) {
-                            String name = item.getString(MapCreatorPlugin.Storage.Categories.NAME);
-                            String icon = item.getString(MapCreatorPlugin.Storage.Categories.ICON);
+                            String name = item.getString(MapCreatorPlugin.DataSource.NAME);
+                            String icon = item.getString(MapCreatorPlugin.DataSource.ICON);
                             items.add(new ItemCreator(Material.valueOf(icon)).setDisplayName(name).addAllFlags().apply());
                         }
                         items.addAll(fetchedItems);
@@ -95,7 +95,11 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                         customInfiniteInventory.open(inventoryCreator -> {
                             switch(inventorySection) {
                                 case CATEGORIES -> {
-                                    inventoryCreator.setItem(49, new ItemCreator(Material.GLOWSTONE_DUST).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY).addLores(new String[]{" ", new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1).get(player), new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2).get(player)}).apply());
+                                    inventoryCreator.setItem(49, new ItemCreator(Material.GLOWSTONE_DUST).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY).addLores(new String[]{
+                                            " ",
+                                            new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1).get(player),
+                                            new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2).get(player)
+                                    }).apply());
                                     if(fetchedCategories.isEmpty()) {
                                         this.setNothingFoundItem(player, inventoryCreator, inventorySection);
                                     }
@@ -165,14 +169,16 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
 
     @Override
     public void fetch(Player player, Section inventorySection, CustomMapCreatorMap currentPlayerMap, BiCallback<List<Document>, List<ItemStack>> fetchedItems) throws IOException, UnknownWorldException {
-        DataManagement dataManagement = MapCreatorPlugin.getMapCreatorPlugin().getCoreAPI().getDataManagement();
+        Database database = MapCreatorPlugin.getMapCreatorPlugin().getCoreAPI().getDatabase();
         List<Document> documents = new ArrayList<>();
         List<ItemStack> items = new ArrayList<>();
 
         switch(inventorySection) {
             case CATEGORIES -> {
-                dataManagement.setRequirements(MapCreatorPlugin.Storage.CATEGORIES, null, null);
-                dataManagement.listDocuments(MapCreatorPlugin.Storage.Categories.NAME, fetchedCategories -> fetchedItems.done(fetchedCategories, items));
+                database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
+                database.disableCache();
+
+                database.list(fetchedCategories -> fetchedItems.done(fetchedCategories, items));
             }
             case CATEGORY_MAPS -> {
                 CustomMapCreatorMap recentlyViewed = currentPlayerMap.getRecentlyViewed();

@@ -5,8 +5,10 @@ import dev.dementisimus.capi.core.annotations.bukkit.BukkitListener;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.creators.infiniteinventory.events.InfiniteInventoryClickEvent;
 import dev.dementisimus.capi.core.creators.signcreator.SignInputCreator;
-import dev.dementisimus.capi.core.databases.DataManagement;
+import dev.dementisimus.capi.core.database.Database;
+import dev.dementisimus.capi.core.database.properties.UpdateProperty;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
+import dev.dementisimus.capi.core.pools.ScheduledExecutor;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
@@ -19,8 +21,8 @@ import dev.dementisimus.mapcreator.creator.templates.interfaces.MapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.bson.Document;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -29,12 +31,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.BACK;
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY;
@@ -50,11 +54,10 @@ import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Sec
  * @author dementisimus
  * @since 31.07.2021:16:58
  */
-@BukkitListener(additionalModulesToInject = {MapCreatorPlugin.class, DataManagement.class, CustomMapCreatorInventory.class, CustomMapCreator.class})
+@BukkitListener(additionalModulesToInject = {MapCreatorPlugin.class, CustomMapCreatorInventory.class, CustomMapCreator.class})
 public class InfiniteInventoryClickListener implements Listener {
 
     @Inject MapCreatorPlugin mapCreatorPlugin;
-    @Inject DataManagement dataManagement;
     @Inject CustomMapCreatorInventory customMapCreatorInventory;
     @Inject CustomMapCreator customMapCreator;
 
@@ -64,6 +67,7 @@ public class InfiniteInventoryClickListener implements Listener {
         String title = event.getCurrentInventoryTitle();
         String displayName = event.getCurrentItemDisplayName();
         boolean isInRange = event.isInRange();
+        Database database = this.mapCreatorPlugin.getDatabase();
 
         MapCreatorInventory.Section currentSection = null;
 
@@ -100,20 +104,17 @@ public class InfiniteInventoryClickListener implements Listener {
                                     if(!newCategory.isEmpty()) {
                                         if(!newCategory.equalsIgnoreCase(MapTemplates.CATEGORY_TEMPLATES)) {
                                             newCategory = newCategory.toUpperCase();
-                                            this.dataManagement.setRequirements(MapCreatorPlugin.Storage.CATEGORIES, MapCreatorPlugin.Storage.Categories.NAME, newCategory);
+
+                                            database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
 
                                             Document document = new Document();
-                                            document.append(MapCreatorPlugin.Storage.Categories.NAME, newCategory);
-                                            document.append(MapCreatorPlugin.Storage.Categories.ICON, icon.name());
+                                            document.append(MapCreatorPlugin.DataSource.NAME, newCategory);
+                                            document.append(MapCreatorPlugin.DataSource.ICON, icon.name());
 
-                                            this.dataManagement.update(document, updated -> {
-                                                if(!updated) {
-                                                    this.dataManagement.write(document, done -> {
-                                                        this.customMapCreatorInventory.open(player, CATEGORIES);
-                                                    });
-                                                }else {
-                                                    this.customMapCreatorInventory.open(player, CATEGORIES);
-                                                }
+                                            database.setDocument(document);
+                                            database.setUpdateProperty(UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, newCategory).value(MapCreatorPlugin.DataSource.ICON, icon.name()));
+                                            database.writeOrUpdate(success -> {
+                                                this.customMapCreatorInventory.open(player, CATEGORIES);
                                             });
                                         }else {
                                             player.playSound(player.getLocation(), Sound.ENTITY_PIGLIN_BRUTE_ANGRY, 10, 1);
@@ -296,7 +297,7 @@ public class InfiniteInventoryClickListener implements Listener {
 
         long started = System.currentTimeMillis();
 
-        AtomicInteger actionBarStatusTaskId = new AtomicInteger(-1);
+        AtomicReference<ScheduledFuture<?>> scheduledFuture = new AtomicReference<>();
 
         if(action.isUseLoadingActionBar()) {
             player.closeInventory();
@@ -304,10 +305,25 @@ public class InfiniteInventoryClickListener implements Listener {
             String mapName = action.equals(MapCreator.Action.CLONE) ? customMapCreatorMap.getCloneFrom().getPrettyName() : customMapCreatorMap.getPrettyName();
             Component message = Component.text(new BukkitTranslation(action.getLoadingActionBarActionTranslationProperty()).get(player, "$map$", mapName));
 
-            BukkitTask bukkitTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this.mapCreatorPlugin, () -> {
-                player.sendActionBar(message);
-            }, 0, 5);
-            actionBarStatusTaskId.set(bukkitTask.getTaskId());
+            AtomicInteger atomicDotCounter = new AtomicInteger(0);
+            TextComponent dotText = Component.text(".");
+
+            scheduledFuture.set(ScheduledExecutor.scheduleWithFixedDelay(0, 375, TimeUnit.MILLISECONDS, () -> {
+                int dotCounter = atomicDotCounter.get();
+                TextComponent dots = Component.empty();
+
+                for(int i = 0; i < dotCounter; i++) {
+                    dots = dots.append(dotText);
+                }
+
+                player.sendActionBar(message.append(dots));
+
+                if(dotCounter == 3) {
+                    atomicDotCounter.set(0);
+                }else {
+                    atomicDotCounter.incrementAndGet();
+                }
+            }));
 
             if(action.equals(MapCreator.Action.LOAD)) {
                 player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 999999, 10, false, false, false));
@@ -324,7 +340,7 @@ public class InfiniteInventoryClickListener implements Listener {
                     this.customMapCreatorInventory.setLoadedPlayerMap(player, customMapCreatorMap);
                 }
 
-                if(action.equals(MapCreator.Action.IMPORT)) {
+                if(action.equals(MapCreator.Action.IMPORT) || action.equals(MapCreator.Action.DELETE)) {
                     this.customMapCreator.getCustomWorldImporter().scanForImportableWorlds();
                 }
 
@@ -334,20 +350,21 @@ public class InfiniteInventoryClickListener implements Listener {
                     this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
                 }
 
-                if(action.isUseLoadingActionBar()) {
-                    Bukkit.getScheduler().cancelTask(actionBarStatusTaskId.get());
-                    player.sendActionBar(Component.empty());
-
-                    if(action.equals(MapCreator.Action.LOAD)) {
-                        player.removePotionEffect(PotionEffectType.BLINDNESS);
-                    }
-                }
-
                 String elapsed = String.format("%.3fs", (System.currentTimeMillis() - started) / 1000.0f);
                 action.sendActionMessage(player, customMapCreatorMap, elapsed, true);
             }else {
                 performance.announceFailure(player);
                 player.playSound(player.getLocation(), Sound.ENTITY_CHICKEN_DEATH, 20, 1);
+            }
+
+            if(action.isUseLoadingActionBar() || !performance.isSuccess()) {
+                scheduledFuture.get().cancel(true);
+
+                player.sendActionBar(Component.empty());
+
+                if(action.equals(MapCreator.Action.LOAD)) {
+                    player.removePotionEffect(PotionEffectType.BLINDNESS);
+                }
             }
         });
     }

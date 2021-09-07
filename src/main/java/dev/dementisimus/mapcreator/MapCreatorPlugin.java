@@ -4,7 +4,9 @@ import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import dev.dementisimus.capi.core.CoreAPI;
 import dev.dementisimus.capi.core.core.BukkitCoreAPI;
-import dev.dementisimus.capi.core.databases.DataManagement;
+import dev.dementisimus.capi.core.database.Database;
+import dev.dementisimus.capi.core.database.properties.DataSourceProperty;
+import dev.dementisimus.capi.core.database.types.SQLTypes;
 import dev.dementisimus.capi.core.language.Translation;
 import dev.dementisimus.capi.core.logger.CoreAPILogger;
 import dev.dementisimus.capi.core.setup.SetupManager;
@@ -23,7 +25,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Locale;
+import java.util.Map;
 
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.ExtraSetupStates.*;
 /**
@@ -45,38 +47,31 @@ public class MapCreatorPlugin extends JavaPlugin {
     @Getter private SlimeLoader slimeLoader;
     @Getter private CustomMapCreator customMapCreator;
     @Getter private SetupManager setupManager;
-    @Getter private CoreAPILogger coreAPILogger;
+    @Getter private Database database;
 
     @Override
     public void onEnable() {
         mapCreatorPlugin = this;
         this.bukkitCoreAPI = new BukkitCoreAPI(this, true);
         this.coreAPI = this.bukkitCoreAPI.getCoreAPI();
-        this.coreAPILogger = this.coreAPI.getCoreAPILogger();
+
+        this.setupManager = this.coreAPI.getSetupManager();
+
+        this.coreAPI.enableMainSetupStates();
+
+        this.coreAPI.enableExtraSetupState(WORLD_IMPORTER_REQUIRED);
+        this.coreAPI.enableExtraSetupState(WORLD_IMPORTER_FOLDER_LOCATION);
+        this.coreAPI.enableExtraSetupState(API_MODE);
+        this.coreAPI.enableExtraSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS);
+        this.coreAPI.enableExtraSetupState(DEFAULT_WORLD);
+        this.coreAPI.enableExtraSetupState(SIMPLE_TEMPLATE_MAP_WANTED);
 
         this.coreAPI.prepareInit(() -> {
-            this.coreAPI.enableDatabase(new String[]{Storage.CATEGORIES}, new String[]{Storage.Rows.NAME});
-
-            this.setupManager = this.coreAPI.getSetupManager();
-
-            this.coreAPI.enableMainSetupStates();
-
-            this.coreAPI.enableExtraSetupState(WORLD_IMPORTER_REQUIRED);
-            this.coreAPI.enableExtraSetupState(WORLD_IMPORTER_FOLDER_LOCATION);
-            this.coreAPI.enableExtraSetupState(API_MODE);
-            this.coreAPI.enableExtraSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS);
-            this.coreAPI.enableExtraSetupState(DEFAULT_WORLD);
-            this.coreAPI.enableExtraSetupState(SIMPLE_TEMPLATE_MAP_WANTED);
+            this.coreAPI.enableDatabase(DataSource.PROPERTY);
+            this.database = this.coreAPI.getDatabase();
 
             this.coreAPI.registerAdditionalModuleToInject(MapCreatorPlugin.class, this);
             this.coreAPI.registerAdditionalModuleToInject(BukkitCoreAPI.class, this.bukkitCoreAPI);
-            this.coreAPI.registerAdditionalModuleToInject(DataManagement.class, this.bukkitCoreAPI.getCoreAPI().getDataManagement());
-
-            if(!this.setupManager.getSetupState(WORLD_IMPORTER_REQUIRED).isPresentInConfig(this.getCoreAPI())) {
-                if(this.getCoreAPI().getConfigFile().delete()) {
-                    this.coreAPILogger.warning(new Translation(Translations.SETUP_OLD_VERSION_FOUND_RESTART_SETUP).get(Locale.ENGLISH, true));
-                }
-            }
 
             this.coreAPI.init(initializedCoreAPI -> {
                 this.slimePlugin = this.retrieveSlimePlugin();
@@ -102,7 +97,7 @@ public class MapCreatorPlugin extends JavaPlugin {
 
                     this.customMapCreator.setCustomMapTemplates(customMapTemplates);
 
-                    BossBar bossBar = BossBar.bossBar(Component.text(""), 1, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_12);
+                    BossBar bossBar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_12);
                     Bukkit.getScheduler().runTaskTimer(this, () -> {
                         for(Player player : Bukkit.getOnlinePlayers()) {
                             if(player != null) {
@@ -122,7 +117,7 @@ public class MapCreatorPlugin extends JavaPlugin {
                         }
                     }, 30, 30);
                 }else {
-                    this.coreAPILogger.info(new Translation(Translations.API_MODE_ENABLED).get(true));
+                    CoreAPILogger.info(new Translation(Translations.API_MODE_ENABLED).get(true));
                 }
                 if(this.setupManager.getSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS).getBoolean()) {
                     this.getCoreAPI().setRegisterOptionalListeners(true);
@@ -162,19 +157,21 @@ public class MapCreatorPlugin extends JavaPlugin {
 
     }
 
-    public static class Storage {
+    public static class DataSource implements DataSourceProperty {
 
-        public static final String CATEGORIES = "categories";
+        public static final DataSource PROPERTY = new DataSource();
 
-        public static class Rows {
+        public static final String NAME = "name";
+        public static final String ICON = "icon";
 
-            public static final String NAME = "";
+        @Override
+        public String name() {
+            return "categories";
         }
 
-        public static class Categories {
-
-            public static final String NAME = "name";
-            public static final String ICON = "icon";
+        @Override
+        public Map<String, String> fields() {
+            return Map.ofEntries(Map.entry(NAME, SQLTypes.LONGTEXT), Map.entry(ICON, SQLTypes.LONGTEXT));
         }
     }
 
@@ -184,8 +181,6 @@ public class MapCreatorPlugin extends JavaPlugin {
     }
 
     public static class Translations {
-
-        public static final String SETUP_OLD_VERSION_FOUND_RESTART_SETUP = "setup.old.version.found.restart.setup";
 
         public static final String API_MODE_ENABLED = "api.mode.enabled";
 

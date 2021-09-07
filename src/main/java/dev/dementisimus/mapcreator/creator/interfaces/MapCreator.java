@@ -92,7 +92,9 @@ public interface MapCreator {
             String cloneFrom = map.getCloneFrom() == null ? "" : map.getCloneFrom().getPrettyName();
 
             String basicActionMessageProperty = isPostAction ? MapCreatorPlugin.Translations.BASIC_POST_ACTION_MESSAGE : MapCreatorPlugin.Translations.BASIC_PRE_ACTION_MESSAGE;
-            return new BukkitTranslation(basicActionMessageProperty).get(player, new String[]{"$prefix$", "$map$", "$action$", "$elapsed$"}, new String[]{MapCreatorPlugin.Strings.PREFIX, map.getPrettyName(), new BukkitTranslation(actionMessageTranslationProperty).get(player, "$clone$", cloneFrom), elapsed});
+            return new BukkitTranslation(basicActionMessageProperty).get(player, new String[]{"$prefix$", "$map$", "$action$", "$elapsed$"}, new String[]{
+                    MapCreatorPlugin.Strings.PREFIX, map.getPrettyName(), new BukkitTranslation(actionMessageTranslationProperty).get(player, "$clone$", cloneFrom), elapsed
+            });
         }
 
         public void sendActionMessage(Player player, CustomMapCreatorMap map, String elapsed, boolean isPostAction) {
@@ -121,7 +123,10 @@ public interface MapCreator {
                     player.sendMessage(Action.getActionMessage(player, map, this.getActionMessageTranslationProperty(), "", true));
                     return;
                 }
-                player.sendMessage(new BukkitTranslation(this.getActionMessageTranslationProperty()).get(player, new String[]{"$prefix$", "$map$"}, new String[]{MapCreatorPlugin.Strings.PREFIX, map.getPrettyName()}));
+                player.sendMessage(new BukkitTranslation(this.getActionMessageTranslationProperty()).get(player, new String[]{"$prefix$", "$map$"}, new String[]{
+                        MapCreatorPlugin.Strings.PREFIX,
+                        map.getPrettyName()
+                }));
             }
         }
     }
@@ -229,13 +234,18 @@ public interface MapCreator {
 
         public void announceFailure(@NotNull Player player) {
             if(this.failureReason != null) {
-                player.sendMessage(MapCreatorPlugin.Strings.PREFIX + this.failureAnnouncement.message().get(player, this.failureAnnouncement.targets(), new String[]{this.getAction().name(), this.failureAnnouncement.failureMessage().get(player)}));
+                player.sendMessage(MapCreatorPlugin.Strings.PREFIX + this.failureAnnouncement.message().get(player, this.failureAnnouncement.targets(), new String[]{
+                        this.getAction().name(),
+                        this.failureAnnouncement.failureMessage().get(player)
+                }));
             }
         }
 
         public void announceFailure() {
             if(this.failureReason != null) {
-                MapCreatorPlugin.getMapCreatorPlugin().getLogger().log(Level.WARNING, this.failureAnnouncement.message().get(this.failureAnnouncement.targets(), new String[]{this.getAction().name(), this.failureAnnouncement.failureMessage().get(true)}, true));
+                MapCreatorPlugin.getMapCreatorPlugin().getLogger().log(Level.WARNING, this.failureAnnouncement.message().get(this.failureAnnouncement.targets(), new String[]{
+                        this.getAction().name(), this.failureAnnouncement.failureMessage().get(true)
+                }, true));
             }
         }
 

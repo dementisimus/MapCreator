@@ -8,7 +8,6 @@ import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.nms.CraftSlimeWorld;
 import dev.dementisimus.capi.core.callback.Callback;
-import dev.dementisimus.capi.core.logger.CoreAPILogger;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
@@ -35,7 +34,6 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Getter private final SlimePlugin slimePlugin;
     @Getter private final SlimeLoader slimeLoader;
     @Getter private final CustomMapCreator customMapCreator;
-    @Getter private final CoreAPILogger coreAPILogger;
     @Getter
     @Setter
     CustomMapCreatorMap recentlyViewed;
@@ -61,7 +59,6 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         this.slimePlugin = mapCreatorPlugin.getSlimePlugin();
         this.slimeLoader = mapCreatorPlugin.getSlimeLoader();
         this.customMapCreator = mapCreatorPlugin.getCustomMapCreator();
-        this.coreAPILogger = mapCreatorPlugin.getCoreAPILogger();
     }
 
     public CustomMapCreatorMap(String mapName, String mapCategory) {
