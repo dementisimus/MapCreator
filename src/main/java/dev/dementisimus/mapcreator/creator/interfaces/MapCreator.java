@@ -124,8 +124,7 @@ public interface MapCreator {
                     return;
                 }
                 player.sendMessage(new BukkitTranslation(this.getActionMessageTranslationProperty()).get(player, new String[]{"$prefix$", "$map$"}, new String[]{
-                        MapCreatorPlugin.Strings.PREFIX,
-                        map.getPrettyName()
+                        MapCreatorPlugin.Strings.PREFIX, map.getPrettyName()
                 }));
             }
         }
@@ -234,9 +233,8 @@ public interface MapCreator {
 
         public void announceFailure(@NotNull Player player) {
             if(this.failureReason != null) {
-                player.sendMessage(MapCreatorPlugin.Strings.PREFIX + this.failureAnnouncement.message().get(player, this.failureAnnouncement.targets(), new String[]{
-                        this.getAction().name(),
-                        this.failureAnnouncement.failureMessage().get(player)
+                player.sendMessage(MapCreatorPlugin.Strings.PREFIX + " " + this.failureAnnouncement.message().get(player, this.failureAnnouncement.targets(), new String[]{
+                        this.getAction().name(), this.failureAnnouncement.failureMessage().get(player)
                 }));
             }
         }

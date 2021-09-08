@@ -3,6 +3,7 @@ package dev.dementisimus.mapcreator;
 import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import dev.dementisimus.capi.core.CoreAPI;
+import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.core.BukkitCoreAPI;
 import dev.dementisimus.capi.core.database.Database;
 import dev.dementisimus.capi.core.database.properties.DataSourceProperty;
@@ -14,6 +15,8 @@ import dev.dementisimus.capi.core.setup.states.type.SetupStateBoolean;
 import dev.dementisimus.capi.core.setup.states.type.SetupStateString;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.SlimeDataSource;
+import dev.dementisimus.mapcreator.creator.aswm.ASWMDownloads;
+import dev.dementisimus.mapcreator.creator.aswm.SlimeDataSoureConfig;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
@@ -23,8 +26,11 @@ import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.InvalidDescriptionException;
+import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.Map;
 
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.ExtraSetupStates.*;
@@ -74,54 +80,58 @@ public class MapCreatorPlugin extends JavaPlugin {
             this.coreAPI.registerAdditionalModuleToInject(BukkitCoreAPI.class, this.bukkitCoreAPI);
 
             this.coreAPI.init(initializedCoreAPI -> {
-                this.slimePlugin = this.retrieveSlimePlugin();
+                this.retrieveSlimePlugin(continueInitialization -> {
+                    this.customMapCreator = new CustomMapCreator(this, SlimeDataSource.MONGODB);
+                    this.slimeLoader = this.customMapCreator.getSlimeLoader();
 
-                this.customMapCreator = new CustomMapCreator(this, SlimeDataSource.MONGODB);
-                this.slimeLoader = this.customMapCreator.getSlimeLoader();
+                    this.coreAPI.registerAdditionalModuleToInject(SlimePlugin.class, this.getSlimePlugin());
+                    this.coreAPI.registerAdditionalModuleToInject(SlimeLoader.class, this.getSlimeLoader());
+                    this.coreAPI.registerAdditionalModuleToInject(CustomMapCreator.class, this.getCustomMapCreator());
+                    this.coreAPI.registerAdditionalModuleToInject(CustomMapCreatorInventory.class, this.getCustomMapCreator().getCustomMapCreatorInventory());
 
-                this.coreAPI.registerAdditionalModuleToInject(SlimePlugin.class, this.getSlimePlugin());
-                this.coreAPI.registerAdditionalModuleToInject(SlimeLoader.class, this.getSlimeLoader());
-                this.coreAPI.registerAdditionalModuleToInject(CustomMapCreator.class, this.getCustomMapCreator());
-                this.coreAPI.registerAdditionalModuleToInject(CustomMapCreatorInventory.class, this.getCustomMapCreator().getCustomMapCreatorInventory());
+                    if(!continueInitialization) {
+                        return;
+                    }
 
-                if(!this.setupManager.getSetupState(API_MODE).getBoolean()) {
-                    this.getCoreAPI().setRegisterOptionalCommands(true);
+                    if(!this.setupManager.getSetupState(API_MODE).getBoolean()) {
+                        this.getCoreAPI().setRegisterOptionalCommands(true);
 
-                    CustomWorldImporter customWorldImporter = new CustomWorldImporter(this);
-                    customWorldImporter.scanForImportableWorlds();
+                        CustomWorldImporter customWorldImporter = new CustomWorldImporter(this);
+                        customWorldImporter.scanForImportableWorlds();
 
-                    this.customMapCreator.setCustomWorldImporter(customWorldImporter);
+                        this.customMapCreator.setCustomWorldImporter(customWorldImporter);
 
-                    CustomMapTemplates customMapTemplates = new CustomMapTemplates(this);
-                    customMapTemplates.downloadSimpleTemplate();
+                        CustomMapTemplates customMapTemplates = new CustomMapTemplates(this);
+                        customMapTemplates.downloadSimpleTemplate();
 
-                    this.customMapCreator.setCustomMapTemplates(customMapTemplates);
+                        this.customMapCreator.setCustomMapTemplates(customMapTemplates);
 
-                    BossBar bossBar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_12);
-                    Bukkit.getScheduler().runTaskTimer(this, () -> {
-                        for(Player player : Bukkit.getOnlinePlayers()) {
-                            if(player != null) {
-                                String fullMapName = player.getWorld().getName();
-                                if(fullMapName.contains(MapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
-                                    String[] fullMapNameSplitted = fullMapName.replace(MapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
-                                    String category = fullMapNameSplitted[0];
-                                    String name = fullMapNameSplitted[1];
+                        BossBar bossBar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_12);
+                        Bukkit.getScheduler().runTaskTimer(this, () -> {
+                            for(Player player : Bukkit.getOnlinePlayers()) {
+                                if(player != null) {
+                                    String fullMapName = player.getWorld().getName();
+                                    if(fullMapName.contains(MapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
+                                        String[] fullMapNameSplitted = fullMapName.replace(MapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
+                                        String category = fullMapNameSplitted[0];
+                                        String name = fullMapNameSplitted[1];
 
-                                    bossBar.name(Component.text("§c§l" + category + "§7/§f§l" + name));
+                                        bossBar.name(Component.text("§c§l" + category + "§7/§f§l" + name));
 
-                                    player.showBossBar(bossBar);
-                                }else {
-                                    player.hideBossBar(bossBar);
+                                        player.showBossBar(bossBar);
+                                    }else {
+                                        player.hideBossBar(bossBar);
+                                    }
                                 }
                             }
-                        }
-                    }, 30, 30);
-                }else {
-                    CoreAPILogger.info(new Translation(Translations.API_MODE_ENABLED).get(true));
-                }
-                if(this.setupManager.getSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS).getBoolean()) {
-                    this.getCoreAPI().setRegisterOptionalListeners(true);
-                }
+                        }, 30, 30);
+                    }else {
+                        CoreAPILogger.info(new Translation(Translations.API_MODE_ENABLED).get(true));
+                    }
+                    if(this.setupManager.getSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS).getBoolean()) {
+                        this.getCoreAPI().setRegisterOptionalListeners(true);
+                    }
+                });
             });
         });
     }
@@ -132,12 +142,46 @@ public class MapCreatorPlugin extends JavaPlugin {
        the latest version of AdvancedSlimeWorldManager, load it as a plugin & set it up with the database credentials given!
      *
      * */
-    private SlimePlugin retrieveSlimePlugin() {
+    private void retrieveSlimePlugin(Callback<Boolean> booleanCallback) {
         SlimePlugin plugin = (SlimePlugin) Bukkit.getPluginManager().getPlugin("SlimeWorldManager");
+        File pluginFile = new File("./plugins/" + ASWMDownloads.PLUGIN_FILE_NAME);
+
         if(plugin == null) {
-            throw new IllegalArgumentException("SlimePlugin is NULL");
+            CoreAPILogger.info(new Translation(Translations.ASWM_INIT_PLUGIN_NOT_FOUND_DOWNLOADING_FILES).get("$prefix$", Strings.PREFIX, true));
+
+            this.coreAPI.getFileDownloader().downloadFile(ASWMDownloads.CLASS_MODIFIER_URL, "./" + ASWMDownloads.CLASS_MODIFIER_FILE_NAME, classModifierDownload -> {
+                this.coreAPI.getFileDownloader().downloadFile(ASWMDownloads.PLUGIN_URL, "./plugins/" + ASWMDownloads.PLUGIN_FILE_NAME, pluginDownload -> {
+                    try {
+                        SlimePlugin slimePlugin = (SlimePlugin) Bukkit.getPluginManager().loadPlugin(pluginFile);
+
+                        if(slimePlugin != null) {
+                            this.slimePlugin = slimePlugin;
+
+                            SlimeDataSoureConfig slimeDataSoureConfig = new SlimeDataSoureConfig(this.getDatabase(), this.getSetupManager());
+                            slimeDataSoureConfig.modify();
+
+                            booleanCallback.done(false);
+
+                            CoreAPILogger.warning(new Translation(Translations.ASWM_INIT_DONE_RESTART_REQUIRED_AUTO_RESTART).get(new String[]{
+                                    "$prefix$", "$classModifierVersion$"
+                            }, new String[]{Strings.PREFIX, ASWMDownloads.VERSION}, true));
+
+                            Bukkit.getScheduler().runTaskTimer(this, runnable -> {
+                                Bukkit.shutdown();
+
+                                runnable.cancel();
+                            }, 200, 200);
+                        }
+
+                    }catch(InvalidPluginException | InvalidDescriptionException e) {
+                        e.printStackTrace();
+                    }
+                });
+            });
+        }else {
+            this.slimePlugin = plugin;
+            booleanCallback.done(true);
         }
-        return plugin;
     }
 
     public static class ExtraSetupStates {
@@ -153,7 +197,7 @@ public class MapCreatorPlugin extends JavaPlugin {
 
     public static class Strings {
 
-        public static final String PREFIX = "§c§lMap§f§lCreator §7§l» ";
+        public static final String PREFIX = "§c§lMap§f§lCreator §7§l»";
 
     }
 
@@ -207,6 +251,11 @@ public class MapCreatorPlugin extends JavaPlugin {
 
         public static final String BASIC_PRE_ACTION_MESSAGE = "basic.pre.action.message";
         public static final String BASIC_POST_ACTION_MESSAGE = "basic.post.action.message";
+
+        public static final String ASWM_INIT_PLUGIN_NOT_FOUND_DOWNLOADING_FILES = "aswm.init.plugin.not.found.downloading.files";
+        public static final String ASWM_INIT_UNSUPPORTED_DATABASE = "aswm.init.unsupported.database";
+        public static final String ASWM_INIT_CONFIG_DONE = "aswm.init.config.done";
+        public static final String ASWM_INIT_DONE_RESTART_REQUIRED_AUTO_RESTART = "aswm.init.done.restart.required.auto.restart";
 
     }
 }
