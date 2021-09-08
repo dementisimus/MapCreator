@@ -1,99 +1,68 @@
-![](https://dementisimus.dev/img/MapCreator/MapCreator.jpg)
+# MapCreator
+## _Build maps better. Together._
+  
+MapCreator is a **lightweight**, **inventory based** map management tool which allows users to **create**, **load**, **delete**, **import** and **clone** custom Minecraft maps. **For your custom needs**!
 
-### *an easy && lightweight Plugin / and or API // for creating/loading custom maps for your custom needs!*
-------------
+[![main build status](https://github.com/dementisimus/MapCreator/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/dementisimus/MapCreator) [![develop build status](https://github.com/dementisimus/MapCreator/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/dementisimus/MapCreator/tree/develop)
 
-## some impressions first (outdated)
+## **Features**
 
-![](https://dementisimus.dev/img/MapCreator/commandOutput.jpg)
+- **Create** new maps **from templates**
+- **Manage** (**load**, **delete**, **clone**) already **existing worlds**
+- **Easy import** of **traditionally** saved **maps**
+- **Lightweight** & **asynchronous** map management
+- **Ability** to **store** custom maps **permanently** in **databases** such as **MongoDB**, **MariaDB** (**MySQL**), **SQLite**, or on your **file system**
+- **Sort** your **maps** by creating **unique categories**
+- Ability to **manage all maps** and **categories** through an **inventory**
+- **Multilingual** console messages (languages currently available: **English**, **German**)
+- Each **player may choose** a suitable language via `/language`, otherwise the language will be **picked automatically**
+- Uses **less disk space** and **provides more performance** than **traditional maps**
+- **No need** to **install anything** by yourself - **MapCreator** does **everything** for you (except for **MapCreator itself** ¬‿¬ )!
+- **Powerful API** for **Java Developers**
+- **Continuous development** with many **[planned features]**
+- **24/7-Support** at our **[Discord-Server]**
 
-![](https://dementisimus.dev/img/MapCreator/treeCommandOutput.jpg)
+## **Requirements**
 
-![](https://dementisimus.dev/img/MapCreator/loadExample.jpg)
+1. **Java 16**
+2. **[PaperMC 1.17.1]** (a **SpigotMC-Fork**)
+3. **Access** to the **server console** (for the **automated setup**)
+4. **Access** to a **database** **(MongoDB, MariaDB (MySQL), SQLite)**
 
-![](https://dementisimus.dev/img/MapCreator/newlyCreatedMap.jpg)
+## **Installation**
 
-![](https://dementisimus.dev/img/MapCreator/loadedSuccessfully.jpg)
+1. Make sure your **server** is **stopped**, or will be **restarted**. Do **not reload** your server!
+2. **Download** the **latest version** of **MapCreator** from **[GitHub Releases]**
+3. **Move** the **downloaded jar-file** to the **`plugins`-folder**
+4. **Start** (or **restart**) your **server**
+5. **Go through** the **installation process** (**setu**p) in your **console** by **answering** the **prompted questions** with **commands** (**commands** represent the **data**, may be **infinitely long**)
 
-![](https://repo.dementisimus.dev/dev/dementisimus/mrs/MapRatingSystem/images/server.png)
+## **Development**
 
-![](https://dementisimus.dev/img/MapCreator/savedSuccessfully.jpg)
+- [coming soon]
 
-![](https://dementisimus.dev/img/MapCreator/treeCommandOutputAfterSaving.jpg)
+## **Credits**
 
-## Features (outdated)
+- [Advanced-Slime-World-Manager] for **creating** and **maintaining** the **software used** to **store maps** in the **Slime-Format**
 
-- **easy** installation && setup via **console** on server startup
-- possibility to **choose** between **MongoDB**, **MariaDB** or **SQLite**
-- **automatic** dependency **installer** - **no need** to download dependencies **by yourself**!
-- **automatic** **saving** and **loading** of your **last** **Location**, **GameMode**, **Inventory** & **more**!
-- async
-- lightweight
-- **caches** used data for **maximum performance**
-- **multilingual** - by selecting the **correct language** for a player **automatically**
-- high scalability
-- **docs** on [docs.dementisimus.dev](https://docs.dementisimus.dev/MapCreator/ "docs.dementisimus.dev")
-- **Support** @ [Discord](https://discord.gg/sTRg8A7 "Discord") && [SpigotMC](https://www.spigotmc.org/conversations/add?to=dementisimus "SpigotMC") (Discord **preferred, so your question might help other people as well!**)
-- **issues** can be **reported** [here](https://discord.gg/sTRg8A7 "here")
-- [have a look at upcoming features on GitHub!](https://github.com/dementisimus/MapCreator/projects "have a look at upcoming features on GitHub!")
+## **Special thanks to**
 
-## API-Usage (outdated)
+- [@TearingBooch482] for **helping** me **stress-testing** every **new version** of my **plugins**
 
-```xml
-<!-- dementisimus.dev-Repository -->
-<repository>
-     <id>dementisimus.dev</id>
-     <url>https://repo.dementisimus.dev</url>
-</repository>
+## **License**
 
-<!-- MapCreator-1.3.0 by dementisimus -->
-<dependency>
-     <groupId>dev.dementisimus.mapcreator</groupId>
-     <artifactId>MapCreator</artifactId>
-     <version>1.3.0</version>
-     <scope>provided</scope>
-</dependency>
-```
+» [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License]
 
-```yaml
-#this you need to specify in your plugin.yml!
-loadbefore: [MapCreator]
-```
+# **Happy map creating!**
 
-```java
-[example]
-MapCreatorAPI.setWorldPoolFolder("/home/minecraft/maps/");
-MapCreatorAPI mapCreatorAPI = new MapCreatorAPI(); //use a player as parameter to teleport them to the newly loaded map;
-mapCreatorAPI.setMapType("MYMAPS");
-mapCreatorAPI.setMapName("myMap");
-mapCreatorAPI#load(boolean useDefaultWorldSettings); //(use loadSync for using while loading on server startup, or without any player)
-```
-
-## » more information: ([click](https://docs.dementisimus.dev/MapCreator/ "click"))
-
-## ToS
-- the plugin **may not** be decompiled, modified, sold, be published as your own.
-- the plugin **may** be used in public/private plugins; credits would be nice!
-
-# !!! read this carefully before downloading !!!
-> **- in order to use this plugin properly, you need to use Java >16 & [Paper by PaperMC](https://papermc.io/downloads "Paper by PaperMC") >1.17! (Paper is an extension/fork of Spigot by SpigotMC, which implements many useful features!)**
-
-## Credits
-
-**special thanks** goes to
-  - the **team & community** of [Advanced-Slime-World-Manager](https://github.com/Paul19988/Advanced-Slime-World-Manager)
-    - for creating such awesome software!
-
-## installation
-
-###  (outdated) » **you can find an example for your defaultWorld [here](https://repo.dementisimus.dev/dev/dementisimus/mapcreator/MapCreator/DEFAULTMAPS/defaultWorld.zip "here")!**
-
-- **[If your server is currently running, make sure you stop him, do NOT reload your server!]**
-- **put this plugin** into the **plugin folder** of **your** **server**.
-- you can now **start** your **server**!
-
-## install an update
-- **download** the **new version** and put it in your **plugin-folder**. **Follow** the **instructions** on the update post, **if given**.
-- **restart** or **start** [do **NOT** reload] your **server**.
-
-# » Have fun!
+   [planned features]: <https://github.com/dementisimus/MapCreator/projects/2>
+   [Discord-Server]: <https://discord.gg/sTRg8A7>
+   
+   [PaperMC 1.17.1]: <https://papermc.io/downloads>
+   
+   [GitHub Releases]: <https://github.com/dementisimus/MapCreator/releases>
+   
+   [Advanced-Slime-World-Manager]: <https://github.com/Paul19988/Advanced-Slime-World-Manager>
+   [@TearingBooch482]: <https://github.com/TearingBooch482>
+   
+   [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License]: <https://creativecommons.org/licenses/by-nc-nd/4.0/>
