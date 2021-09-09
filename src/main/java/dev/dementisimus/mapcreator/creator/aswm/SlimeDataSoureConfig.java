@@ -1,9 +1,8 @@
 package dev.dementisimus.mapcreator.creator.aswm;
 
 import com.google.common.reflect.TypeToken;
-import com.grinderwolf.swm.internal.ninja.leaping.configurate.objectmapping.Setting;
-import com.grinderwolf.swm.internal.ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import com.grinderwolf.swm.internal.ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
+import com.grinderwolf.swm.plugin.config.DatasourcesConfig;
 import dev.dementisimus.capi.core.database.Database;
 import dev.dementisimus.capi.core.database.interfaces.IDatabase;
 import dev.dementisimus.capi.core.language.Translation;
@@ -12,7 +11,6 @@ import dev.dementisimus.capi.core.setup.MainSetupStates;
 import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import org.yaml.snakeyaml.DumperOptions;
 
@@ -40,20 +38,21 @@ public class SlimeDataSoureConfig {
 
     @SneakyThrows
     public void modify() {
-        Sources sources = new Sources();
+        DatasourcesConfig datasourcesConfig = new DatasourcesConfig();
+
         IDatabase.Type type = this.database.getType();
         boolean supportedDatabase = true;
 
         if(type.equals(IDatabase.Type.MONGODB)) {
-            Sources.MongoDBConfig mongoDBConfig = new Sources.MongoDBConfig();
+            DatasourcesConfig.MongoDBConfig mongoDBConfig = new DatasourcesConfig.MongoDBConfig();
 
             mongoDBConfig.setEnabled(true);
             mongoDBConfig.setUri(this.setupManager.getSetupState(MainSetupStates.MONGODB_URI).getString());
             mongoDBConfig.setDatabase(this.setupManager.getSetupState(MainSetupStates.DATABASE).getString());
 
-            sources.setMongoDbConfig(mongoDBConfig);
+            datasourcesConfig.setMongoDbConfig(mongoDBConfig);
         }else if(type.equals(IDatabase.Type.MARIADB)) {
-            Sources.MysqlConfig mysqlConfig = new Sources.MysqlConfig();
+            DatasourcesConfig.MysqlConfig mysqlConfig = new DatasourcesConfig.MysqlConfig();
 
             mysqlConfig.setEnabled(true);
             mysqlConfig.setHost(this.setupManager.getSetupState(MainSetupStates.MARIADB_HOST).getString());
@@ -62,7 +61,7 @@ public class SlimeDataSoureConfig {
             mysqlConfig.setPassword(this.setupManager.getSetupState(MainSetupStates.MARIADB_PASSWORD).getString());
             mysqlConfig.setDatabase(this.setupManager.getSetupState(MainSetupStates.DATABASE).getString());
 
-            sources.setMysqlConfig(mysqlConfig);
+            datasourcesConfig.setMysqlConfig(mysqlConfig);
         }else {
             CoreAPILogger.error(new Translation(MapCreatorPlugin.Translations.ASWM_INIT_UNSUPPORTED_DATABASE).get(new String[]{
                     "$prefix$", "$database$"
@@ -78,126 +77,10 @@ public class SlimeDataSoureConfig {
             this.sourcesFile.createNewFile();
         }
 
-        this.dataSourceLoader.load().setValue(TypeToken.of(Sources.class), sources);
-        this.dataSourceLoader.save(this.dataSourceLoader.createEmptyNode().setValue(TypeToken.of(Sources.class), sources));
+        this.dataSourceLoader.save(this.dataSourceLoader.createEmptyNode().setValue(TypeToken.of(DatasourcesConfig.class), datasourcesConfig));
 
         if(supportedDatabase) {
             CoreAPILogger.info(new Translation(MapCreatorPlugin.Translations.ASWM_INIT_CONFIG_DONE).get("$prefix$", MapCreatorPlugin.Strings.PREFIX, true));
-        }
-    }
-
-    /*
-     * Copyright (c) by GitHub.com/Paul19988/Advanced-Slime-World-Manager & Team,
-     * modified by GitHub.com/dementisimus
-     * */
-    @Getter
-    @ConfigSerializable
-    public static class Sources {
-
-        @Setting("file")
-        @Setter
-        private FileConfig fileConfig = new FileConfig();
-        @Setting("mysql")
-        @Setter
-        private MysqlConfig mysqlConfig = new MysqlConfig();
-        @Setting("mongodb")
-        @Setter
-        private MongoDBConfig mongoDbConfig = new MongoDBConfig();
-        @Setting("redis")
-        @Setter
-        private RedisConfig redisConfig = new RedisConfig();
-
-        @Getter
-        @ConfigSerializable
-        public static class MysqlConfig {
-
-            @Setting("enabled")
-            @Setter
-            private boolean enabled = false;
-
-            @Setting("host")
-            @Setter
-            private String host = "127.0.0.1";
-            @Setting("port")
-            @Setter
-            private int port = 3306;
-
-            @Setting("username")
-            @Setter
-            private String username = "slimeworldmanager";
-            @Setting("password")
-            @Setter
-            private String password = "";
-
-            @Setting("database")
-            @Setter
-            private String database = "slimeworldmanager";
-
-            @Setting("usessl")
-            @Setter
-            private boolean usessl = false;
-
-            @Setting("sqlUrl")
-            @Setter
-            private String sqlUrl = "jdbc:mysql://{host}:{port}/{database}?autoReconnect=true&allowMultiQueries=true&useSSL={usessl}";
-        }
-
-        @Getter
-        @ConfigSerializable
-        public static class MongoDBConfig {
-
-            @Setting("enabled")
-            @Setter
-            private boolean enabled = false;
-
-            @Setting("host")
-            @Setter
-            private String host = "127.0.0.1";
-            @Setting("port")
-            @Setter
-            private int port = 27017;
-
-            @Setting("auth")
-            @Setter
-            private String authSource = "admin";
-            @Setting("username")
-            @Setter
-            private String username = "slimeworldmanager";
-            @Setting("password")
-            @Setter
-            private String password = "";
-
-            @Setting("database")
-            @Setter
-            private String database = "slimeworldmanager";
-            @Setting("collection")
-            @Setter
-            private String collection = "worlds";
-
-            @Setting("uri")
-            @Setter
-            private String uri = "";
-        }
-
-        @Getter
-        @ConfigSerializable
-        public static class FileConfig {
-
-            @Setting("path")
-            @Setter
-            private String path = "slime_worlds";
-        }
-
-        @Getter
-        @ConfigSerializable
-        public static class RedisConfig {
-
-            @Setting("enabled")
-            @Setter
-            private boolean enabled = false;
-            @Setting("uri")
-            @Setter
-            private String uri = "redis://127.0.0.1/";
         }
     }
 }

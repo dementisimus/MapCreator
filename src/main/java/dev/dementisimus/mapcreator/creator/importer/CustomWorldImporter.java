@@ -7,7 +7,6 @@ import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.importer.interfaces.WorldImporter;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
@@ -66,7 +65,7 @@ public class CustomWorldImporter implements WorldImporter {
                             if(listWorld.isDirectory() && worldFiles != null && !Arrays.asList(worldFiles).isEmpty()) {
                                 String categoryName = listCategory.getName();
                                 String worldName = listWorld.getName();
-                                String fullWorldName = categoryName + MapCreatorMap.CATEGORY_MAP_SEPARATOR + worldName;
+                                String fullWorldName = categoryName + CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR + worldName;
                                 try {
                                     if(!this.slimeLoader.worldExists(fullWorldName)) {
                                         CustomMapCreatorMap customMapCreatorMap = new CustomMapCreatorMap(worldName, categoryName);

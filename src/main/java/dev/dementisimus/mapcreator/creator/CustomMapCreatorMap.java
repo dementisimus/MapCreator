@@ -10,8 +10,8 @@ import com.grinderwolf.swm.nms.CraftSlimeWorld;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
+import dev.dementisimus.mapcreator.creator.api.MapCreator;
+import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -31,24 +31,28 @@ import java.util.Date;
  */
 public class CustomMapCreatorMap implements MapCreatorMap {
 
+    public static final String CATEGORY_MAP_SEPARATOR = "...";
+
     @Getter private final SlimePlugin slimePlugin;
     @Getter private final SlimeLoader slimeLoader;
     @Getter private final CustomMapCreator customMapCreator;
     @Getter
     @Setter
     CustomMapCreatorMap recentlyViewed;
-    @Getter
-    @Setter
-    private File importableWorldFile;
-    @Getter private String mapName;
     @Getter private String mapCategory;
     @Getter private SlimeWorld slimeWorld;
     @Getter
     @Setter
-    private String loadedBy;
+    private File importableWorldFile;
+
     @Getter
     @Setter
-    private Date loadedSince;
+    private String mapName;
+
+    @Setter private String loadedBy;
+
+    @Setter private Date loadedSince;
+
     @Getter
     @Setter
     private CustomMapCreatorMap cloneFrom;
@@ -65,7 +69,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         this();
 
         this.mapName = mapName;
-        this.mapCategory = mapCategory;
+        this.mapCategory = mapCategory.toUpperCase();
     }
 
     @Override
@@ -77,9 +81,9 @@ public class CustomMapCreatorMap implements MapCreatorMap {
             SlimeWorld slimeWorld = null;
             try {
                 if(this.exists()) {
-                    slimeWorld = this.getSlimePlugin().loadWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap);
+                    slimeWorld = this.getSlimePlugin().loadWorld(this.getSlimeLoader(), this.getFileName(), readOnly, slimePropertyMap);
                 }else {
-                    slimeWorld = this.getSlimePlugin().createEmptyWorld(this.getSlimeLoader(), this.getWorldFileName(), readOnly, slimePropertyMap);
+                    slimeWorld = this.getSlimePlugin().createEmptyWorld(this.getSlimeLoader(), this.getFileName(), readOnly, slimePropertyMap);
                 }
             }catch(Exception exception) {
                 performance.setSuccess(exception);
@@ -100,11 +104,11 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         this.checkArguments();
 
         MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
-        World world = Bukkit.getWorld(this.getWorldFileName());
+        World world = Bukkit.getWorld(this.getFileName());
         if(world != null) {
             if(this.exists()) {
                 try {
-                    if(save) this.getSlimeLoader().saveWorld(this.getWorldFileName(), ((CraftSlimeWorld) slimeWorld).serialize(), false);
+                    if(save) this.getSlimeLoader().saveWorld(this.getFileName(), ((CraftSlimeWorld) slimeWorld).serialize(), false);
                     if(world.getPlayers().isEmpty()) {
                         performance.setSuccess();
                         BukkitSynchronousExecutor.execute(MapCreatorPlugin.getMapCreatorPlugin(), () -> {
@@ -132,7 +136,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
         if(this.exists()) {
             try {
-                this.slimeLoader.deleteWorld(this.getWorldFileName());
+                this.slimeLoader.deleteWorld(this.getFileName());
                 performance.setSuccess();
             }catch(Exception exception) {
                 performance.setSuccess(exception);
@@ -212,7 +216,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Override
     public boolean isLocked() {
         try {
-            return this.slimeLoader.isWorldLocked(this.getWorldFileName());
+            return this.slimeLoader.isWorldLocked(this.getFileName());
         }catch(UnknownWorldException | IOException exception) {
             return false;
         }
@@ -221,18 +225,12 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Override
     public boolean exists() {
         try {
-            return this.slimeLoader.worldExists(this.getWorldFileName());
+            return this.slimeLoader.worldExists(this.getFileName());
         }catch(IOException exception) {
             return false;
         }
     }
 
-    @Override
-    public String getWorldFileName() {
-        return this.mapCategory.toUpperCase() + CATEGORY_MAP_SEPARATOR + this.mapName;
-    }
-
-    @Override
     public void checkArguments() {
         Preconditions.checkNotNull(this.mapName, "mapName == null");
         Preconditions.checkNotNull(this.mapCategory, "mapCategory == null");
@@ -240,24 +238,13 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         Preconditions.checkNotNull(this.slimeLoader, "slimeLoader == null");
     }
 
-    public CustomMapCreatorMap setMapName(String mapName) {
-        this.mapName = mapName;
-        return this;
-    }
-
-    public CustomMapCreatorMap setSlimeWorld(SlimeWorld slimeWorld) {
-        this.slimeWorld = slimeWorld;
-        return this;
-    }
-
     public CustomMapCreatorMap setMapCategory(String mapCategory) {
-        this.mapCategory = mapCategory;
+        this.mapCategory = mapCategory.toUpperCase();
         return this;
     }
 
-    @Override
     public String getCategoryIdentifier() {
-        return this.getMapCategory() + CATEGORY_MAP_SEPARATOR;
+        return this.getMapCategory().toUpperCase() + CATEGORY_MAP_SEPARATOR;
     }
 
     @Override
@@ -268,5 +255,20 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Override
     public String getPrettyName() {
         return "§c§l" + this.getMapCategory() + "§7/§f§l" + this.getMapName();
+    }
+
+    @Override
+    public void setSlimeWorld(SlimeWorld slimeWorld) {
+        this.slimeWorld = slimeWorld;
+    }
+
+    @Override
+    public String getLoadedBy() {
+        return this.loadedBy;
+    }
+
+    @Override
+    public Date getLoadedSince() {
+        return this.loadedSince;
     }
 }

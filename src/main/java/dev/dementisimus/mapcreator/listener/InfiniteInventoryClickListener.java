@@ -13,9 +13,9 @@ import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.CustomPlayerMapActions;
+import dev.dementisimus.mapcreator.creator.api.MapCreator;
+import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.creator.templates.interfaces.MapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
@@ -138,7 +138,7 @@ public class InfiniteInventoryClickListener implements Listener {
                             if(!new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND).matches(displayName)) {
                                 recentlyViewedMap.setMapName(displayName);
 
-                                CustomMapCreatorMap loadedMap = this.customMapCreator.getMapCreatorMap(recentlyViewedMap.getFileName());
+                                MapCreatorMap loadedMap = this.customMapCreator.getMapCreatorMap(recentlyViewedMap.getFileName());
                                 if(loadedMap != null) {
                                     recentlyViewedMap.setSlimeWorld(loadedMap.getSlimeWorld());
                                 }
@@ -180,7 +180,7 @@ public class InfiniteInventoryClickListener implements Listener {
                     CustomMapCreatorMap mapCreatorMap = currentSection.equals(CATEGORY_MAPS_MAP_CHOOSE_ACTION) ? loadedPlayerMap.getRecentlyViewed() : loadedPlayerMap;
 
                     MapCreator.Action clickedAction = null;
-                    MapCreator.Action.User clickedUserAction = null;
+                    CustomMapCreator.CustomAction.User clickedUserAction = null;
 
                     for(MapCreator.Action action : MapCreator.Action.values()) {
                         if(this.matchesAction(player, displayName, action.getTranslationProperty())) {
@@ -188,7 +188,7 @@ public class InfiniteInventoryClickListener implements Listener {
                             break;
                         }
                     }
-                    for(MapCreator.Action.User userAction : MapCreator.Action.User.values()) {
+                    for(CustomMapCreator.CustomAction.User userAction : CustomMapCreator.CustomAction.User.values()) {
                         if(this.matchesAction(player, displayName, userAction.getTranslationProperty())) {
                             clickedUserAction = userAction;
                             break;
@@ -251,7 +251,7 @@ public class InfiniteInventoryClickListener implements Listener {
 
                     if(isInRange) {
                         if(displayName.contains("/")) {
-                            String fileName = ChatColor.stripColor(displayName).replace("/", MapCreatorMap.CATEGORY_MAP_SEPARATOR);
+                            String fileName = ChatColor.stripColor(displayName).replace("/", CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR);
                             CustomMapCreatorMap importableWorld = customWorldImporter.getImportableWorldByFileName(fileName);
 
                             if(importableWorld != null) {

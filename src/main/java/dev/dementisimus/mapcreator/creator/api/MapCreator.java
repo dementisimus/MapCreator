@@ -1,17 +1,13 @@
-package dev.dementisimus.mapcreator.creator.interfaces;
+package dev.dementisimus.mapcreator.creator.api;
 
 import com.grinderwolf.swm.api.exceptions.*;
-import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
-import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
-import com.grinderwolf.swm.plugin.config.WorldData;
 import dev.dementisimus.capi.core.callback.Callback;
-import dev.dementisimus.capi.core.callback.EmptyCallback;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
+import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.CustomPlayerMapActions;
-import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -19,9 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 /**
  * Copyright (c) by dementisimus,
@@ -34,39 +27,45 @@ import java.util.logging.Level;
  */
 public interface MapCreator {
 
-    Map<String, CustomMapCreatorMap> MAP_CREATOR_MAPS = new HashMap<>();
-
-    void perform(Action action, CustomMapCreatorMap customMapCreatorMap, Callback<Performance> performanceCallback);
-
-    SlimeLoader getSlimeLoader();
-
-    WorldData getWorldData();
-
-    SlimePropertyMap getSlimePropertyMap();
-
-    Map<String, CustomMapCreatorMap> getMapCreatorMaps();
-
-    CustomMapCreatorInventory getCustomMapCreatorInventory();
-
-    List<String> listWorldsByCategory(String categoryName) throws IOException;
-
-    @Nullable CustomMapCreatorMap getMapCreatorMap(String mapName);
-
-    void addMapCreatorMap(CustomMapCreatorMap customMapCreatorMap);
-
-    void removeMapCreatorMap(CustomMapCreatorMap customMapCreatorMap);
-
-    void ensureNoPlayersLeftOnMap(Action action, CustomMapCreatorMap customMapCreatorMap, EmptyCallback emptyCallback);
-
-    void manageWorldConfig(Action action, CustomMapCreatorMap customMapCreatorMap);
+    /**
+     * Performs the {@link Action} on {@link MapCreatorMap} asynchronously
+     *
+     * @param action              the {@link Action} to perform on {@link MapCreatorMap}
+     * @param mapCreatorMap       the {@link MapCreatorMap} to perform the {@link Action} on
+     * @param performanceCallback the {@link Callback} which returns the {@link Performance} of the executed {@link Action}
+     */
+    void perform(MapCreator.Action action, MapCreatorMap mapCreatorMap, Callback<MapCreator.Performance> performanceCallback);
 
     enum Action {
 
+        /**
+         * Loads {@link MapCreatorMap} from the data source
+         */
         LOAD("mapcreator.action.item.load", "mapcreator.action.message.load", 11, Material.SPYGLASS, true, true, "mapcreator.action.loading.actionbar.load"),
+
+        /**
+         * Saves {@link MapCreatorMap} to the data source
+         */
         SAVE("mapcreator.action.item.save", "mapcreator.action.message.save", 13, Material.CLOCK, true, false, ""),
+
+        /**
+         * Leaves without saving {@link MapCreatorMap}
+         */
         LEAVE_WITHOUT_SAVING("mapcreator.action.item.leave.without.saving", "mapcreator.action.message.leave.without.saving", 14, Material.GLASS_BOTTLE, false, false, ""),
+
+        /**
+         * Deletes {@link MapCreatorMap} from the data source
+         */
         DELETE("mapcreator.action.item.delete", "mapcreator.action.message.delete", 15, Material.STRUCTURE_VOID, false, false, ""),
+
+        /**
+         * Imports a traditional world folder, named by {@link MapCreatorMap} properties, to the data source
+         */
         IMPORT("", "mapcreator.action.message.import", -1, Material.AIR, true, true, "mapcreator.action.loading.actionbar.import"),
+
+        /**
+         * Clones a {@link MapCreatorMap} from the data source and loads it
+         */
         CLONE("", "mapcreator.action.message.clone", -1, Material.AIR, true, true, "mapcreator.action.loading.actionbar.clone");
 
         @Getter String translationProperty;
@@ -88,55 +87,35 @@ public interface MapCreator {
             this.loadingActionBarActionTranslationProperty = loadingActionBarActionTranslationProperty;
         }
 
-        private static String getActionMessage(Player player, CustomMapCreatorMap map, String actionMessageTranslationProperty, String elapsed, boolean isPostAction) {
-            String cloneFrom = map.getCloneFrom() == null ? "" : map.getCloneFrom().getPrettyName();
-
-            String basicActionMessageProperty = isPostAction ? MapCreatorPlugin.Translations.BASIC_POST_ACTION_MESSAGE : MapCreatorPlugin.Translations.BASIC_PRE_ACTION_MESSAGE;
-            return new BukkitTranslation(basicActionMessageProperty).get(player, new String[]{"$prefix$", "$map$", "$action$", "$elapsed$"}, new String[]{
-                    MapCreatorPlugin.Strings.PREFIX, map.getPrettyName(), new BukkitTranslation(actionMessageTranslationProperty).get(player, "$clone$", cloneFrom), elapsed
-            });
-        }
-
         public void sendActionMessage(Player player, CustomMapCreatorMap map, String elapsed, boolean isPostAction) {
-            player.sendMessage(Action.getActionMessage(player, map, this.getActionMessageTranslationProperty(), elapsed, isPostAction));
-        }
-
-        public enum User {
-
-            TELEPORT("mapcreator.action.player.item.teleport", "mapcreator.action.message.player.teleport", 12, Material.ENDER_EYE),
-            BACK("back", "back", 18, Material.RED_DYE);
-
-            @Getter String translationProperty;
-            @Getter String actionMessageTranslationProperty;
-            @Getter int actionItemSlot;
-            @Getter Material actionItemMaterial;
-
-            User(String translationProperty, String actionMessageTranslationProperty, int actionItemSlot, Material actionItemMaterial) {
-                this.translationProperty = translationProperty;
-                this.actionMessageTranslationProperty = actionMessageTranslationProperty;
-                this.actionItemSlot = actionItemSlot;
-                this.actionItemMaterial = actionItemMaterial;
-            }
-
-            public void sendActionMessage(Player player, CustomMapCreatorMap map) {
-                if(!this.equals(TELEPORT)) {
-                    player.sendMessage(Action.getActionMessage(player, map, this.getActionMessageTranslationProperty(), "", true));
-                    return;
-                }
-                player.sendMessage(new BukkitTranslation(this.getActionMessageTranslationProperty()).get(player, new String[]{"$prefix$", "$map$"}, new String[]{
-                        MapCreatorPlugin.Strings.PREFIX, map.getPrettyName()
-                }));
-            }
+            player.sendMessage(CustomMapCreator.CustomAction.getActionMessage(player, map, this.getActionMessageTranslationProperty(), elapsed, isPostAction));
         }
     }
 
     class Performance {
 
-        private Action action;
-        private SlimeWorld slimeWorld;
-        private boolean success;
-        private FailureReason failureReason;
-        private FailureAnnouncement failureAnnouncement;
+        /**
+         * The performed {@link Action}
+         */
+        @Getter private Action action;
+
+        /**
+         * The {@link SlimeWorld} generated by this action
+         */
+        @Getter
+        private @Nullable SlimeWorld slimeWorld;
+
+        /**
+         * True if no error occured, false otherwise
+         */
+        @Getter private boolean success;
+
+        /**
+         * The {@link FailureReason} for the action
+         */
+        private @Nullable FailureReason failureReason;
+
+        private @Nullable FailureAnnouncement failureAnnouncement;
 
         public Performance() {
 
@@ -165,25 +144,13 @@ public interface MapCreator {
             this.success = success;
         }
 
-        public Action getAction() {
-            return this.action;
-        }
-
         public void setAction(Action action) {
             this.action = action;
-        }
-
-        public SlimeWorld getSlimeWorld() {
-            return this.slimeWorld;
         }
 
         public Performance setSlimeWorld(SlimeWorld slimeWorld) {
             this.slimeWorld = slimeWorld;
             return this;
-        }
-
-        public boolean isSuccess() {
-            return this.success;
         }
 
         public Performance setSuccess(FailureReason failureReason) {
@@ -209,7 +176,7 @@ public interface MapCreator {
             }else if(exception instanceof NewerFormatException) {
                 this.setSuccess(FailureReason.WORLD_USES_NEWER_VERSION_OF_SRF);
             }else if(exception instanceof WorldInUseException) {
-                this.setSuccess(FailureReason.WORLD_IS_ALREADY_BEING_USED_BY_ANOTHER_SERVER);
+                this.setSuccess(FailureReason.WORLD_LOCKED);
             }else if(exception instanceof WorldAlreadyExistsException) {
                 this.setSuccess(FailureReason.WORLD_ALREADY_EXISTS_IN_DATA_SOURCE);
             }else if(exception instanceof InvalidWorldException) {
@@ -231,6 +198,11 @@ public interface MapCreator {
             return this.failureReason;
         }
 
+        /**
+         * If {@link FailureReason} not null, a failure message will be announced to the player
+         *
+         * @param player The player the failure message will be announced to
+         */
         public void announceFailure(@NotNull Player player) {
             if(this.failureReason != null) {
                 player.sendMessage(MapCreatorPlugin.Strings.PREFIX + " " + this.failureAnnouncement.message().get(player, this.failureAnnouncement.targets(), new String[]{
@@ -239,6 +211,9 @@ public interface MapCreator {
             }
         }
 
+        /**
+         * If {@link FailureReason} not null, a failure message will be announced to the console
+         */
         public void announceFailure() {
             if(this.failureReason != null) {
                 MapCreatorPlugin.getMapCreatorPlugin().getLogger().log(Level.WARNING, this.failureAnnouncement.message().get(this.failureAnnouncement.targets(), new String[]{
@@ -265,20 +240,74 @@ public interface MapCreator {
 
         public enum FailureReason {
 
+            /**
+             * There were still players on the map
+             */
             PLAYERS_ON_MAP("mapcreator.performance.failure.reason.players.on.map"),
+
+            /**
+             * The world is currently not loaded
+             */
             WORLD_NOT_LOADED("mapcreator.performance.failure.reason.world.not.loaded"),
+
+            /**
+             * The world does not exist in the data source
+             */
             WORLD_DOES_NOT_EXIST("mapcreator.performance.failure.reason.world.does.not.exist"),
+
+            /**
+             * The map could not be obtained from the data source
+             */
             NOT_ABLE_TO_OBTAIN_FROM_DATA_SOURCE("mapcreator.performance.failure.reason.not.able.to.obtain.from.data.source"),
+
+            /**
+             * The world already exists in the data source
+             */
             WORLD_ALREADY_EXISTS_IN_DATA_SOURCE("mapcreator.performance.failure.reason.world.already.exists.in.data.source"),
+
+            /**
+             * The world is corrupted
+             */
             CORRUPTED_WORLD("mapcreator.performance.failure.reason.corrupted.world"),
+
+            /**
+             * The world uses a newer version of the Slime Region Format
+             */
             WORLD_USES_NEWER_VERSION_OF_SRF("mapcreator.performance.failure.reason.world.uses.newer.version.of.srf"),
-            WORLD_IS_ALREADY_BEING_USED_BY_ANOTHER_SERVER("mapcreator.performance.failure.reason.world.is.already.being.used.by.another.server"),
+
+            /**
+             * The world is unknown
+             */
             WORLD_NOT_FOUND("mapcreator.performance.failure.reason.world.not.found"),
+
+            /**
+             * The world is locked
+             */
             WORLD_LOCKED("mapcreator.performance.failure.reason.world.locked"),
+
+            /**
+             * The world is invalid
+             */
             INVALID_WORLD("mapcreator.performance.failure.reason.invalid.world"),
+
+            /**
+             * The world is already loaded on the server
+             */
             WORLD_ALREADY_LOADED("mapcreator.performance.failure.reason.world.already.loaded"),
+
+            /**
+             * The world is too big
+             */
             WORLD_TOO_BIG("mapcreator.performance.failure.reason.world.too.big"),
+
+            /**
+             * The world can not be imported
+             */
             NO_IMPORTABLE_WORLD("mapcreator.performance.failure.reason.no.importable.world"),
+
+            /**
+             * The world may not be cloned
+             */
             NO_CLONEABLE_MAP("mapcreator.performance.failure.reason.no.cloneable.map");
 
             @Getter String translationProperty;

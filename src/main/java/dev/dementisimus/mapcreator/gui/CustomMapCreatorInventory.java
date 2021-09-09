@@ -12,8 +12,9 @@ import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
+import dev.dementisimus.mapcreator.creator.api.MapCreator;
+import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
 import dev.dementisimus.mapcreator.creator.templates.interfaces.MapTemplates;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
 import org.bson.Document;
@@ -122,9 +123,9 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                                 this.setMapManagementActionItems(player, mapCreatorMap, inventoryCreator, action, action.getTranslationProperty(), action.getActionItemSlot(), action.getActionItemMaterial());
                                             }
                                         }
-                                        for(MapCreator.Action.User userAction : MapCreator.Action.User.values()) {
+                                        for(CustomMapCreator.CustomAction.User userAction : CustomMapCreator.CustomAction.User.values()) {
                                             if(inventorySection.equals(Section.CATEGORY_MAPS_MAP_MANAGEMENT)) {
-                                                if(!userAction.equals(MapCreator.Action.User.BACK)) {
+                                                if(!userAction.equals(CustomMapCreator.CustomAction.User.BACK)) {
                                                     this.setMapManagementActionItems(player, mapCreatorMap, inventoryCreator, userAction, userAction.getTranslationProperty(), userAction.getActionItemSlot(), userAction.getActionItemMaterial());
                                                 }
                                             }else {
@@ -187,7 +188,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                     worldItemCreator.addLore(" ");
 
                     if(this.worldAlreadyLoadedOnServer(world)) {
-                        CustomMapCreatorMap mapCreatorMap = this.getCustomMapCreator().getMapCreatorMap(world);
+                        MapCreatorMap mapCreatorMap = this.getCustomMapCreator().getMapCreatorMap(world);
                         if(mapCreatorMap != null) {
                             boolean dataAdded = false;
                             if(mapCreatorMap.getLoadedBy() != null) {
@@ -250,13 +251,13 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
         if(this.worldAlreadyLoadedOnServer(mapCreatorMap.getFileName())) {
             if(action.equals(MapCreator.Action.LOAD)) {
                 disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
-            }else if(action.equals(MapCreator.Action.User.TELEPORT)) {
+            }else if(action.equals(CustomMapCreator.CustomAction.User.TELEPORT)) {
                 if(player.getWorld().getName().equals(mapCreatorMap.getFileName())) {
                     disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
                 }
             }
         }else {
-            if(action.equals(MapCreator.Action.SAVE) || action.equals(MapCreator.Action.LEAVE_WITHOUT_SAVING) || action.equals(MapCreator.Action.User.TELEPORT)) {
+            if(action.equals(MapCreator.Action.SAVE) || action.equals(MapCreator.Action.LEAVE_WITHOUT_SAVING) || action.equals(CustomMapCreator.CustomAction.User.TELEPORT)) {
                 disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
             }
         }

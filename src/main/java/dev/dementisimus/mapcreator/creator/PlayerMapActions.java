@@ -1,4 +1,4 @@
-package dev.dementisimus.mapcreator.creator.interfaces;
+package dev.dementisimus.mapcreator.creator;
 
 /**
  * Copyright (c) by dementisimus,

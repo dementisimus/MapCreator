@@ -10,15 +10,16 @@ import dev.dementisimus.capi.core.database.properties.DataSourceProperty;
 import dev.dementisimus.capi.core.database.types.SQLTypes;
 import dev.dementisimus.capi.core.language.Translation;
 import dev.dementisimus.capi.core.logger.CoreAPILogger;
+import dev.dementisimus.capi.core.setup.MainSetupStates;
 import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.capi.core.setup.states.type.SetupStateBoolean;
 import dev.dementisimus.capi.core.setup.states.type.SetupStateString;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
+import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.SlimeDataSource;
 import dev.dementisimus.mapcreator.creator.aswm.ASWMDownloads;
 import dev.dementisimus.mapcreator.creator.aswm.SlimeDataSoureConfig;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
@@ -51,6 +52,7 @@ public class MapCreatorPlugin extends JavaPlugin {
     @Getter private BukkitCoreAPI bukkitCoreAPI;
     @Getter private SlimePlugin slimePlugin;
     @Getter private SlimeLoader slimeLoader;
+    @Getter private String slimeDataSource;
     @Getter private CustomMapCreator customMapCreator;
     @Getter private SetupManager setupManager;
     @Getter private Database database;
@@ -81,7 +83,7 @@ public class MapCreatorPlugin extends JavaPlugin {
 
             this.coreAPI.init(initializedCoreAPI -> {
                 this.retrieveSlimePlugin(continueInitialization -> {
-                    this.customMapCreator = new CustomMapCreator(this, SlimeDataSource.MONGODB);
+                    this.customMapCreator = new CustomMapCreator();
                     this.slimeLoader = this.customMapCreator.getSlimeLoader();
 
                     this.coreAPI.registerAdditionalModuleToInject(SlimePlugin.class, this.getSlimePlugin());
@@ -111,8 +113,8 @@ public class MapCreatorPlugin extends JavaPlugin {
                             for(Player player : Bukkit.getOnlinePlayers()) {
                                 if(player != null) {
                                     String fullMapName = player.getWorld().getName();
-                                    if(fullMapName.contains(MapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
-                                        String[] fullMapNameSplitted = fullMapName.replace(MapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
+                                    if(fullMapName.contains(CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
+                                        String[] fullMapNameSplitted = fullMapName.replace(CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
                                         String category = fullMapNameSplitted[0];
                                         String name = fullMapNameSplitted[1];
 
@@ -136,15 +138,11 @@ public class MapCreatorPlugin extends JavaPlugin {
         });
     }
 
-    /*
-     *
-     * ToDO (before release): instead of throwing an Exception, print a "warning" message, download
-       the latest version of AdvancedSlimeWorldManager, load it as a plugin & set it up with the database credentials given!
-     *
-     * */
     private void retrieveSlimePlugin(Callback<Boolean> booleanCallback) {
         SlimePlugin plugin = (SlimePlugin) Bukkit.getPluginManager().getPlugin("SlimeWorldManager");
         File pluginFile = new File("./plugins/" + ASWMDownloads.PLUGIN_FILE_NAME);
+
+        this.slimeDataSource = SlimeDataSource.of(this.setupManager.getSetupState(MainSetupStates.STORAGE).getString());
 
         if(plugin == null) {
             CoreAPILogger.info(new Translation(Translations.ASWM_INIT_PLUGIN_NOT_FOUND_DOWNLOADING_FILES).get("$prefix$", Strings.PREFIX, true));

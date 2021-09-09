@@ -6,7 +6,7 @@ import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
+import dev.dementisimus.mapcreator.creator.api.MapCreator;
 import dev.dementisimus.mapcreator.creator.templates.interfaces.MapTemplates;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;

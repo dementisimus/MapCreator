@@ -9,22 +9,26 @@ import com.grinderwolf.swm.plugin.config.WorldData;
 import com.grinderwolf.swm.plugin.config.WorldsConfig;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.callback.EmptyCallback;
+import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.capi.core.pools.ThreadPool;
 import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
+import dev.dementisimus.mapcreator.creator.api.MapCreator;
+import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreator;
-import dev.dementisimus.mapcreator.creator.interfaces.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,6 +42,8 @@ import java.util.stream.Collectors;
  * @since 24.07.2021:19:38
  */
 public class CustomMapCreator implements MapCreator {
+
+    private static final Map<String, MapCreatorMap> MAP_CREATOR_MAPS = new HashMap<>();
 
     private final MapCreatorPlugin mapCreatorPlugin;
     @Getter private final SetupManager setupManager;
@@ -53,26 +59,26 @@ public class CustomMapCreator implements MapCreator {
     @Setter
     private CustomMapTemplates customMapTemplates;
 
-    public CustomMapCreator(MapCreatorPlugin mapCreatorPlugin, String slimeDataSource) {
-        this.mapCreatorPlugin = mapCreatorPlugin;
-        this.setupManager = mapCreatorPlugin.getSetupManager();
+    public CustomMapCreator() {
+        this.mapCreatorPlugin = MapCreatorPlugin.getMapCreatorPlugin();
+        this.setupManager = this.mapCreatorPlugin.getSetupManager();
         this.slimePlugin = this.mapCreatorPlugin.getSlimePlugin();
-        this.slimeLoader = this.slimePlugin.getLoader(slimeDataSource);
+        this.slimeLoader = this.slimePlugin.getLoader(this.mapCreatorPlugin.getSlimeDataSource());
         this.customMapCreatorInventory = new CustomMapCreatorInventory(this);
     }
 
     @Override
-    public void perform(Action action, CustomMapCreatorMap customMapCreatorMap, Callback<Performance> performanceCallback) {
-        this.awaitPerformance(action, customMapCreatorMap, performance -> {
+    public void perform(Action action, MapCreatorMap mapCreatorMap, Callback<Performance> performanceCallback) {
+        this.awaitPerformance(action, mapCreatorMap, performance -> {
             BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> {
                 SlimeWorld slimeWorld = performance.getSlimeWorld();
 
                 if(!action.equals(Action.CLONE)) {
                     if(slimeWorld != null) {
                         this.slimePlugin.generateWorld(slimeWorld);
-                        this.addMapCreatorMap(customMapCreatorMap);
+                        this.addMapCreatorMap(mapCreatorMap);
                     }else {
-                        this.removeMapCreatorMap(customMapCreatorMap);
+                        this.removeMapCreatorMap(mapCreatorMap);
                     }
                 }
 
@@ -82,26 +88,24 @@ public class CustomMapCreator implements MapCreator {
         });
     }
 
-    public void awaitPerformance(Action action, CustomMapCreatorMap customMapCreatorMap, Callback<Performance> performanceCallback) {
-        this.manageWorldConfig(action, customMapCreatorMap);
-        this.ensureNoPlayersLeftOnMap(action, customMapCreatorMap, () -> ThreadPool.execute(() -> {
+    public void awaitPerformance(Action action, MapCreatorMap mapCreatorMap, Callback<Performance> performanceCallback) {
+        this.manageWorldConfig(action, mapCreatorMap);
+        this.ensureNoPlayersLeftOnMap(action, mapCreatorMap, () -> ThreadPool.execute(() -> {
             switch(action) {
-                case LOAD -> customMapCreatorMap.load(false, this.getSlimePropertyMap(), performanceCallback);
-                case SAVE -> customMapCreatorMap.save(true, customMapCreatorMap.getSlimeWorld(), performanceCallback);
-                case LEAVE_WITHOUT_SAVING -> customMapCreatorMap.leave(performanceCallback);
-                case DELETE -> customMapCreatorMap.delete(performanceCallback);
-                case IMPORT -> customMapCreatorMap.importWorld(performanceCallback);
-                case CLONE -> customMapCreatorMap.clone(performanceCallback);
+                case LOAD -> mapCreatorMap.load(false, this.getSlimePropertyMap(), performanceCallback);
+                case SAVE -> mapCreatorMap.save(true, mapCreatorMap.getSlimeWorld(), performanceCallback);
+                case LEAVE_WITHOUT_SAVING -> mapCreatorMap.leave(performanceCallback);
+                case DELETE -> mapCreatorMap.delete(performanceCallback);
+                case IMPORT -> mapCreatorMap.importWorld(performanceCallback);
+                case CLONE -> mapCreatorMap.clone(performanceCallback);
             }
         }));
     }
 
-    @Override
     public SlimeLoader getSlimeLoader() {
         return this.slimeLoader;
     }
 
-    @Override
     public WorldData getWorldData() {
         WorldData worldData = new WorldData();
         worldData.setDataSource(SlimeDataSource.MONGODB);
@@ -117,44 +121,36 @@ public class CustomMapCreator implements MapCreator {
         return worldData;
     }
 
-    @Override
     public SlimePropertyMap getSlimePropertyMap() {
         return this.getWorldData().toPropertyMap();
     }
 
-    @Override
-    public Map<String, CustomMapCreatorMap> getMapCreatorMaps() {
+    public Map<String, MapCreatorMap> getMapCreatorMaps() {
         return MAP_CREATOR_MAPS;
     }
 
-    @Override
     public CustomMapCreatorInventory getCustomMapCreatorInventory() {
         return this.customMapCreatorInventory;
     }
 
-    @Override
     public List<String> listWorldsByCategory(String categoryName) throws IOException {
-        return this.slimeLoader.listWorlds().stream().filter(world -> world.startsWith(categoryName + MapCreatorMap.CATEGORY_MAP_SEPARATOR)).collect(Collectors.toList());
+        return this.slimeLoader.listWorlds().stream().filter(world -> world.startsWith(categoryName + CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR)).collect(Collectors.toList());
     }
 
-    @Override
-    public @Nullable CustomMapCreatorMap getMapCreatorMap(String mapName) {
+    public @Nullable MapCreatorMap getMapCreatorMap(String mapName) {
         return this.getMapCreatorMaps().get(mapName);
     }
 
-    @Override
-    public void addMapCreatorMap(CustomMapCreatorMap customMapCreatorMap) {
-        this.getMapCreatorMaps().put(customMapCreatorMap.getFileName(), customMapCreatorMap);
+    public void addMapCreatorMap(MapCreatorMap mapCreatorMap) {
+        this.getMapCreatorMaps().put(mapCreatorMap.getFileName(), mapCreatorMap);
     }
 
-    @Override
-    public void removeMapCreatorMap(CustomMapCreatorMap customMapCreatorMap) {
-        this.getMapCreatorMaps().remove(customMapCreatorMap.getFileName());
+    public void removeMapCreatorMap(MapCreatorMap mapCreatorMap) {
+        this.getMapCreatorMaps().remove(mapCreatorMap.getFileName());
     }
 
-    @Override
-    public void ensureNoPlayersLeftOnMap(Action action, CustomMapCreatorMap customMapCreatorMap, EmptyCallback emptyCallback) {
-        World world = Bukkit.getWorld(customMapCreatorMap.getWorldFileName());
+    public void ensureNoPlayersLeftOnMap(Action action, MapCreatorMap mapCreatorMap, EmptyCallback emptyCallback) {
+        World world = Bukkit.getWorld(mapCreatorMap.getFileName());
         if(world == null) {
             emptyCallback.done();
             return;
@@ -168,7 +164,7 @@ public class CustomMapCreator implements MapCreator {
                     player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
                 });
                 if(!world.getPlayers().isEmpty()) {
-                    this.ensureNoPlayersLeftOnMap(action, customMapCreatorMap, emptyCallback);
+                    this.ensureNoPlayersLeftOnMap(action, mapCreatorMap, emptyCallback);
                 }else {
                     emptyCallback.done();
                 }
@@ -177,13 +173,52 @@ public class CustomMapCreator implements MapCreator {
         }
     }
 
-    @Override
-    public void manageWorldConfig(Action action, CustomMapCreatorMap customMapCreatorMap) {
+    public void manageWorldConfig(MapCreator.Action action, MapCreatorMap mapCreatorMap) {
         WorldsConfig worldsConfig = ConfigManager.getWorldConfig();
         switch(action) {
-            case SAVE, LEAVE_WITHOUT_SAVING, DELETE, IMPORT -> worldsConfig.getWorlds().remove(customMapCreatorMap.getWorldFileName());
-            default -> worldsConfig.getWorlds().put(customMapCreatorMap.getWorldFileName(), this.getWorldData());
+            case SAVE, LEAVE_WITHOUT_SAVING, DELETE, IMPORT -> worldsConfig.getWorlds().remove(mapCreatorMap.getFileName());
+            default -> worldsConfig.getWorlds().put(mapCreatorMap.getFileName(), this.getWorldData());
         }
         worldsConfig.save();
+    }
+
+    public static class CustomAction {
+
+        public static String getActionMessage(Player player, CustomMapCreatorMap map, String actionMessageTranslationProperty, String elapsed, boolean isPostAction) {
+            String cloneFrom = map.getCloneFrom() == null ? "" : map.getCloneFrom().getPrettyName();
+
+            String basicActionMessageProperty = isPostAction ? MapCreatorPlugin.Translations.BASIC_POST_ACTION_MESSAGE : MapCreatorPlugin.Translations.BASIC_PRE_ACTION_MESSAGE;
+            return new BukkitTranslation(basicActionMessageProperty).get(player, new String[]{"$prefix$", "$map$", "$action$", "$elapsed$"}, new String[]{
+                    MapCreatorPlugin.Strings.PREFIX, map.getPrettyName(), new BukkitTranslation(actionMessageTranslationProperty).get(player, "$clone$", cloneFrom), elapsed
+            });
+        }
+
+        public enum User {
+
+            TELEPORT("mapcreator.action.player.item.teleport", "mapcreator.action.message.player.teleport", 12, Material.ENDER_EYE),
+            BACK("back", "back", 18, Material.RED_DYE);
+
+            @Getter String translationProperty;
+            @Getter String actionMessageTranslationProperty;
+            @Getter int actionItemSlot;
+            @Getter Material actionItemMaterial;
+
+            User(String translationProperty, String actionMessageTranslationProperty, int actionItemSlot, Material actionItemMaterial) {
+                this.translationProperty = translationProperty;
+                this.actionMessageTranslationProperty = actionMessageTranslationProperty;
+                this.actionItemSlot = actionItemSlot;
+                this.actionItemMaterial = actionItemMaterial;
+            }
+
+            public void sendActionMessage(Player player, CustomMapCreatorMap map) {
+                if(!this.equals(TELEPORT)) {
+                    player.sendMessage(getActionMessage(player, map, this.getActionMessageTranslationProperty(), "", true));
+                    return;
+                }
+                player.sendMessage(new BukkitTranslation(this.getActionMessageTranslationProperty()).get(player, new String[]{"$prefix$", "$map$"}, new String[]{
+                        MapCreatorPlugin.Strings.PREFIX, map.getPrettyName()
+                }));
+            }
+        }
     }
 }
