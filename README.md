@@ -37,7 +37,33 @@ MapCreator is a **lightweight**, **inventory based** map management tool which a
 
 ## **Development**
 
-- [coming soon]
+```java
+// Docs: https://docs.dementisimus.dev/development/MapCreator/1.4.0/dev/dementisimus/mapcreator/creator/api/package-summary.html
+MapCreator mapCreator = new CustomMapCreator();
+MapCreatorMap mapCreatorMap = MapCreatorMap.of("myMapName", "myMapCategory");
+
+// MapCreator.Action.LOAD loads 'mapCreatorMap', for more Actions see 
+// https://docs.dementisimus.dev/development/MapCreator/1.4.0/dev/dementisimus/mapcreator/creator/api/MapCreator.Action.html
+mapCreator.perform(MapCreator.Action.LOAD, mapCreatorMap, performance -> {
+    // do something with MapCreator.Performance
+});
+```
+
+## **Images**
+
+<p align="center">
+  <img src="https://dementisimus.dev/img/MapCreator/overview.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/map_overview.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/choose_template.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/world_import.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/name.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/load.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/teleport.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/save.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/leave-without-saving.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/delete.jpg" />
+</p>
+
 
 ## **Credits**
 
