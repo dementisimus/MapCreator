@@ -75,10 +75,10 @@
             <id>papermc</id>
             <url>https://papermc.io/repo/repository/maven-public/</url>
         </repository>
-        <repository>
+        <!--<repository>
             <id>rapture-snapshots</id>
             <url>https://repo.rapture.pw/repository/maven-snapshots/</url>
-        </repository>
+        </repository>-->
         <repository>
             <id>dementisimus-dev-release</id>
             <url>https://repo.dementisimus.dev/release/</url>
@@ -86,6 +86,10 @@
         <repository>
             <id>dementisimus-dev-development</id>
             <url>https://repo.dementisimus.dev/development/</url>
+        </repository>
+        <repository>
+            <id>dementisimus-dev-temp</id>
+            <url>https://repo.dementisimus.dev/temp/</url>
         </repository>
     </repositories>
 
