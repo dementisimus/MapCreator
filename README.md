@@ -30,7 +30,7 @@ MapCreator is a **lightweight**, **inventory based** map management tool which a
 ## **Installation**
 
 1. Make sure your **server** is **stopped**, or will be **restarted**. Do **not reload** your server!
-2. **Download** the **latest version** of **MapCreator** from **[GitHub Releases]**
+2. **Download** the **latest version** of _**CoreAPI**_ & _**MapCreator**_ from **[GitHub Releases]**
 3. **Move** the **downloaded jar-file** to the **`plugins`-folder**
 4. **Start** (or **restart**) your **server**
 5. **Go through** the **installation process** (**setu**p) in your **console** by **answering** the **prompted questions** with **commands** (**commands** represent the **data**, may be **infinitely long**)
