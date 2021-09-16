@@ -3,7 +3,7 @@ package dev.dementisimus.mapcreator;
 import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import dev.dementisimus.capi.core.BukkitCoreAPI;
-import dev.dementisimus.capi.core.callback.Callback;
+import dev.dementisimus.capi.core.callback.EmptyCallback;
 import dev.dementisimus.capi.core.database.Database;
 import dev.dementisimus.capi.core.database.properties.DataSourceProperty;
 import dev.dementisimus.capi.core.database.types.SQLTypes;
@@ -80,8 +80,7 @@ public class MapCreatorPlugin extends JavaPlugin {
             coreAPIInjector.addInjectionModule(MapCreatorPlugin.class, this);
 
             this.bukkitCoreAPI.init(() -> {
-                this.retrieveSlimePlugin(continueInitialization -> {
-
+                this.retrieveSlimePlugin(() -> {
                     this.customMapCreator = new CustomMapCreator();
                     this.slimeLoader = this.customMapCreator.getSlimeLoader();
 
@@ -89,10 +88,6 @@ public class MapCreatorPlugin extends JavaPlugin {
                     coreAPIInjector.addInjectionModule(CustomMapCreatorInventory.class, this.customMapCreator.getCustomMapCreatorInventory());
                     coreAPIInjector.addInjectionModule(SlimePlugin.class, this.getSlimePlugin());
                     coreAPIInjector.addInjectionModule(SlimeLoader.class, this.getSlimeLoader());
-
-                    if(!continueInitialization) {
-                        return;
-                    }
 
                     if(!this.setupManager.getSetupState(API_MODE).getBoolean()) {
                         this.bukkitCoreAPI.setRegisterOptionalListeners(true);
@@ -135,7 +130,7 @@ public class MapCreatorPlugin extends JavaPlugin {
         });
     }
 
-    private void retrieveSlimePlugin(Callback<Boolean> booleanCallback) {
+    private void retrieveSlimePlugin(EmptyCallback emptyCallback) {
         SlimePlugin plugin = (SlimePlugin) Bukkit.getPluginManager().getPlugin("SlimeWorldManager");
         File pluginFile = new File("./plugins/" + ASWMDownloads.PLUGIN_FILE_NAME);
 
@@ -155,7 +150,7 @@ public class MapCreatorPlugin extends JavaPlugin {
                             SlimeDataSoureConfig slimeDataSoureConfig = new SlimeDataSoureConfig(this.getDatabase(), this.getSetupManager());
                             slimeDataSoureConfig.modify();
 
-                            booleanCallback.done(false);
+                            this.bukkitCoreAPI.setSkipInjection(true);
 
                             CoreAPILogger.warning(new Translation(Translations.ASWM_INIT_DONE_RESTART_REQUIRED_AUTO_RESTART).get(new String[]{
                                     "$prefix$", "$classModifierVersion$"
@@ -175,7 +170,7 @@ public class MapCreatorPlugin extends JavaPlugin {
             });
         }else {
             this.slimePlugin = plugin;
-            booleanCallback.done(true);
+            emptyCallback.done();
         }
     }
 
