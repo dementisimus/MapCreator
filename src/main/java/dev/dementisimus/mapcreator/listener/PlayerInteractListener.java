@@ -1,9 +1,8 @@
 package dev.dementisimus.mapcreator.listener;
 
 import com.google.inject.Inject;
-import dev.dementisimus.capi.core.annotations.bukkit.BukkitListener;
+import dev.dementisimus.capi.core.injection.annotations.bukkit.BukkitListener;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
-import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
@@ -22,10 +21,9 @@ import org.bukkit.inventory.ItemStack;
  * @author dementisimus
  * @since 23.08.2021:12:26
  */
-@BukkitListener(additionalModulesToInject = {MapCreatorPlugin.class, CustomMapCreatorInventory.class})
+@BukkitListener(isOptional = true)
 public class PlayerInteractListener implements Listener {
 
-    @Inject MapCreatorPlugin mapCreatorPlugin;
     @Inject CustomMapCreatorInventory customMapCreatorInventory;
 
     @EventHandler

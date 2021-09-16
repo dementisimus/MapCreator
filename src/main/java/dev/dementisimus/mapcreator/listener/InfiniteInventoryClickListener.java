@@ -1,12 +1,12 @@
 package dev.dementisimus.mapcreator.listener;
 
 import com.google.inject.Inject;
-import dev.dementisimus.capi.core.annotations.bukkit.BukkitListener;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.creators.infiniteinventory.events.InfiniteInventoryClickEvent;
 import dev.dementisimus.capi.core.creators.signcreator.SignInputCreator;
 import dev.dementisimus.capi.core.database.Database;
 import dev.dementisimus.capi.core.database.properties.UpdateProperty;
+import dev.dementisimus.capi.core.injection.annotations.bukkit.BukkitListener;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.capi.core.pools.ScheduledExecutor;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
@@ -54,12 +54,14 @@ import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Sec
  * @author dementisimus
  * @since 31.07.2021:16:58
  */
-@BukkitListener(additionalModulesToInject = {MapCreatorPlugin.class, CustomMapCreatorInventory.class, CustomMapCreator.class})
+@BukkitListener(isOptional = true)
 public class InfiniteInventoryClickListener implements Listener {
 
+    @Inject Database database;
+
     @Inject MapCreatorPlugin mapCreatorPlugin;
-    @Inject CustomMapCreatorInventory customMapCreatorInventory;
     @Inject CustomMapCreator customMapCreator;
+    @Inject CustomMapCreatorInventory customMapCreatorInventory;
 
     @EventHandler
     public void on(InfiniteInventoryClickEvent event) {
@@ -67,7 +69,6 @@ public class InfiniteInventoryClickListener implements Listener {
         String title = event.getCurrentInventoryTitle();
         String displayName = event.getCurrentItemDisplayName();
         boolean isInRange = event.isInRange();
-        Database database = this.mapCreatorPlugin.getDatabase();
 
         MapCreatorInventory.Section currentSection = null;
 
@@ -105,15 +106,15 @@ public class InfiniteInventoryClickListener implements Listener {
                                         if(!newCategory.equalsIgnoreCase(MapTemplates.CATEGORY_TEMPLATES)) {
                                             newCategory = newCategory.toUpperCase();
 
-                                            database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
+                                            this.database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
 
                                             Document document = new Document();
                                             document.append(MapCreatorPlugin.DataSource.NAME, newCategory);
                                             document.append(MapCreatorPlugin.DataSource.ICON, icon.name());
 
-                                            database.setDocument(document);
-                                            database.setUpdateProperty(UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, newCategory).value(MapCreatorPlugin.DataSource.ICON, icon.name()));
-                                            database.writeOrUpdate(success -> {
+                                            this.database.setDocument(document);
+                                            this.database.setUpdateProperty(UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, newCategory).value(MapCreatorPlugin.DataSource.ICON, icon.name()));
+                                            this.database.writeOrUpdate(success -> {
                                                 this.customMapCreatorInventory.open(player, CATEGORIES);
                                             });
                                         }else {

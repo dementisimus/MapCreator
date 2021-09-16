@@ -1,6 +1,6 @@
 package dev.dementisimus.mapcreator.creator.templates;
 
-import dev.dementisimus.capi.core.dependencies.FileDownloader;
+import dev.dementisimus.capi.core.dependencies.ZipFileDownloader;
 import dev.dementisimus.capi.core.language.Translation;
 import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
@@ -26,13 +26,13 @@ import java.util.logging.Level;
 public class CustomMapTemplates implements MapTemplates {
 
     @Getter private final MapCreatorPlugin mapCreatorPlugin;
-    @Getter private final FileDownloader fileDownloader;
+    @Getter private final ZipFileDownloader zipFileDownloader;
     @Getter private final CustomMapCreator customMapCreator;
     @Getter private final SetupManager setupManager;
 
     public CustomMapTemplates(MapCreatorPlugin mapCreatorPlugin) {
         this.mapCreatorPlugin = mapCreatorPlugin;
-        this.fileDownloader = mapCreatorPlugin.getCoreAPI().getFileDownloader();
+        this.zipFileDownloader = mapCreatorPlugin.getBukkitCoreAPI().getZipFileDownloader();
         this.customMapCreator = mapCreatorPlugin.getCustomMapCreator();
         this.setupManager = mapCreatorPlugin.getSetupManager();
     }
@@ -46,8 +46,7 @@ public class CustomMapTemplates implements MapTemplates {
         importableTemplate.setMapName(SIMPLE_TEMPLATE_NAME);
 
         if(!importableTemplate.exists()) {
-            this.fileDownloader.setRequirements(this.mapCreatorPlugin.getName());
-            this.fileDownloader.downloadZipFile(MapTemplates.SIMPLE_TEMPLATE_URL, this.getTemporaryTemplate(SIMPLE_TEMPLATE_NAME_ZIP), this.getTemporaryTemplatesFolder(), success -> {
+            this.zipFileDownloader.downloadZipFile(MapTemplates.SIMPLE_TEMPLATE_URL, this.getTemporaryTemplate(SIMPLE_TEMPLATE_NAME_ZIP), this.getTemporaryTemplatesFolder(), success -> {
                 if(success) {
                     importableTemplate.setImportableWorldFile(this.getTemporaryTemplate(SIMPLE_TEMPLATE_NAME));
 

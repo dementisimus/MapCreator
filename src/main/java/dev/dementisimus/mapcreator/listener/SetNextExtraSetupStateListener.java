@@ -1,6 +1,6 @@
 package dev.dementisimus.mapcreator.listener;
 
-import dev.dementisimus.capi.core.annotations.bukkit.BukkitSetupListener;
+import dev.dementisimus.capi.core.injection.annotations.bukkit.BukkitSetupListener;
 import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.capi.core.setup.events.SetNextExtraSetupStateEvent;
 import dev.dementisimus.capi.core.setup.states.SetupState;

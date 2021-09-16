@@ -36,7 +36,7 @@
             <groupId>dev.dementisimus.capi</groupId>
             <artifactId>CoreAPI</artifactId>
             <version>latest</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>

@@ -1,9 +1,8 @@
 package dev.dementisimus.mapcreator.command;
 
 import com.google.inject.Inject;
-import dev.dementisimus.capi.core.annotations.bukkit.OptionalBukkitCommand;
-import dev.dementisimus.mapcreator.MapCreatorPlugin;
-import dev.dementisimus.mapcreator.creator.CustomMapCreator;
+import dev.dementisimus.capi.core.injection.annotations.bukkit.BukkitCommand;
+import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,16 +18,15 @@ import org.jetbrains.annotations.NotNull;
  * @author dementisimus
  * @since 24.07.2021:22:06
  */
-@OptionalBukkitCommand(name = "mapcreator", nameAliases = {"mc"}, additionalModulesToInject = {MapCreatorPlugin.class})
+@BukkitCommand(isOptional = true, name = "mapcreator", nameAliases = {"mc"})
 public class MapCreatorCommand implements CommandExecutor {
 
-    @Inject MapCreatorPlugin mapCreatorPlugin;
+    @Inject CustomMapCreatorInventory customMapCreatorInventory;
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if(commandSender instanceof Player player) {
-            CustomMapCreator customMapCreator = this.mapCreatorPlugin.getCustomMapCreator();
-            customMapCreator.getCustomMapCreatorInventory().open(player, MapCreatorInventory.Section.CATEGORIES);
+            this.customMapCreatorInventory.open(player, MapCreatorInventory.Section.CATEGORIES);
         }
         return false;
     }

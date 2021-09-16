@@ -63,7 +63,6 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
 
         CustomMapCreatorMap loadedPlayerMap = this.getLoadedPlayerMap(player);
 
-        SetupManager setupManager = MapCreatorPlugin.getMapCreatorPlugin().getSetupManager();
         AtomicReference<List<CustomMapCreatorMap>> importableWorlds = new AtomicReference<>();
 
         new CustomInfiniteInventory(MapCreatorPlugin.getMapCreatorPlugin(), player, customInfiniteInventory -> {
@@ -106,7 +105,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                     }
                                 }
                                 case CATEGORY_MAPS -> {
-                                    if(setupManager.getSetupState(MapCreatorPlugin.ExtraSetupStates.WORLD_IMPORTER_REQUIRED).getBoolean()) {
+                                    if(this.setupManager.getSetupState(MapCreatorPlugin.ExtraSetupStates.WORLD_IMPORTER_REQUIRED).getBoolean()) {
                                         inventoryCreator.setItem(49, new ItemCreator(Material.SUGAR).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_IMPORT_WORLD).apply());
                                     }
                                     inventoryCreator.setItem(50, new ItemCreator(Material.LIME_DYE).setDisplayName(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP).apply());
@@ -170,7 +169,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
 
     @Override
     public void fetch(Player player, Section inventorySection, CustomMapCreatorMap currentPlayerMap, BiCallback<List<Document>, List<ItemStack>> fetchedItems) throws IOException, UnknownWorldException {
-        Database database = MapCreatorPlugin.getMapCreatorPlugin().getCoreAPI().getDatabase();
+        Database database = MapCreatorPlugin.getMapCreatorPlugin().getBukkitCoreAPI().getDatabase();
         List<Document> documents = new ArrayList<>();
         List<ItemStack> items = new ArrayList<>();
 

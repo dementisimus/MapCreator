@@ -2,9 +2,8 @@ package dev.dementisimus.mapcreator;
 
 import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
-import dev.dementisimus.capi.core.CoreAPI;
+import dev.dementisimus.capi.core.BukkitCoreAPI;
 import dev.dementisimus.capi.core.callback.Callback;
-import dev.dementisimus.capi.core.core.BukkitCoreAPI;
 import dev.dementisimus.capi.core.database.Database;
 import dev.dementisimus.capi.core.database.properties.DataSourceProperty;
 import dev.dementisimus.capi.core.database.types.SQLTypes;
@@ -48,7 +47,6 @@ public class MapCreatorPlugin extends JavaPlugin {
 
     @Getter private static MapCreatorPlugin mapCreatorPlugin;
 
-    @Getter private CoreAPI coreAPI;
     @Getter private BukkitCoreAPI bukkitCoreAPI;
     @Getter private SlimePlugin slimePlugin;
     @Getter private SlimeLoader slimeLoader;
@@ -60,43 +58,45 @@ public class MapCreatorPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         mapCreatorPlugin = this;
+
         this.bukkitCoreAPI = new BukkitCoreAPI(this, true);
-        this.coreAPI = this.bukkitCoreAPI.getCoreAPI();
 
-        this.setupManager = this.coreAPI.getSetupManager();
+        this.setupManager = this.bukkitCoreAPI.getSetupManager();
 
-        this.coreAPI.enableMainSetupStates();
+        this.bukkitCoreAPI.enableMainSetupStates();
 
-        this.coreAPI.enableExtraSetupState(WORLD_IMPORTER_REQUIRED);
-        this.coreAPI.enableExtraSetupState(WORLD_IMPORTER_FOLDER_LOCATION);
-        this.coreAPI.enableExtraSetupState(API_MODE);
-        this.coreAPI.enableExtraSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS);
-        this.coreAPI.enableExtraSetupState(DEFAULT_WORLD);
-        this.coreAPI.enableExtraSetupState(SIMPLE_TEMPLATE_MAP_WANTED);
+        this.bukkitCoreAPI.enableExtraSetupState(WORLD_IMPORTER_REQUIRED);
+        this.bukkitCoreAPI.enableExtraSetupState(WORLD_IMPORTER_FOLDER_LOCATION);
+        this.bukkitCoreAPI.enableExtraSetupState(API_MODE);
+        this.bukkitCoreAPI.enableExtraSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS);
+        this.bukkitCoreAPI.enableExtraSetupState(DEFAULT_WORLD);
+        this.bukkitCoreAPI.enableExtraSetupState(SIMPLE_TEMPLATE_MAP_WANTED);
 
-        this.coreAPI.prepareInit(() -> {
-            this.coreAPI.enableDatabase(DataSource.PROPERTY);
-            this.database = this.coreAPI.getDatabase();
+        this.bukkitCoreAPI.enableDatabase(DataSource.PROPERTY);
+        this.database = this.bukkitCoreAPI.getDatabase();
 
-            this.coreAPI.registerAdditionalModuleToInject(MapCreatorPlugin.class, this);
-            this.coreAPI.registerAdditionalModuleToInject(BukkitCoreAPI.class, this.bukkitCoreAPI);
+        this.bukkitCoreAPI.prepare(coreAPIInjector -> {
 
-            this.coreAPI.init(initializedCoreAPI -> {
+            coreAPIInjector.addInjectionModule(MapCreatorPlugin.class, this);
+
+            this.bukkitCoreAPI.init(() -> {
                 this.retrieveSlimePlugin(continueInitialization -> {
+
                     this.customMapCreator = new CustomMapCreator();
                     this.slimeLoader = this.customMapCreator.getSlimeLoader();
 
-                    this.coreAPI.registerAdditionalModuleToInject(SlimePlugin.class, this.getSlimePlugin());
-                    this.coreAPI.registerAdditionalModuleToInject(SlimeLoader.class, this.getSlimeLoader());
-                    this.coreAPI.registerAdditionalModuleToInject(CustomMapCreator.class, this.getCustomMapCreator());
-                    this.coreAPI.registerAdditionalModuleToInject(CustomMapCreatorInventory.class, this.getCustomMapCreator().getCustomMapCreatorInventory());
+                    coreAPIInjector.addInjectionModule(CustomMapCreator.class, this.getCustomMapCreator());
+                    coreAPIInjector.addInjectionModule(CustomMapCreatorInventory.class, this.customMapCreator.getCustomMapCreatorInventory());
+                    coreAPIInjector.addInjectionModule(SlimePlugin.class, this.getSlimePlugin());
+                    coreAPIInjector.addInjectionModule(SlimeLoader.class, this.getSlimeLoader());
 
                     if(!continueInitialization) {
                         return;
                     }
 
                     if(!this.setupManager.getSetupState(API_MODE).getBoolean()) {
-                        this.getCoreAPI().setRegisterOptionalCommands(true);
+                        this.bukkitCoreAPI.setRegisterOptionalListeners(true);
+                        this.bukkitCoreAPI.setRegisterOptionalCommands(true);
 
                         CustomWorldImporter customWorldImporter = new CustomWorldImporter(this);
                         customWorldImporter.scanForImportableWorlds();
@@ -130,9 +130,6 @@ public class MapCreatorPlugin extends JavaPlugin {
                     }else {
                         CoreAPILogger.info(new Translation(Translations.API_MODE_ENABLED).get(true));
                     }
-                    if(this.setupManager.getSetupState(USE_DEFAULT_WORLD_FOR_PLAYERS).getBoolean()) {
-                        this.getCoreAPI().setRegisterOptionalListeners(true);
-                    }
                 });
             });
         });
@@ -147,8 +144,8 @@ public class MapCreatorPlugin extends JavaPlugin {
         if(plugin == null) {
             CoreAPILogger.info(new Translation(Translations.ASWM_INIT_PLUGIN_NOT_FOUND_DOWNLOADING_FILES).get("$prefix$", Strings.PREFIX, true));
 
-            this.coreAPI.getFileDownloader().downloadFile(ASWMDownloads.CLASS_MODIFIER_URL, "./" + ASWMDownloads.CLASS_MODIFIER_FILE_NAME, classModifierDownload -> {
-                this.coreAPI.getFileDownloader().downloadFile(ASWMDownloads.PLUGIN_URL, "./plugins/" + ASWMDownloads.PLUGIN_FILE_NAME, pluginDownload -> {
+            this.bukkitCoreAPI.getFileDownloader().downloadFile(ASWMDownloads.CLASS_MODIFIER_URL, "./" + ASWMDownloads.CLASS_MODIFIER_FILE_NAME, classModifierDownload -> {
+                this.bukkitCoreAPI.getFileDownloader().downloadFile(ASWMDownloads.PLUGIN_URL, "./plugins/" + ASWMDownloads.PLUGIN_FILE_NAME, pluginDownload -> {
                     try {
                         SlimePlugin slimePlugin = (SlimePlugin) Bukkit.getPluginManager().loadPlugin(pluginFile);
 
