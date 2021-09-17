@@ -6,13 +6,17 @@
 
     <groupId>dev.dementisimus.mapcreator</groupId>
     <artifactId>MapCreator</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <paper-api.version>1.17.1-R0.1-SNAPSHOT</paper-api.version>
-        <annotations.version>19.0.0</annotations.version>
+        <annotations.version>22.0.0</annotations.version>
+        <guice.version>5.0.1</guice.version>
+        <slimeworldmanager-api.version>2.6.2-SNAPSHOT</slimeworldmanager-api.version>
+        <bson.version>4.3.0</bson.version>
+        <lombok.version>1.18.20</lombok.version>
     </properties>
 
     <dependencies>
@@ -32,7 +36,37 @@
             <groupId>dev.dementisimus.capi</groupId>
             <artifactId>CoreAPI</artifactId>
             <version>latest</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.grinderwolf</groupId>
+            <artifactId>slimeworldmanager-api</artifactId>
+            <version>${slimeworldmanager-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.grinderwolf</groupId>
+            <artifactId>slimeworldmanager-plugin</artifactId>
+            <version>${slimeworldmanager-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>bson</artifactId>
+            <version>${bson.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -40,6 +74,22 @@
         <repository>
             <id>papermc</id>
             <url>https://papermc.io/repo/repository/maven-public/</url>
+        </repository>
+        <!--<repository>
+            <id>rapture-snapshots</id>
+            <url>https://repo.rapture.pw/repository/maven-snapshots/</url>
+        </repository>-->
+        <repository>
+            <id>dementisimus-dev-release</id>
+            <url>https://repo.dementisimus.dev/release/</url>
+        </repository>
+        <repository>
+            <id>dementisimus-dev-development</id>
+            <url>https://repo.dementisimus.dev/development/</url>
+        </repository>
+        <repository>
+            <id>dementisimus-dev-temp</id>
+            <url>https://repo.dementisimus.dev/temp/</url>
         </repository>
     </repositories>
 
@@ -51,21 +101,12 @@
                 <version>3.2.0</version>
                 <configuration>
                     <source>16</source>
-                    <excludePackageNames>
-                        dev.dementisimus.mapcreator:
-                        dev.dementisimus.mapcreator.setup: dev.dementisimus.mapcreator.setup.*:
-                        dev.dementisimus.mapcreator.creator: dev.dementisimus.mapcreator.creator.*:
-                        dev.dementisimus.mapcreator.commands: dev.dementisimus.mapcreator.commands.*:
-                        dev.dementisimus.mapcreator.core: dev.dementisimus.mapcreator.core.*:
-                        dev.dementisimus.mapcreator.listeners: dev.dementisimus.mapcreator.listeners.*:
-                        dev.dementisimus.mapcreator.translation: dev.dementisimus.mapcreator.translation.*
-                    </excludePackageNames>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.4.3</version>
+                <version>3.2.4</version>
                 <configuration>
                 </configuration>
                 <executions>
@@ -80,10 +121,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.2</version>
+                <version>3.8.1</version>
                 <configuration>
                     <source>16</source>
                     <target>16</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>
