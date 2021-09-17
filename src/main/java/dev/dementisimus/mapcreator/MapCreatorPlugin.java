@@ -137,6 +137,8 @@ public class MapCreatorPlugin extends JavaPlugin {
         this.slimeDataSource = SlimeDataSource.of(this.setupManager.getSetupState(MainSetupStates.STORAGE).getString());
 
         if(plugin == null) {
+            this.bukkitCoreAPI.setSkipInjection(true);
+
             CoreAPILogger.info(new Translation(Translations.ASWM_INIT_PLUGIN_NOT_FOUND_DOWNLOADING_FILES).get("$prefix$", Strings.PREFIX, true));
 
             this.bukkitCoreAPI.getFileDownloader().downloadFile(ASWMDownloads.CLASS_MODIFIER_URL, "./" + ASWMDownloads.CLASS_MODIFIER_FILE_NAME, classModifierDownload -> {
@@ -149,8 +151,6 @@ public class MapCreatorPlugin extends JavaPlugin {
 
                             SlimeDataSoureConfig slimeDataSoureConfig = new SlimeDataSoureConfig(this.getDatabase(), this.getSetupManager());
                             slimeDataSoureConfig.modify();
-
-                            this.bukkitCoreAPI.setSkipInjection(true);
 
                             CoreAPILogger.warning(new Translation(Translations.ASWM_INIT_DONE_RESTART_REQUIRED_AUTO_RESTART).get(new String[]{
                                     "$prefix$", "$classModifierVersion$"
