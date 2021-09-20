@@ -4,7 +4,7 @@ author: dementisimus
 version: ${project.version}
 website: dementisimus.dev
 depend: [ CoreAPI ]
-softdepend: [ CoreAPIDependencies, SlimeWorldManager ]
+softdepend: [ CoreAPI-Dependencies, SlimeWorldManager ]
 api-version: 1.17
 
 commands:
