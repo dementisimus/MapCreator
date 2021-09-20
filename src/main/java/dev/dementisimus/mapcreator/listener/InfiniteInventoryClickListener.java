@@ -1,6 +1,7 @@
 package dev.dementisimus.mapcreator.listener;
 
 import com.google.inject.Inject;
+import dev.dementisimus.capi.core.actionbar.ActionBar;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.creators.infiniteinventory.events.InfiniteInventoryClickEvent;
 import dev.dementisimus.capi.core.creators.signcreator.SignInputCreator;
@@ -20,8 +21,7 @@ import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.creator.templates.interfaces.MapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bson.Document;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -304,20 +304,21 @@ public class InfiniteInventoryClickListener implements Listener {
             player.closeInventory();
 
             String mapName = action.equals(MapCreator.Action.CLONE) ? customMapCreatorMap.getCloneFrom().getPrettyName() : customMapCreatorMap.getPrettyName();
-            Component message = Component.text(new BukkitTranslation(action.getLoadingActionBarActionTranslationProperty()).get(player, "$map$", mapName));
+            String text = new BukkitTranslation(action.getLoadingActionBarActionTranslationProperty()).get(player, "$map$", mapName);
+
+            StringBuilder message = new StringBuilder(" " + text);
 
             AtomicInteger atomicDotCounter = new AtomicInteger(0);
-            TextComponent dotText = Component.text(".");
 
             scheduledFuture.set(ScheduledExecutor.scheduleWithFixedDelay(0, 375, TimeUnit.MILLISECONDS, () -> {
                 int dotCounter = atomicDotCounter.get();
-                TextComponent dots = Component.empty();
 
-                for(int i = 0; i < dotCounter; i++) {
-                    dots = dots.append(dotText);
-                }
+                message.append(".".repeat(Math.max(0, dotCounter)));
 
-                player.sendActionBar(message.append(dots));
+                ActionBar.send(player, new TextComponent(message.toString()));
+
+                message.setLength(0);
+                message.append(" ").append(text);
 
                 if(dotCounter == 3) {
                     atomicDotCounter.set(0);
@@ -361,7 +362,7 @@ public class InfiniteInventoryClickListener implements Listener {
             if(action.isUseLoadingActionBar() || !performance.isSuccess()) {
                 scheduledFuture.get().cancel(true);
 
-                player.sendActionBar(Component.empty());
+                ActionBar.send(player, new TextComponent(" "));
 
                 if(action.equals(MapCreator.Action.LOAD)) {
                     player.removePotionEffect(PotionEffectType.BLINDNESS);

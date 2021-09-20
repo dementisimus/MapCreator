@@ -22,9 +22,10 @@ import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
-import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
@@ -103,7 +104,8 @@ public class MapCreatorPlugin extends JavaPlugin {
 
                         this.customMapCreator.setCustomMapTemplates(customMapTemplates);
 
-                        BossBar bossBar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_12);
+                        BossBar bossBar = Bukkit.createBossBar(" ", BarColor.YELLOW, BarStyle.SEGMENTED_12);
+                        bossBar.setVisible(true);
                         Bukkit.getScheduler().runTaskTimer(this, () -> {
                             for(Player player : Bukkit.getOnlinePlayers()) {
                                 if(player != null) {
@@ -113,11 +115,11 @@ public class MapCreatorPlugin extends JavaPlugin {
                                         String category = fullMapNameSplitted[0];
                                         String name = fullMapNameSplitted[1];
 
-                                        bossBar.name(Component.text("§c§l" + category + "§7/§f§l" + name));
+                                        bossBar.setTitle("§c§l" + category + "§7/§f§l" + name);
 
-                                        player.showBossBar(bossBar);
+                                        bossBar.addPlayer(player);
                                     }else {
-                                        player.hideBossBar(bossBar);
+                                        bossBar.removePlayer(player);
                                     }
                                 }
                             }
