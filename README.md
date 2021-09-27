@@ -86,7 +86,7 @@ mapCreator.perform(MapCreator.Action.LOAD, mapCreatorMap, performance -> {
    [planned features]: <https://github.com/dementisimus/MapCreator/projects/2>
    [Discord-Server]: <https://discord.gg/sTRg8A7>
    
-   [PaperMC 1.17.1]: <https://papermc.io/downloads>
+   [PaperMC]: <https://papermc.io/downloads>
    
    [GitHub Releases]: <https://github.com/dementisimus/MapCreator/releases>
    
