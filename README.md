@@ -87,7 +87,7 @@ mapCreator.perform(MapCreator.Action.LOAD, mapCreatorMap, performance -> {
    [Discord-Server]: <https://discord.gg/sTRg8A7>
    
    [PaperMC]: <https://papermc.io/downloads>
-   
+
    [GitHub Releases]: <https://github.com/dementisimus/MapCreator/releases>
    
    [Advanced-Slime-World-Manager]: <https://github.com/Paul19988/Advanced-Slime-World-Manager>
