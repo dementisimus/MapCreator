@@ -6,7 +6,7 @@
 
     <groupId>dev.dementisimus.mapcreator</groupId>
     <artifactId>MapCreator</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,7 +15,7 @@
         <annotations.version>22.0.0</annotations.version>
         <guice.version>5.0.1</guice.version>
         <slimeworldmanager-api.version>2.6.2-SNAPSHOT</slimeworldmanager-api.version>
-        <bson.version>4.3.0</bson.version>
+        <bson.version>4.3.2</bson.version>
         <lombok.version>1.18.20</lombok.version>
     </properties>
 
@@ -98,7 +98,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.3.1</version>
                 <configuration>
                     <source>16</source>
                 </configuration>

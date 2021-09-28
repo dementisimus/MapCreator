@@ -60,7 +60,7 @@ public class MapCreatorPlugin extends JavaPlugin {
     public void onEnable() {
         mapCreatorPlugin = this;
 
-        this.bukkitCoreAPI = new BukkitCoreAPI(this, true);
+        this.bukkitCoreAPI = new BukkitCoreAPI(this);
 
         this.setupManager = this.bukkitCoreAPI.getSetupManager();
 
@@ -221,7 +221,7 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String API_MODE_ENABLED = "api.mode.enabled";
 
         public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY = "inventory.section.categories.add";
-        public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_SIGN_INSTRUCTION = "inventory.section.categories.add.sign.instruction";
+        public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_INSTRUCTION = "inventory.section.categories.add.instruction";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP = "inventory.section.category.create.map";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1 = "inventory.section.category.create.map.map.icon.lore.instructions.1";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2 = "inventory.section.category.create.map.map.icon.lore.instructions.2";

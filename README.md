@@ -23,7 +23,7 @@ MapCreator is a **lightweight**, **inventory based** map management tool which a
 ## **Requirements**
 
 1. **Java 16**
-2. **Spigot 1.17.1**
+2. **Spigot 1.17.1** **([PaperMC] recommended)**
 3. **Access** to the **server console** (for the **automated setup**)
 4. **Access** to a **database** **(MongoDB, MariaDB (MySQL), SQLite)**
 
@@ -86,6 +86,8 @@ mapCreator.perform(MapCreator.Action.LOAD, mapCreatorMap, performance -> {
    [planned features]: <https://github.com/dementisimus/MapCreator/projects/2>
    [Discord-Server]: <https://discord.gg/sTRg8A7>
    
+   [PaperMC]: <https://papermc.io/downloads>
+
    [GitHub Releases]: <https://github.com/dementisimus/MapCreator/releases>
    
    [Advanced-Slime-World-Manager]: <https://github.com/Paul19988/Advanced-Slime-World-Manager>
