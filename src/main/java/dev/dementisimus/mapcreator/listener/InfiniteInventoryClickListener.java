@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import dev.dementisimus.capi.core.actionbar.ActionBar;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.creators.infiniteinventory.events.InfiniteInventoryClickEvent;
-import dev.dementisimus.capi.core.creators.signcreator.SignInputCreator;
+import dev.dementisimus.capi.core.creators.input.UserInputFetcher;
 import dev.dementisimus.capi.core.database.Database;
 import dev.dementisimus.capi.core.database.properties.UpdateProperty;
 import dev.dementisimus.capi.core.injection.annotations.bukkit.BukkitListener;
@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.BACK;
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY;
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_SIGN_INSTRUCTION;
+import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_INSTRUCTION;
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP;
 import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Section.*;
 /**
@@ -57,14 +57,14 @@ import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Sec
 @BukkitListener(isOptional = true)
 public class InfiniteInventoryClickListener implements Listener {
 
-    @Inject Database database;
-
     @Inject MapCreatorPlugin mapCreatorPlugin;
     @Inject CustomMapCreator customMapCreator;
     @Inject CustomMapCreatorInventory customMapCreatorInventory;
 
     @EventHandler
     public void on(InfiniteInventoryClickEvent event) {
+        Database database = this.mapCreatorPlugin.getDatabase();
+
         Player player = event.getPlayer();
         String title = event.getCurrentInventoryTitle();
         String displayName = event.getCurrentItemDisplayName();
@@ -106,15 +106,15 @@ public class InfiniteInventoryClickListener implements Listener {
                                         if(!newCategory.equalsIgnoreCase(MapTemplates.CATEGORY_TEMPLATES)) {
                                             newCategory = newCategory.toUpperCase();
 
-                                            this.database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
+                                            database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
 
                                             Document document = new Document();
                                             document.append(MapCreatorPlugin.DataSource.NAME, newCategory);
                                             document.append(MapCreatorPlugin.DataSource.ICON, icon.name());
 
-                                            this.database.setDocument(document);
-                                            this.database.setUpdateProperty(UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, newCategory).value(MapCreatorPlugin.DataSource.ICON, icon.name()));
-                                            this.database.writeOrUpdate(success -> {
+                                            database.setDocument(document);
+                                            database.setUpdateProperty(UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, newCategory).value(MapCreatorPlugin.DataSource.ICON, icon.name()));
+                                            database.writeOrUpdate(success -> {
                                                 this.customMapCreatorInventory.open(player, CATEGORIES);
                                             });
                                         }else {
@@ -372,7 +372,11 @@ public class InfiniteInventoryClickListener implements Listener {
     }
 
     private void fetchInput(Player player, boolean allowBlankInput, Callback<String> stringCallback) {
-        new SignInputCreator(player, this.mapCreatorPlugin).listen(SignInputCreator.getAdditionalSignLines(player, INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_SIGN_INSTRUCTION), newMap -> {
+        UserInputFetcher userInputFetcher = new UserInputFetcher(player);
+
+        userInputFetcher.setMessagePrefix(MapCreatorPlugin.Strings.PREFIX);
+        userInputFetcher.setMessageTranslationProperty(INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_INSTRUCTION);
+        userInputFetcher.fetch(newMap -> {
             if(newMap.matches("[A-Za-z0-9]+")) {
                 if(!newMap.isBlank() && !newMap.isEmpty()) {
                     stringCallback.done(newMap.replaceAll(" ", ""));
