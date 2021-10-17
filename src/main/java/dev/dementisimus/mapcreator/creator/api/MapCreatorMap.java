@@ -46,28 +46,28 @@ public interface MapCreatorMap {
     /**
      * Checks if a map is locked in the data source
      *
-     * @returns true if isLocked, false otherwise
+     * @return true if isLocked, false otherwise
      */
     boolean isLocked();
 
     /**
      * Checks if a map exists in the data source
      *
-     * @returns true if isLocked, false otherwise
+     * @return true if isLocked, false otherwise
      */
     boolean exists();
 
     /**
      * Gets the full map name (CATEGORY + {@link #CATEGORY_MAP_SEPARATOR} + mapName)
      *
-     * @returns the full map name (CATEGORY + {@link #CATEGORY_MAP_SEPARATOR} + mapName)
+     * @return the full map name (CATEGORY + {@link #CATEGORY_MAP_SEPARATOR} + mapName)
      */
     String getFileName();
 
     /**
      * Gets the full colored map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
      *
-     * @returns the full colored map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
+     * @return the full colored map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
      */
     String getPrettyName();
 
@@ -75,21 +75,21 @@ public interface MapCreatorMap {
      * Gets the loader of a map
      * Note: the loader may be null, but the map could still be loaded (by API, for example)
      *
-     * @returns the loader of a map
+     * @return the loader of a map
      */
     @Nullable String getLoadedBy();
 
     /**
      * Gets the date the map has been loaded
      *
-     * @returns the date the map has been loaded
+     * @return the date the map has been loaded
      */
     @Nullable Date getLoadedSince();
 
     /**
      * Checks if a map is read-only
      *
-     * @returns true if read-only, false otherwise
+     * @return true if read-only, false otherwise
      */
     boolean isReadOnly();
 
