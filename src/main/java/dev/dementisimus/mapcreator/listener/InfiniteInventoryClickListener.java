@@ -9,6 +9,7 @@ import dev.dementisimus.capi.core.database.Database;
 import dev.dementisimus.capi.core.database.properties.UpdateProperty;
 import dev.dementisimus.capi.core.injection.annotations.bukkit.BukkitListener;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
+import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.capi.core.pools.ScheduledExecutor;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
@@ -32,8 +33,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -139,7 +138,7 @@ public class InfiniteInventoryClickListener implements Listener {
                             if(!new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND).matches(displayName)) {
                                 recentlyViewedMap.setMapName(displayName);
 
-                                MapCreatorMap loadedMap = this.customMapCreator.getMapCreatorMap(recentlyViewedMap.getFileName());
+                                CustomMapCreatorMap loadedMap = (CustomMapCreatorMap) this.customMapCreator.getMapCreatorMap(recentlyViewedMap.getFileName());
                                 if(loadedMap != null) {
                                     recentlyViewedMap.setSlimeWorld(loadedMap.getSlimeWorld());
                                 }
@@ -160,13 +159,12 @@ public class InfiniteInventoryClickListener implements Listener {
                             }
                         }else {
                             if(new BukkitTranslation(INVENTORY_SECTION_CATEGORY_CREATE_MAP).matches(displayName)) {
-                                try {
-                                    List<String> availableTemplates = this.customMapCreator.listWorldsByCategory(CustomMapTemplates.CATEGORY_TEMPLATES);
-                                    if(availableTemplates != null && !availableTemplates.isEmpty()) {
-                                        this.customMapCreatorInventory.open(player, MapCreatorInventory.Section.MAP_TEMPLATES_CHOOSE_TEMPLATE);
-                                        return;
-                                    }
-                                }catch(IOException ignored) {}
+                                List<String> availableTemplates = this.customMapCreator.listMapsByCategory(CustomMapTemplates.CATEGORY_TEMPLATES);
+
+                                if(availableTemplates != null && !availableTemplates.isEmpty()) {
+                                    this.customMapCreatorInventory.open(player, MapCreatorInventory.Section.MAP_TEMPLATES_CHOOSE_TEMPLATE);
+                                    return;
+                                }
 
                                 this.handleMapCreation(player, MapCreator.Action.LOAD, recentlyViewedMap);
                             }else if(new BukkitTranslation(BACK).matches(displayName)) {
@@ -252,7 +250,7 @@ public class InfiniteInventoryClickListener implements Listener {
 
                     if(isInRange) {
                         if(displayName.contains("/")) {
-                            String fileName = ChatColor.stripColor(displayName).replace("/", CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR);
+                            String fileName = ChatColor.stripColor(displayName).replace("/", MapCreatorMap.CATEGORY_MAP_SEPARATOR);
                             CustomMapCreatorMap importableWorld = customWorldImporter.getImportableWorldByFileName(fileName);
 
                             if(importableWorld != null) {
@@ -301,7 +299,7 @@ public class InfiniteInventoryClickListener implements Listener {
         AtomicReference<ScheduledFuture<?>> scheduledFuture = new AtomicReference<>();
 
         if(action.isUseLoadingActionBar()) {
-            player.closeInventory();
+            BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, player :: closeInventory);
 
             String mapName = action.equals(MapCreator.Action.CLONE) ? customMapCreatorMap.getCloneFrom().getPrettyName() : customMapCreatorMap.getPrettyName();
             String text = new BukkitTranslation(action.getLoadingActionBarActionTranslationProperty()).get(player, "$map$", mapName);
@@ -335,9 +333,7 @@ public class InfiniteInventoryClickListener implements Listener {
         this.customMapCreator.perform(action, customMapCreatorMap, performance -> {
             if(performance.isSuccess()) {
                 if(performance.getSlimeWorld() != null) {
-                    customMapCreatorMap.setSlimeWorld(performance.getSlimeWorld());
                     customMapCreatorMap.setLoadedBy(player.getName());
-                    customMapCreatorMap.setLoadedSince(new Date());
 
                     this.customMapCreatorInventory.setLoadedPlayerMap(player, customMapCreatorMap);
                 }

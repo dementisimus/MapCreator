@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 /**
  * Copyright (c) by dementisimus,
@@ -35,6 +36,15 @@ public interface MapCreator {
      * @param performanceCallback the {@link Callback} which returns the {@link Performance} of the executed {@link Action}
      */
     void perform(MapCreator.Action action, MapCreatorMap mapCreatorMap, Callback<MapCreator.Performance> performanceCallback);
+
+    /**
+     * Lists all maps by category
+     *
+     * @param category the category to search maps for
+     *
+     * @return a list of all maps in the given category
+     */
+    List<String> listMapsByCategory(String category);
 
     enum Action {
 

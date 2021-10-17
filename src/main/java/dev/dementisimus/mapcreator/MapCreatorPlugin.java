@@ -14,8 +14,8 @@ import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.capi.core.setup.states.type.SetupStateBoolean;
 import dev.dementisimus.capi.core.setup.states.type.SetupStateString;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
-import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.SlimeDataSource;
+import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.aswm.ASWMDownloads;
 import dev.dementisimus.mapcreator.creator.aswm.SlimeDataSoureConfig;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
@@ -110,8 +110,8 @@ public class MapCreatorPlugin extends JavaPlugin {
                             for(Player player : Bukkit.getOnlinePlayers()) {
                                 if(player != null) {
                                     String fullMapName = player.getWorld().getName();
-                                    if(fullMapName.contains(CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
-                                        String[] fullMapNameSplitted = fullMapName.replace(CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
+                                    if(fullMapName.contains(MapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
+                                        String[] fullMapNameSplitted = fullMapName.replace(MapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
                                         String category = fullMapNameSplitted[0];
                                         String name = fullMapNameSplitted[1];
 

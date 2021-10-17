@@ -28,6 +28,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,13 +71,19 @@ public class CustomMapCreator implements MapCreator {
 
     @Override
     public void perform(Action action, MapCreatorMap mapCreatorMap, Callback<Performance> performanceCallback) {
-        this.awaitPerformance(action, mapCreatorMap, performance -> {
+        CustomMapCreatorMap customMapCreatorMap = (CustomMapCreatorMap) mapCreatorMap;
+
+        this.awaitPerformance(action, customMapCreatorMap, performance -> {
             BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> {
                 SlimeWorld slimeWorld = performance.getSlimeWorld();
 
                 if(!action.equals(Action.CLONE)) {
                     if(slimeWorld != null) {
                         this.slimePlugin.generateWorld(slimeWorld);
+
+                        customMapCreatorMap.setSlimeWorld(slimeWorld);
+                        customMapCreatorMap.setLoadedSince(new Date());
+
                         this.addMapCreatorMap(mapCreatorMap);
                     }else {
                         this.removeMapCreatorMap(mapCreatorMap);
@@ -88,18 +96,27 @@ public class CustomMapCreator implements MapCreator {
         });
     }
 
-    public void awaitPerformance(Action action, MapCreatorMap mapCreatorMap, Callback<Performance> performanceCallback) {
+    @Override
+    public List<String> listMapsByCategory(String category) {
+        try {
+            return this.slimeLoader.listWorlds().stream().filter(world -> world.startsWith(category + MapCreatorMap.CATEGORY_MAP_SEPARATOR)).collect(Collectors.toList());
+        }catch(IOException exception) {
+            return new ArrayList<>();
+        }
+    }
+
+    public void awaitPerformance(Action action, CustomMapCreatorMap mapCreatorMap, Callback<Performance> performanceCallback) {
         this.manageWorldConfig(action, mapCreatorMap);
-        this.ensureNoPlayersLeftOnMap(action, mapCreatorMap, () -> ThreadPool.execute(() -> {
+        BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> this.ensureNoPlayersLeftOnMap(action, mapCreatorMap, () -> ThreadPool.execute(() -> {
             switch(action) {
-                case LOAD -> mapCreatorMap.load(false, this.getSlimePropertyMap(), performanceCallback);
+                case LOAD -> mapCreatorMap.load(mapCreatorMap.isReadOnly(), this.getSlimePropertyMap(), performanceCallback);
                 case SAVE -> mapCreatorMap.save(true, mapCreatorMap.getSlimeWorld(), performanceCallback);
                 case LEAVE_WITHOUT_SAVING -> mapCreatorMap.leave(performanceCallback);
                 case DELETE -> mapCreatorMap.delete(performanceCallback);
                 case IMPORT -> mapCreatorMap.importWorld(performanceCallback);
                 case CLONE -> mapCreatorMap.clone(performanceCallback);
             }
-        }));
+        })));
     }
 
     public SlimeLoader getSlimeLoader() {
@@ -108,7 +125,7 @@ public class CustomMapCreator implements MapCreator {
 
     public WorldData getWorldData() {
         WorldData worldData = new WorldData();
-        worldData.setDataSource(SlimeDataSource.MONGODB);
+        worldData.setDataSource(this.mapCreatorPlugin.getSlimeDataSource());
         worldData.setSpawn("0, 100, 0");
         worldData.setDifficulty("easy");
         worldData.setAllowAnimals(false);
@@ -133,10 +150,6 @@ public class CustomMapCreator implements MapCreator {
         return this.customMapCreatorInventory;
     }
 
-    public List<String> listWorldsByCategory(String categoryName) throws IOException {
-        return this.slimeLoader.listWorlds().stream().filter(world -> world.startsWith(categoryName + CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR)).collect(Collectors.toList());
-    }
-
     public @Nullable MapCreatorMap getMapCreatorMap(String mapName) {
         return this.getMapCreatorMaps().get(mapName);
     }
@@ -159,7 +172,7 @@ public class CustomMapCreator implements MapCreator {
             case SAVE, LEAVE_WITHOUT_SAVING, DELETE -> {
                 world.getPlayers().forEach(player -> {
                     /*
-                     * replace with previous location
+                     * ToDo: replace with previous location
                      * */
                     player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
                 });

@@ -5,6 +5,7 @@ import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.exceptions.UnknownWorldException;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
+import com.grinderwolf.swm.api.world.properties.SlimeProperties;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.nms.CraftSlimeWorld;
 import dev.dementisimus.capi.core.callback.Callback;
@@ -15,7 +16,10 @@ import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,8 +35,6 @@ import java.util.Date;
  */
 public class CustomMapCreatorMap implements MapCreatorMap {
 
-    public static final String CATEGORY_MAP_SEPARATOR = "...";
-
     @Getter private final SlimePlugin slimePlugin;
     @Getter private final SlimeLoader slimeLoader;
     @Getter private final CustomMapCreator customMapCreator;
@@ -40,6 +42,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Setter
     CustomMapCreatorMap recentlyViewed;
     @Getter private String mapCategory;
+    private boolean readOnly;
     @Getter private SlimeWorld slimeWorld;
     @Getter
     @Setter
@@ -72,7 +75,98 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         this.mapCategory = mapCategory.toUpperCase();
     }
 
+    public CustomMapCreatorMap(String fullMap) {
+        this();
+
+        if(fullMap.contains(CATEGORY_MAP_SEPARATOR)) {
+            String[] mapParts = fullMap.replace(CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
+            this.mapCategory = mapParts[0];
+            this.mapName = mapParts[1];
+        }
+    }
+
+    public CustomMapCreatorMap(String mapName, String mapCategory, boolean readOnly) {
+        this(mapName, mapCategory);
+
+        this.readOnly = readOnly;
+    }
+
+    public CustomMapCreatorMap(String fullMap, boolean readOnly) {
+        this(fullMap);
+
+        this.readOnly = readOnly;
+    }
+
     @Override
+    public boolean isLocked() {
+        try {
+            return this.slimeLoader.isWorldLocked(this.getFileName());
+        }catch(UnknownWorldException | IOException exception) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean exists() {
+        try {
+            return this.slimeLoader.worldExists(this.getFileName());
+        }catch(IOException exception) {
+            return false;
+        }
+    }
+
+    @Override
+    public String getFileName() {
+        return this.getCategoryIdentifier() + this.getMapName();
+    }
+
+    @Override
+    public String getPrettyName() {
+        return "§c§l" + this.getMapCategory() + "§7/§f§l" + this.getMapName();
+    }
+
+    @Override
+    public @Nullable String getLoadedBy() {
+        return this.loadedBy;
+    }
+
+    @Override
+    public @Nullable Date getLoadedSince() {
+        return this.loadedSince;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return this.readOnly;
+    }
+
+    @Override
+    public void teleportTo(Player player) {
+        World world = Bukkit.getWorld(this.getFileName());
+
+        if(this.slimeWorld == null || this.slimeWorld.getPropertyMap() == null || world == null) return;
+
+        //ToDO: replace with spawn location out of database
+
+        SlimePropertyMap slimePropertyMap = this.slimeWorld.getPropertyMap();
+
+        int x = slimePropertyMap.getValue(SlimeProperties.SPAWN_X);
+        int y = slimePropertyMap.getValue(SlimeProperties.SPAWN_Y);
+        int z = slimePropertyMap.getValue(SlimeProperties.SPAWN_Z);
+
+        this.teleportTo(player, new Location(world, x, y, z));
+    }
+
+    @Override
+    public void teleportTo(Player player, Location location) {
+        player.teleport(location);
+    }
+
+    @Override
+    public void teleportTo(Player player, String locationKey) {
+        //ToDo: allow users to create custom location keys in the map management inventory
+    }
+
     public void load(boolean readOnly, SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
@@ -99,7 +193,6 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         performanceCallback.done(performance);
     }
 
-    @Override
     public void save(boolean save, SlimeWorld slimeWorld, Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
@@ -129,7 +222,6 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         performanceCallback.done(performance);
     }
 
-    @Override
     public void delete(Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
@@ -147,14 +239,12 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         performanceCallback.done(performance);
     }
 
-    @Override
     public void leave(Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
         this.save(false, null, performanceCallback);
     }
 
-    @Override
     public void importWorld(Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
@@ -176,7 +266,6 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         performanceCallback.done(performance);
     }
 
-    @Override
     public void clone(Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
@@ -213,24 +302,6 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         }
     }
 
-    @Override
-    public boolean isLocked() {
-        try {
-            return this.slimeLoader.isWorldLocked(this.getFileName());
-        }catch(UnknownWorldException | IOException exception) {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean exists() {
-        try {
-            return this.slimeLoader.worldExists(this.getFileName());
-        }catch(IOException exception) {
-            return false;
-        }
-    }
-
     public void checkArguments() {
         Preconditions.checkNotNull(this.mapName, "mapName == null");
         Preconditions.checkNotNull(this.mapCategory, "mapCategory == null");
@@ -247,28 +318,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         return this.getMapCategory().toUpperCase() + CATEGORY_MAP_SEPARATOR;
     }
 
-    @Override
-    public String getFileName() {
-        return this.getCategoryIdentifier() + this.getMapName();
-    }
-
-    @Override
-    public String getPrettyName() {
-        return "§c§l" + this.getMapCategory() + "§7/§f§l" + this.getMapName();
-    }
-
-    @Override
     public void setSlimeWorld(SlimeWorld slimeWorld) {
         this.slimeWorld = slimeWorld;
-    }
-
-    @Override
-    public String getLoadedBy() {
-        return this.loadedBy;
-    }
-
-    @Override
-    public Date getLoadedSince() {
-        return this.loadedSince;
     }
 }

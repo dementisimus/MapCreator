@@ -182,7 +182,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
             }
             case CATEGORY_MAPS -> {
                 CustomMapCreatorMap recentlyViewed = currentPlayerMap.getRecentlyViewed();
-                for(String world : this.customMapCreator.listWorldsByCategory(recentlyViewed.getMapCategory())) {
+                for(String world : this.customMapCreator.listMapsByCategory(recentlyViewed.getMapCategory())) {
                     ItemCreator worldItemCreator = new ItemCreator(Material.FILLED_MAP).setDisplayName(world.split(recentlyViewed.getCategoryIdentifier())[1]).addAllFlags();
                     worldItemCreator.addLore(" ");
 
