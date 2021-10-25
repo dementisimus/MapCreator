@@ -58,6 +58,7 @@ jobs:
           remote: /home/repo-deployment/repository/repositories/release/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/
           concurrency: 5
           host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           privateKey: ${{ secrets.PRIVATE_KEY}}
@@ -71,6 +72,7 @@ jobs:
           remote: /home/repo-deployment/repository/repositories/development/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/
           concurrency: 5
           host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           privateKey: ${{ secrets.PRIVATE_KEY}}
@@ -84,6 +86,7 @@ jobs:
           remote: /var/www/dementisimus.dev/html/docs/release/${{ env.name }}/${{ env.version }}/
           concurrency: 5
           host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           privateKey: ${{ secrets.PRIVATE_KEY}}
@@ -97,6 +100,7 @@ jobs:
           remote: /var/www/dementisimus.dev/html/docs/development/${{ env.name }}/${{ env.version }}/
           concurrency: 5
           host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           privateKey: ${{ secrets.PRIVATE_KEY}}
