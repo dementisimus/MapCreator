@@ -3,6 +3,7 @@ package dev.dementisimus.mapcreator.creator;
 import com.google.common.base.Preconditions;
 import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.exceptions.UnknownWorldException;
+import com.grinderwolf.swm.api.exceptions.WorldAlreadyExistsException;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimeProperties;
@@ -51,6 +52,10 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Getter
     @Setter
     private String mapName;
+
+    @Getter
+    @Setter
+    private CustomMapCreatorMap renameTo;
 
     @Setter private String loadedBy;
 
@@ -117,12 +122,22 @@ public class CustomMapCreatorMap implements MapCreatorMap {
 
     @Override
     public String getFileName() {
-        return this.getCategoryIdentifier() + this.getMapName();
+        return this.getFileName(this.getMapName());
+    }
+
+    @Override
+    public String getFileName(String mapName) {
+        return this.getCategoryIdentifier() + mapName;
     }
 
     @Override
     public String getPrettyName() {
-        return "§c§l" + this.getMapCategory() + "§7/§f§l" + this.getMapName();
+        return this.getPrettyName(this.getMapName());
+    }
+
+    @Override
+    public String getPrettyName(String mapName) {
+        return "§c§l" + this.getMapCategory() + "§7/§f§l" + mapName;
     }
 
     @Override
@@ -300,6 +315,34 @@ public class CustomMapCreatorMap implements MapCreatorMap {
             performance.setSuccess(MapCreator.Performance.FailureReason.NO_CLONEABLE_MAP);
             performanceCallback.done(performance);
         }
+    }
+
+    public void rename(SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) {
+        this.checkArguments();
+
+        MapCreator.Performance performance = new MapCreator.Performance();
+
+        this.load(true, slimePropertyMap, loadPerformance -> {
+            if(loadPerformance.isSuccess()) {
+                SlimeWorld slimeWorld = loadPerformance.getSlimeWorld();
+                try {
+                    slimeWorld.clone(this.getRenameTo().getFileName(), this.slimeLoader, false);
+                    this.leave(leavePerformance -> {
+                        try {
+                            this.slimeLoader.deleteWorld(this.getFileName());
+                            performance.setSuccess();
+                            performanceCallback.done(performance);
+                        }catch(UnknownWorldException | IOException exception) {
+                            performance.setSuccess(exception);
+                            performanceCallback.done(performance);
+                        }
+                    });
+                }catch(WorldAlreadyExistsException | IOException exception) {
+                    performance.setSuccess(exception);
+                    performanceCallback.done(performance);
+                }
+            }
+        });
     }
 
     public void checkArguments() {

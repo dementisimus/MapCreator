@@ -77,7 +77,15 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                         for(Document item : fetchedCategories) {
                             String name = item.getString(MapCreatorPlugin.DataSource.NAME);
                             String icon = item.getString(MapCreatorPlugin.DataSource.ICON);
-                            items.add(new ItemCreator(Material.valueOf(icon)).setDisplayName(name).addAllFlags().apply());
+                            ItemCreator categoryItemCreator = new ItemCreator(Material.valueOf(icon));
+
+                            categoryItemCreator.setDisplayName(name);
+                            categoryItemCreator.addAllFlags();
+                            categoryItemCreator.addEmptyLore();
+                            categoryItemCreator.addLore(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_ACTION_SHIFT_CLICK_RENAME);
+                            categoryItemCreator.addLore(player, MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_ACTION_SHIFT_CLICK_UPDATE_ICON);
+
+                            items.add(categoryItemCreator.apply());
                         }
                         items.addAll(fetchedItems);
 
@@ -118,9 +126,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                     CustomMapCreatorMap mapCreatorMap = inventorySection.equals(CATEGORY_MAPS_MAP_CHOOSE_ACTION) ? loadedPlayerMap.getRecentlyViewed() : loadedPlayerMap;
                                     if(mapCreatorMap != null && mapCreatorMap.getMapName() != null) {
                                         for(MapCreator.Action action : MapCreator.Action.values()) {
-                                            if(!action.equals(MapCreator.Action.IMPORT) && !action.equals(MapCreator.Action.CLONE)) {
-                                                this.setMapManagementActionItems(player, mapCreatorMap, inventoryCreator, action, action.getTranslationProperty(), action.getActionItemSlot(), action.getActionItemMaterial());
-                                            }
+                                            this.setMapManagementActionItems(player, mapCreatorMap, inventoryCreator, action, action.getTranslationProperty(), action.getActionItemSlot(), action.getActionItemMaterial());
                                         }
                                         for(CustomMapCreator.CustomAction.User userAction : CustomMapCreator.CustomAction.User.values()) {
                                             if(inventorySection.equals(Section.CATEGORY_MAPS_MAP_MANAGEMENT)) {
@@ -184,7 +190,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                 CustomMapCreatorMap recentlyViewed = currentPlayerMap.getRecentlyViewed();
                 for(String world : this.customMapCreator.listMapsByCategory(recentlyViewed.getMapCategory())) {
                     ItemCreator worldItemCreator = new ItemCreator(Material.FILLED_MAP).setDisplayName(world.split(recentlyViewed.getCategoryIdentifier())[1]).addAllFlags();
-                    worldItemCreator.addLore(" ");
+                    worldItemCreator.addEmptyLore();
 
                     if(this.worldAlreadyLoadedOnServer(world)) {
                         MapCreatorMap mapCreatorMap = this.getCustomMapCreator().getMapCreatorMap(world);
@@ -198,10 +204,12 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                 worldItemCreator.addLore(new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_MAP_LOADED_SINCE).get(player, "$loadedSince$", LOADED_SINCE_DATE_FORMAT.format(mapCreatorMap.getLoadedSince())));
                                 dataAdded = true;
                             }
-                            if(dataAdded) worldItemCreator.addLore(" ");
+                            if(dataAdded) worldItemCreator.addEmptyLore();
                         }
                     }else {
                         worldItemCreator.addLore(new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_RIGHT_CLICK).get(player));
+                        worldItemCreator.addLore(new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_SHIFT_CLICK).get(player));
+                        worldItemCreator.addEmptyLore();
                     }
                     worldItemCreator.addLore(new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_LEFT_CLICK).get(player));
                     worldItemCreator.addHiddenString(MapCreatorPlugin.getMapCreatorPlugin(), MapCreatorPlugin.ItemDataStorageKeys.CATEGORY, recentlyViewed.getMapCategory());
@@ -245,23 +253,25 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
 
     @Override
     public void setMapManagementActionItems(Player player, CustomMapCreatorMap mapCreatorMap, InventoryCreator inventoryCreator, Enum action, String translationProperty, int actionItemSlot, Material actionItemMaterial) {
-        ItemCreator actionItemCreator = new ItemCreator(actionItemMaterial).addAllFlags();
-        String disabledActionColorCodes = "";
-        if(this.worldAlreadyLoadedOnServer(mapCreatorMap.getFileName())) {
-            if(action.equals(MapCreator.Action.LOAD)) {
-                disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
-            }else if(action.equals(CustomMapCreator.CustomAction.User.TELEPORT)) {
-                if(player.getWorld().getName().equals(mapCreatorMap.getFileName())) {
+        if(!actionItemMaterial.equals(Material.AIR)) {
+            ItemCreator actionItemCreator = new ItemCreator(actionItemMaterial).addAllFlags();
+            String disabledActionColorCodes = "";
+            if(this.worldAlreadyLoadedOnServer(mapCreatorMap.getFileName())) {
+                if(action.equals(MapCreator.Action.LOAD)) {
+                    disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
+                }else if(action.equals(CustomMapCreator.CustomAction.User.TELEPORT)) {
+                    if(player.getWorld().getName().equals(mapCreatorMap.getFileName())) {
+                        disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
+                    }
+                }
+            }else {
+                if(action.equals(MapCreator.Action.SAVE) || action.equals(MapCreator.Action.LEAVE_WITHOUT_SAVING) || action.equals(CustomMapCreator.CustomAction.User.TELEPORT)) {
                     disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
                 }
             }
-        }else {
-            if(action.equals(MapCreator.Action.SAVE) || action.equals(MapCreator.Action.LEAVE_WITHOUT_SAVING) || action.equals(CustomMapCreator.CustomAction.User.TELEPORT)) {
-                disabledActionColorCodes = DISABLED_ACTION_COLOR_CODES;
-            }
+            actionItemCreator.setDisplayName(new BukkitTranslation(translationProperty).get(player, "$disabled$", disabledActionColorCodes));
+            inventoryCreator.setItem(actionItemSlot, actionItemCreator.apply());
         }
-        actionItemCreator.setDisplayName(new BukkitTranslation(translationProperty).get(player, "$disabled$", disabledActionColorCodes));
-        inventoryCreator.setItem(actionItemSlot, actionItemCreator.apply());
     }
 
     @Override

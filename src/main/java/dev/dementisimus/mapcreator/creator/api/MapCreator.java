@@ -76,7 +76,12 @@ public interface MapCreator {
         /**
          * Clones a {@link MapCreatorMap} from the data source and loads it
          */
-        CLONE("", "mapcreator.action.message.clone", -1, Material.AIR, true, true, "mapcreator.action.loading.actionbar.clone");
+        CLONE("", "mapcreator.action.message.clone", -1, Material.AIR, true, true, "mapcreator.action.loading.actionbar.clone"),
+
+        /**
+         * Renames a {@link MapCreatorMap}
+         */
+        RENAME("", "mapcreator.action.message.rename", -1, Material.AIR, true, true, "mapcreator.action.loading.actionbar.rename");
 
         @Getter String translationProperty;
         @Getter String actionMessageTranslationProperty;

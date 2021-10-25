@@ -115,6 +115,7 @@ public class CustomMapCreator implements MapCreator {
                 case DELETE -> mapCreatorMap.delete(performanceCallback);
                 case IMPORT -> mapCreatorMap.importWorld(performanceCallback);
                 case CLONE -> mapCreatorMap.clone(performanceCallback);
+                case RENAME -> mapCreatorMap.rename(this.getSlimePropertyMap(), performanceCallback);
             }
         })));
     }
@@ -189,7 +190,7 @@ public class CustomMapCreator implements MapCreator {
     public void manageWorldConfig(MapCreator.Action action, MapCreatorMap mapCreatorMap) {
         WorldsConfig worldsConfig = ConfigManager.getWorldConfig();
         switch(action) {
-            case SAVE, LEAVE_WITHOUT_SAVING, DELETE, IMPORT -> worldsConfig.getWorlds().remove(mapCreatorMap.getFileName());
+            case SAVE, LEAVE_WITHOUT_SAVING, DELETE, IMPORT, RENAME -> worldsConfig.getWorlds().remove(mapCreatorMap.getFileName());
             default -> worldsConfig.getWorlds().put(mapCreatorMap.getFileName(), this.getWorldData());
         }
         worldsConfig.save();
@@ -201,8 +202,13 @@ public class CustomMapCreator implements MapCreator {
             String cloneFrom = map.getCloneFrom() == null ? "" : map.getCloneFrom().getPrettyName();
 
             String basicActionMessageProperty = isPostAction ? MapCreatorPlugin.Translations.BASIC_POST_ACTION_MESSAGE : MapCreatorPlugin.Translations.BASIC_PRE_ACTION_MESSAGE;
-            return new BukkitTranslation(basicActionMessageProperty).get(player, new String[]{"$prefix$", "$map$", "$action$", "$elapsed$"}, new String[]{
-                    MapCreatorPlugin.Strings.PREFIX, map.getPrettyName(), new BukkitTranslation(actionMessageTranslationProperty).get(player, "$clone$", cloneFrom), elapsed
+
+            String newName = "";
+            if(map.getRenameTo() != null) {
+                newName = map.getRenameTo().getPrettyName();
+            }
+            return new BukkitTranslation(basicActionMessageProperty).get(player, new String[]{"$prefix$", "$map$", "$action$", "$elapsed$", "$newName$"}, new String[]{
+                    MapCreatorPlugin.Strings.PREFIX, map.getPrettyName(), new BukkitTranslation(actionMessageTranslationProperty).get(player, "$clone$", cloneFrom), elapsed, newName
             });
         }
 

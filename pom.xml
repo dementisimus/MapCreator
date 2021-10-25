@@ -6,7 +6,7 @@
 
     <groupId>dev.dementisimus.mapcreator</groupId>
     <artifactId>MapCreator</artifactId>
-    <version>1.4.1</version>
+    <version>1.5.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -14,7 +14,7 @@
         <spigot-api.version>1.17.1-R0.1-SNAPSHOT</spigot-api.version>
         <annotations.version>22.0.0</annotations.version>
         <guice.version>5.0.1</guice.version>
-        <slimeworldmanager-api.version>2.6.2-SNAPSHOT</slimeworldmanager-api.version>
+        <slimeworldmanager-api.version>2.6.3-SNAPSHOT</slimeworldmanager-api.version>
         <bson.version>4.3.2</bson.version>
         <lombok.version>1.18.22</lombok.version>
     </properties>

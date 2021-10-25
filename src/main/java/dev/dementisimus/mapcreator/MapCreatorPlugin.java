@@ -226,8 +226,11 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1 = "inventory.section.category.create.map.map.icon.lore.instructions.1";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2 = "inventory.section.category.create.map.map.icon.lore.instructions.2";
         public static final String BACK = "back";
+        public static final String INVENTORY_SECTION_CATEGORY_ACTION_SHIFT_CLICK_RENAME = "inventory.section.category.action.shift.click.rename";
+        public static final String INVENTORY_SECTION_CATEGORY_ACTION_SHIFT_CLICK_UPDATE_ICON = "inventory.section.category.action.shift.click.update.icon";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_RIGHT_CLICK = "inventory.section.maps.map.action.right.click";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_LEFT_CLICK = "inventory.section.maps.map.action.left.click";
+        public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_SHIFT_CLICK = "inventory.section.maps.map.action.shift.click";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_LOADED_BY = "inventory.section.category.maps.map.loaded.by";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_LOADED_SINCE = "inventory.section.category.maps.map.loaded.since";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_IMPORT_WORLD = "inventory.section.category.maps.import.world";

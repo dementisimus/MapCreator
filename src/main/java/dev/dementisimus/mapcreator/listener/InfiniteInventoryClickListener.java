@@ -3,6 +3,7 @@ package dev.dementisimus.mapcreator.listener;
 import com.google.inject.Inject;
 import dev.dementisimus.capi.core.actionbar.ActionBar;
 import dev.dementisimus.capi.core.callback.Callback;
+import dev.dementisimus.capi.core.callback.EmptyCallback;
 import dev.dementisimus.capi.core.creators.infiniteinventory.events.InfiniteInventoryClickEvent;
 import dev.dementisimus.capi.core.creators.input.UserInputFetcher;
 import dev.dementisimus.capi.core.database.Database;
@@ -83,21 +84,47 @@ public class InfiniteInventoryClickListener implements Listener {
 
             switch(currentSection) {
                 case CATEGORIES -> {
+                    Material icon = player.getItemOnCursor().getType().equals(Material.AIR) ? Material.PAPER : player.getItemOnCursor().getType();
+
                     if(isInRange) {
                         if(!new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND).matches(displayName)) {
-                            if(loadedPlayerMap.getMapCategory() == null) {
-                                loadedPlayerMap.setMapCategory(displayName);
+                            if(event.isShiftClick()) {
+                                if(!icon.equals(Material.PAPER)) {
+                                    player.setItemOnCursor(null);
+
+                                    UpdateProperty updateProperty = UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, displayName).value(MapCreatorPlugin.DataSource.ICON, icon.name());
+                                    this.updateCategory(database, updateProperty, () -> {
+                                        this.customMapCreatorInventory.open(player, CATEGORIES);
+                                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 10, 1);
+                                    });
+                                }else {
+                                    this.fetchUpdateInput(player, CATEGORIES, updatedCategoryName -> {
+                                        updatedCategoryName = updatedCategoryName.toUpperCase();
+
+                                        UpdateProperty updateProperty = UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, displayName).value(MapCreatorPlugin.DataSource.NAME, updatedCategoryName);
+                                        this.updateCategory(database, updateProperty, () -> {
+
+                                            //ToDo: update all maps in category to new category name
+
+                                            this.customMapCreatorInventory.open(player, CATEGORIES);
+                                            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 10, 1);
+                                        });
+                                    });
+                                }
+                            }else {
+                                if(loadedPlayerMap.getMapCategory() == null) {
+                                    loadedPlayerMap.setMapCategory(displayName);
+                                }
+                                CustomMapCreatorMap recentlyViewed = loadedPlayerMap.getRecentlyViewed();
+                                if(recentlyViewed == null) {
+                                    recentlyViewed = new CustomMapCreatorMap();
+                                }
+                                loadedPlayerMap.setRecentlyViewed(recentlyViewed.setMapCategory(displayName));
+                                this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
                             }
-                            CustomMapCreatorMap recentlyViewed = loadedPlayerMap.getRecentlyViewed();
-                            if(recentlyViewed == null) {
-                                recentlyViewed = new CustomMapCreatorMap();
-                            }
-                            loadedPlayerMap.setRecentlyViewed(recentlyViewed.setMapCategory(displayName));
-                            this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
                         }
                     }else {
                         if(new BukkitTranslation(INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY).matches(displayName)) {
-                            Material icon = player.getItemOnCursor().getType().equals(Material.AIR) ? Material.PAPER : player.getItemOnCursor().getType();
                             player.setItemOnCursor(null);
                             this.fetchInput(player, true, newCategory -> {
                                 if(newCategory != null) {
@@ -143,18 +170,30 @@ public class InfiniteInventoryClickListener implements Listener {
                                     recentlyViewedMap.setSlimeWorld(loadedMap.getSlimeWorld());
                                 }
 
-                                MapCreatorInventory.Section section = null;
-                                if(event.isRightClick()) {
-                                    if(!this.customMapCreatorInventory.worldAlreadyLoadedOnServer(recentlyViewedMap.getFileName())) {
-                                        this.handlePerformance(MapCreator.Action.LOAD, recentlyViewedMap, player);
-                                    }else {
-                                        section = MapCreatorInventory.Section.CATEGORY_MAPS_MAP_CHOOSE_ACTION;
+                                if(event.isShiftClick()) {
+                                    if(loadedMap == null) {
+                                        this.fetchUpdateInput(player, CATEGORY_MAPS, updatedMapName -> {
+                                            CustomMapCreatorMap renameTo = new CustomMapCreatorMap(updatedMapName, recentlyViewedMap.getMapCategory());
+                                            recentlyViewedMap.setRenameTo(renameTo);
+
+                                            this.handlePerformance(MapCreator.Action.RENAME, recentlyViewedMap, player);
+                                        });
                                     }
-                                }else if(event.isLeftClick()) {
-                                    section = CATEGORY_MAPS_MAP_CHOOSE_ACTION;
-                                }
-                                if(section != null) {
-                                    this.customMapCreatorInventory.open(player, section);
+                                }else {
+                                    MapCreatorInventory.Section section = null;
+
+                                    if(event.isRightClick()) {
+                                        if(!this.customMapCreatorInventory.worldAlreadyLoadedOnServer(recentlyViewedMap.getFileName())) {
+                                            this.handlePerformance(MapCreator.Action.LOAD, recentlyViewedMap, player);
+                                        }else {
+                                            section = MapCreatorInventory.Section.CATEGORY_MAPS_MAP_CHOOSE_ACTION;
+                                        }
+                                    }else if(event.isLeftClick()) {
+                                        section = CATEGORY_MAPS_MAP_CHOOSE_ACTION;
+                                    }
+                                    if(section != null) {
+                                        this.customMapCreatorInventory.open(player, section);
+                                    }
                                 }
                             }
                         }else {
@@ -326,7 +365,7 @@ public class InfiniteInventoryClickListener implements Listener {
             }));
 
             if(action.equals(MapCreator.Action.LOAD)) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 999999, 10, false, false, false));
+                BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 999999, 10, false, false, false)));
             }
         }
 
@@ -365,6 +404,23 @@ public class InfiniteInventoryClickListener implements Listener {
                 }
             }
         });
+    }
+
+    private void fetchUpdateInput(Player player, MapCreatorInventory.Section section, Callback<String> stringCallback) {
+        this.fetchInput(player, true, updatedInput -> {
+            if(updatedInput != null) {
+                stringCallback.done(updatedInput);
+            }else {
+                this.customMapCreatorInventory.open(player, section);
+            }
+        });
+    }
+
+    private void updateCategory(Database database, UpdateProperty updateProperty, EmptyCallback emptyCallback) {
+        database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
+
+        database.setUpdateProperty(updateProperty);
+        database.update(success -> emptyCallback.done());
     }
 
     private void fetchInput(Player player, boolean allowBlankInput, Callback<String> stringCallback) {

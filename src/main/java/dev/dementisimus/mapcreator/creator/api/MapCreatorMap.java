@@ -65,11 +65,25 @@ public interface MapCreatorMap {
     String getFileName();
 
     /**
+     * Gets the full map name (CATEGORY + {@link #CATEGORY_MAP_SEPARATOR} + mapName)
+     *
+     * @return the full map name (CATEGORY + {@link #CATEGORY_MAP_SEPARATOR} + mapName)
+     */
+    String getFileName(String mapName);
+
+    /**
      * Gets the full colored map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
      *
      * @return the full colored map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
      */
     String getPrettyName();
+
+    /**
+     * Gets the full colored map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
+     *
+     * @return the full colored map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
+     */
+    String getPrettyName(String mapName);
 
     /**
      * Gets the loader of a map
