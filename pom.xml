@@ -15,7 +15,7 @@
         <annotations.version>22.0.0</annotations.version>
         <guice.version>5.0.1</guice.version>
         <slimeworldmanager-api.version>2.6.3-SNAPSHOT</slimeworldmanager-api.version>
-        <bson.version>4.3.2</bson.version>
+        <bson.version>4.3.3</bson.version>
         <lombok.version>1.18.22</lombok.version>
     </properties>
 
@@ -75,10 +75,10 @@
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
-        <repository>
+        <!--<repository>
             <id>rapture-snapshots</id>
             <url>https://repo.rapture.pw/repository/maven-snapshots/</url>
-        </repository>
+        </repository>-->
         <repository>
             <id>dementisimus-dev-release</id>
             <url>https://repo.dementisimus.dev/release/</url>
@@ -86,6 +86,10 @@
         <repository>
             <id>dementisimus-dev-development</id>
             <url>https://repo.dementisimus.dev/development/</url>
+        </repository>
+        <repository>
+            <id>dementisimus-dev-temp</id>
+            <url>https://repo.dementisimus.dev/temp/</url>
         </repository>
     </repositories>
 

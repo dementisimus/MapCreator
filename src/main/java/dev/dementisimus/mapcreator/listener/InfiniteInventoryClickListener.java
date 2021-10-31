@@ -103,11 +103,13 @@ public class InfiniteInventoryClickListener implements Listener {
 
                                         UpdateProperty updateProperty = UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, displayName).value(MapCreatorPlugin.DataSource.NAME, updatedCategoryName);
                                         this.updateCategory(database, updateProperty, () -> {
+                                            List<String> mapsToRename = this.customMapCreator.listMapsByCategory(displayName);
+                                            String categoryName = updateProperty.getValue().toString();
 
-                                            //ToDo: update all maps in category to new category name
-
-                                            this.customMapCreatorInventory.open(player, CATEGORIES);
-                                            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 10, 1);
+                                            this.renameCategoryMaps(displayName, categoryName, mapsToRename, () -> {
+                                                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 10, 1);
+                                                this.customMapCreatorInventory.open(player, CATEGORIES);
+                                            });
                                         });
                                     });
                                 }
@@ -404,6 +406,22 @@ public class InfiniteInventoryClickListener implements Listener {
                 }
             }
         });
+    }
+
+    private void renameCategoryMaps(String displayName, String categoryName, List<String> mapsToRename, EmptyCallback emptyCallback) {
+        for(String mapToRename : this.customMapCreator.listMapsByCategory(displayName)) {
+            CustomMapCreatorMap customMapCreatorMap = new CustomMapCreatorMap(mapToRename);
+
+            customMapCreatorMap.setRenameTo(new CustomMapCreatorMap(mapToRename).setMapCategory(categoryName));
+
+            this.customMapCreator.perform(MapCreator.Action.RENAME, customMapCreatorMap, performance -> {
+                mapsToRename.remove(mapToRename);
+
+                if(mapsToRename.isEmpty()) {
+                    emptyCallback.done();
+                }
+            });
+        }
     }
 
     private void fetchUpdateInput(Player player, MapCreatorInventory.Section section, Callback<String> stringCallback) {

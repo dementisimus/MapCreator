@@ -115,7 +115,7 @@ public class CustomMapCreator implements MapCreator {
                 case DELETE -> mapCreatorMap.delete(performanceCallback);
                 case IMPORT -> mapCreatorMap.importWorld(performanceCallback);
                 case CLONE -> mapCreatorMap.clone(performanceCallback);
-                case RENAME -> mapCreatorMap.rename(this.getSlimePropertyMap(), performanceCallback);
+                case RENAME -> mapCreatorMap.rename(performanceCallback);
             }
         })));
     }

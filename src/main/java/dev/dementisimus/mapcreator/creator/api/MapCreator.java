@@ -209,6 +209,11 @@ public interface MapCreator {
             return this;
         }
 
+        public Performance setSuccess(boolean success) {
+            this.success = success;
+            return this;
+        }
+
         public FailureReason getFailureReason() {
             return this.failureReason;
         }

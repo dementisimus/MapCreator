@@ -3,7 +3,6 @@ package dev.dementisimus.mapcreator.creator;
 import com.google.common.base.Preconditions;
 import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.exceptions.UnknownWorldException;
-import com.grinderwolf.swm.api.exceptions.WorldAlreadyExistsException;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimeProperties;
@@ -317,32 +316,20 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         }
     }
 
-    public void rename(SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) {
+    public void rename(Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
         MapCreator.Performance performance = new MapCreator.Performance();
 
-        this.load(true, slimePropertyMap, loadPerformance -> {
-            if(loadPerformance.isSuccess()) {
-                SlimeWorld slimeWorld = loadPerformance.getSlimeWorld();
-                try {
-                    slimeWorld.clone(this.getRenameTo().getFileName(), this.slimeLoader, false);
-                    this.leave(leavePerformance -> {
-                        try {
-                            this.slimeLoader.deleteWorld(this.getFileName());
-                            performance.setSuccess();
-                            performanceCallback.done(performance);
-                        }catch(UnknownWorldException | IOException exception) {
-                            performance.setSuccess(exception);
-                            performanceCallback.done(performance);
-                        }
-                    });
-                }catch(WorldAlreadyExistsException | IOException exception) {
-                    performance.setSuccess(exception);
-                    performanceCallback.done(performance);
-                }
-            }
-        });
+        try {
+            boolean success = this.slimeLoader.renameWorld(this.getFileName(), this.getRenameTo().getFileName());
+
+            performance.setSuccess(success);
+            performanceCallback.done(performance);
+        }catch(UnknownWorldException exception) {
+            performance.setSuccess(exception);
+            performanceCallback.done(performance);
+        }
     }
 
     public void checkArguments() {
