@@ -308,17 +308,19 @@ public class InfiniteInventoryClickListener implements Listener {
                 }
                 case MAP_TEMPLATES_CHOOSE_TEMPLATE -> {
                     CustomMapCreatorMap recentlyViewed = loadedPlayerMap.getRecentlyViewed();
+                    CustomMapCreatorMap simpleTemplate = new CustomMapCreatorMap(MapTemplates.SIMPLE_TEMPLATE_NAME, MapTemplates.CATEGORY_TEMPLATES);
 
                     if(isInRange) {
                         CustomMapCreatorMap cloneFrom = new CustomMapCreatorMap();
                         cloneFrom.setMapCategory(MapTemplates.CATEGORY_TEMPLATES);
-                        if(!new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_TEMPLATES_EMPTY).matches(displayName)) {
-                            cloneFrom.setMapName(MapTemplates.SIMPLE_TEMPLATE_NAME);
 
+                        if(new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_TEMPLATES_EMPTY).matches(displayName)) {
+                            this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
+                        }else if(displayName.equalsIgnoreCase(simpleTemplate.getPrettyName())) {
+                            cloneFrom.setMapName(MapTemplates.SIMPLE_TEMPLATE_NAME);
                             recentlyViewed.setCloneFrom(cloneFrom);
-                            this.handleMapCreation(player, MapCreator.Action.CLONE, recentlyViewed);
-                        }else {
-                            this.handleMapCreation(player, MapCreator.Action.LOAD, recentlyViewed);
+
+                            this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
                         }
                     }else {
                         if(new BukkitTranslation(BACK).matches(displayName)) {

@@ -65,11 +65,25 @@ public interface MapCreatorMap {
     String getFileName();
 
     /**
+     * Gets the full map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
+     *
+     * @return the full map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
+     */
+    String getPrettyFileName();
+
+    /**
      * Gets the full map name (CATEGORY + {@link #CATEGORY_MAP_SEPARATOR} + mapName)
      *
      * @return the full map name (CATEGORY + {@link #CATEGORY_MAP_SEPARATOR} + mapName)
      */
     String getFileName(String mapName);
+
+    /**
+     * Gets the full map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
+     *
+     * @return the full map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
+     */
+    String getPrettyFileName(String mapName);
 
     /**
      * Gets the full colored map name, but with a `/` instead of {@link #CATEGORY_MAP_SEPARATOR}
@@ -106,6 +120,13 @@ public interface MapCreatorMap {
      * @return true if read-only, false otherwise
      */
     boolean isReadOnly();
+
+    /**
+     * Gets the settings for map creation
+     *
+     * @return {@link MapCreationSettings} map creation
+     */
+    MapCreationSettings getMapCreationSettings();
 
     /**
      * Teleports a player to the map

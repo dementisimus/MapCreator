@@ -11,6 +11,7 @@ import com.grinderwolf.swm.nms.CraftSlimeWorld;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
+import dev.dementisimus.mapcreator.creator.api.MapCreationSettings;
 import dev.dementisimus.mapcreator.creator.api.MapCreator;
 import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import lombok.Getter;
@@ -38,6 +39,8 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Getter private final SlimePlugin slimePlugin;
     @Getter private final SlimeLoader slimeLoader;
     @Getter private final CustomMapCreator customMapCreator;
+    private final CustomMapCreationSettings mapCreationSettings;
+
     @Getter
     @Setter
     CustomMapCreatorMap recentlyViewed;
@@ -70,6 +73,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         this.slimePlugin = mapCreatorPlugin.getSlimePlugin();
         this.slimeLoader = mapCreatorPlugin.getSlimeLoader();
         this.customMapCreator = mapCreatorPlugin.getCustomMapCreator();
+        this.mapCreationSettings = new CustomMapCreationSettings(mapCreatorPlugin);
     }
 
     public CustomMapCreatorMap(String mapName, String mapCategory) {
@@ -125,8 +129,18 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
+    public String getPrettyFileName() {
+        return this.getMapCategory() + "/" + this.getMapName();
+    }
+
+    @Override
     public String getFileName(String mapName) {
         return this.getCategoryIdentifier() + mapName;
+    }
+
+    @Override
+    public String getPrettyFileName(String mapName) {
+        return this.getMapCategory() + "/" + mapName;
     }
 
     @Override
@@ -152,6 +166,11 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Override
     public boolean isReadOnly() {
         return this.readOnly;
+    }
+
+    @Override
+    public MapCreationSettings getMapCreationSettings() {
+        return this.mapCreationSettings;
     }
 
     @Override

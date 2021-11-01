@@ -3,13 +3,10 @@ package dev.dementisimus.mapcreator.creator;
 import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
-import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.plugin.config.ConfigManager;
-import com.grinderwolf.swm.plugin.config.WorldData;
 import com.grinderwolf.swm.plugin.config.WorldsConfig;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.callback.EmptyCallback;
-import dev.dementisimus.capi.core.debugging.SysOut;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.capi.core.pools.ThreadPool;
@@ -51,9 +48,8 @@ public class CustomMapCreator implements MapCreator {
     private final MapCreatorPlugin mapCreatorPlugin;
     @Getter private final SetupManager setupManager;
     private final SlimePlugin slimePlugin;
-    private SlimeLoader slimeLoader;
     private final CustomMapCreatorInventory customMapCreatorInventory;
-
+    private SlimeLoader slimeLoader;
     @Getter
     @Setter
     private CustomWorldImporter customWorldImporter;
@@ -124,7 +120,7 @@ public class CustomMapCreator implements MapCreator {
         this.manageWorldConfig(action, mapCreatorMap);
         BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> this.ensureNoPlayersLeftOnMap(action, mapCreatorMap, () -> ThreadPool.execute(() -> {
             switch(action) {
-                case LOAD -> mapCreatorMap.load(mapCreatorMap.isReadOnly(), this.getSlimePropertyMap(), performanceCallback);
+                case LOAD -> mapCreatorMap.load(mapCreatorMap.isReadOnly(), mapCreatorMap.getMapCreationSettings().toSlimePropertyMap(), performanceCallback);
                 case SAVE -> mapCreatorMap.save(true, mapCreatorMap.getSlimeWorld(), performanceCallback);
                 case LEAVE_WITHOUT_SAVING -> mapCreatorMap.leave(performanceCallback);
                 case DELETE -> mapCreatorMap.delete(performanceCallback);
@@ -137,25 +133,6 @@ public class CustomMapCreator implements MapCreator {
 
     public SlimeLoader getSlimeLoader() {
         return this.slimeLoader;
-    }
-
-    public WorldData getWorldData() {
-        WorldData worldData = new WorldData();
-        worldData.setDataSource(this.mapCreatorPlugin.getSlimeDataSource());
-        worldData.setSpawn("0, 100, 0");
-        worldData.setDifficulty("easy");
-        worldData.setAllowAnimals(false);
-        worldData.setAllowMonsters(false);
-        worldData.setDragonBattle(false);
-        worldData.setPvp(true);
-        worldData.setEnvironment("normal");
-        worldData.setWorldType("default_1_1");
-        worldData.setDefaultBiome("minecraft:plains");
-        return worldData;
-    }
-
-    public SlimePropertyMap getSlimePropertyMap() {
-        return this.getWorldData().toPropertyMap();
     }
 
     public Map<String, MapCreatorMap> getMapCreatorMaps() {
@@ -206,7 +183,7 @@ public class CustomMapCreator implements MapCreator {
         WorldsConfig worldsConfig = ConfigManager.getWorldConfig();
         switch(action) {
             case SAVE, LEAVE_WITHOUT_SAVING, DELETE, IMPORT, RENAME -> worldsConfig.getWorlds().remove(mapCreatorMap.getFileName());
-            default -> worldsConfig.getWorlds().put(mapCreatorMap.getFileName(), this.getWorldData());
+            default -> worldsConfig.getWorlds().put(mapCreatorMap.getFileName(), mapCreatorMap.getMapCreationSettings().toWorldData());
         }
         worldsConfig.save();
     }
