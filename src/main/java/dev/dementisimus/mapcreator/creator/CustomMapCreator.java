@@ -9,6 +9,7 @@ import com.grinderwolf.swm.plugin.config.WorldData;
 import com.grinderwolf.swm.plugin.config.WorldsConfig;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.callback.EmptyCallback;
+import dev.dementisimus.capi.core.debugging.SysOut;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.capi.core.pools.ThreadPool;
@@ -50,7 +51,7 @@ public class CustomMapCreator implements MapCreator {
     private final MapCreatorPlugin mapCreatorPlugin;
     @Getter private final SetupManager setupManager;
     private final SlimePlugin slimePlugin;
-    private final SlimeLoader slimeLoader;
+    private SlimeLoader slimeLoader;
     private final CustomMapCreatorInventory customMapCreatorInventory;
 
     @Getter
@@ -66,6 +67,20 @@ public class CustomMapCreator implements MapCreator {
         this.setupManager = this.mapCreatorPlugin.getSetupManager();
         this.slimePlugin = this.mapCreatorPlugin.getSlimePlugin();
         this.slimeLoader = this.slimePlugin.getLoader(this.mapCreatorPlugin.getSlimeDataSource());
+
+        if(this.slimeLoader == null) {
+            String[] dataSources = new String[]{SlimeDataSource.REDIS, SlimeDataSource.FILE};
+            for(String dataSource : dataSources) {
+                SlimeLoader slimeLoader = this.getSlimeLoader(dataSource);
+
+                if(slimeLoader != null) {
+                    this.slimeLoader = slimeLoader;
+                    this.mapCreatorPlugin.setSlimeDataSource(dataSource);
+                    break;
+                }
+            }
+        }
+
         this.customMapCreatorInventory = new CustomMapCreatorInventory(this);
     }
 
@@ -194,6 +209,10 @@ public class CustomMapCreator implements MapCreator {
             default -> worldsConfig.getWorlds().put(mapCreatorMap.getFileName(), this.getWorldData());
         }
         worldsConfig.save();
+    }
+
+    private SlimeLoader getSlimeLoader(String dataSource) {
+        return this.slimePlugin.getLoader(dataSource);
     }
 
     public static class CustomAction {

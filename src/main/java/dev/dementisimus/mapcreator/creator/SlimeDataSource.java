@@ -12,12 +12,13 @@ import dev.dementisimus.capi.core.database.interfaces.IDatabase;
  */
 public class SlimeDataSource {
 
-    public static final String FILESYSTEM = "filesystem";
-    public static final String MYSQL = "mysql";
     public static final String MONGODB = "mongodb";
+    public static final String MYSQL = "mysql";
+    public static final String REDIS = "redis";
+    public static final String FILE = "file";
 
     public static String of(String dataSource) {
-        String slimeDataSource = FILESYSTEM;
+        String slimeDataSource = null;
 
         if(dataSource.equalsIgnoreCase(IDatabase.Type.MARIADB.name())) {
             slimeDataSource = MYSQL;

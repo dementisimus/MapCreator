@@ -22,6 +22,7 @@ import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -51,10 +52,13 @@ public class MapCreatorPlugin extends JavaPlugin {
     @Getter private BukkitCoreAPI bukkitCoreAPI;
     @Getter private SlimePlugin slimePlugin;
     @Getter private SlimeLoader slimeLoader;
-    @Getter private String slimeDataSource;
     @Getter private CustomMapCreator customMapCreator;
     @Getter private SetupManager setupManager;
     @Getter private Database database;
+
+    @Getter
+    @Setter
+    private String slimeDataSource;
 
     @Override
     public void onEnable() {

@@ -326,7 +326,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
 
             performance.setSuccess(success);
             performanceCallback.done(performance);
-        }catch(UnknownWorldException exception) {
+        }catch(UnknownWorldException | IOException exception) {
             performance.setSuccess(exception);
             performanceCallback.done(performance);
         }
