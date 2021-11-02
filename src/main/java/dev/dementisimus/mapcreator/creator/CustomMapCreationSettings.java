@@ -7,6 +7,7 @@ import dev.dementisimus.mapcreator.creator.api.MapCreationSettings;
 import dev.dementisimus.mapcreator.creator.api.settings.DefaultBiome;
 import dev.dementisimus.mapcreator.creator.api.settings.DefaultWorldEnvironment;
 import dev.dementisimus.mapcreator.creator.api.settings.DefaultWorldType;
+import dev.dementisimus.mapcreator.creator.api.settings.biomes.overworld.DefaultOverworldBiome;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Difficulty;
@@ -62,7 +63,7 @@ public class CustomMapCreationSettings implements MapCreationSettings {
         this.pvp = true;
         this.environment = DefaultWorldEnvironment.OVERWORLD;
         this.worldType = DefaultWorldType.DEFAULT;
-        this.defaultBiome = DefaultBiome.FOREST;
+        this.defaultBiome = DefaultOverworldBiome.FOREST;
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimeProperties;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
+import dev.dementisimus.mapcreator.creator.api.PlayerMapActions;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
 import lombok.Getter;
 import org.bukkit.Bukkit;

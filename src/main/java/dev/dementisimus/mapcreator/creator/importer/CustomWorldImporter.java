@@ -7,7 +7,7 @@ import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
-import dev.dementisimus.mapcreator.creator.importer.interfaces.WorldImporter;
+import dev.dementisimus.mapcreator.creator.api.WorldImporter;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;

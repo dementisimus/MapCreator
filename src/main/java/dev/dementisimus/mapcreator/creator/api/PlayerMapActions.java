@@ -1,4 +1,4 @@
-package dev.dementisimus.mapcreator.creator;
+package dev.dementisimus.mapcreator.creator.api;
 
 /**
  * Copyright (c) by dementisimus,
