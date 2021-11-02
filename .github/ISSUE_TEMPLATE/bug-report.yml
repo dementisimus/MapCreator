@@ -63,8 +63,8 @@ body:
       label: PaperMC
       description: Are you using PaperMC?
       options:
-          - yes
-          - no
+          - 'yes'
+          - 'no'
     validations:
       required: true
 
