@@ -162,6 +162,10 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
 
                                     this.setBackItem(inventoryCreator, 18, player);
                                 }
+                                case MAP_CREATION_SETTINGS_OVERVIEW -> {
+                                    inventoryCreator = loadedPlayerMap.getMapCreationSettings().createSettingsItems(player, inventoryCreator);
+                                    this.setBackItem(inventoryCreator, 39, player);
+                                }
                             }
                             inventoryCreator.apply(player);
                         });

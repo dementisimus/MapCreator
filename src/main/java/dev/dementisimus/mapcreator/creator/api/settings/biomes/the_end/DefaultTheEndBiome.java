@@ -1,7 +1,7 @@
 package dev.dementisimus.mapcreator.creator.api.settings.biomes.the_end;
 
-import dev.dementisimus.mapcreator.creator.api.settings.DefaultBiome;
-import dev.dementisimus.mapcreator.creator.api.settings.DefaultWorldEnvironment;
+import dev.dementisimus.mapcreator.creator.api.settings.biomes.DefaultBiome;
+import dev.dementisimus.mapcreator.creator.api.settings.environment.DefaultWorldEnvironment;
 import lombok.AllArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;

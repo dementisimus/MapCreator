@@ -1,6 +1,7 @@
 package dev.dementisimus.mapcreator.creator.api;
 
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
+import dev.dementisimus.mapcreator.creator.api.settings.MapCreationSettings;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;

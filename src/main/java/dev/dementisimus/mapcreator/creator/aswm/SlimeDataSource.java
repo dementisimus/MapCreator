@@ -1,4 +1,4 @@
-package dev.dementisimus.mapcreator.creator;
+package dev.dementisimus.mapcreator.creator.aswm;
 
 import dev.dementisimus.capi.core.database.interfaces.IDatabase;
 /**

@@ -1,7 +1,10 @@
-package dev.dementisimus.mapcreator.creator.api.settings;
+package dev.dementisimus.mapcreator.creator.api.settings.environment;
 
+import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -11,6 +14,7 @@ import org.bukkit.Material;
  * @author dementisimus
  * @since 01.11.2021:21:22
  */
+@AllArgsConstructor
 public enum DefaultWorldEnvironment {
 
     OVERWORLD("normal", "world.environment.overworld", Material.GRASS_BLOCK),
@@ -21,9 +25,7 @@ public enum DefaultWorldEnvironment {
     @Getter private final String translationProperty;
     @Getter private final Material icon;
 
-    DefaultWorldEnvironment(String id, String translationProperty, Material icon) {
-        this.id = id;
-        this.translationProperty = translationProperty;
-        this.icon = icon;
+    public String translate(Player player) {
+        return new BukkitTranslation(this.getTranslationProperty()).get(player);
     }
 }

@@ -1,12 +1,12 @@
 package dev.dementisimus.mapcreator.creator.api.settings.biomes.nether;
 
-import dev.dementisimus.mapcreator.creator.api.settings.DefaultBiome;
-import dev.dementisimus.mapcreator.creator.api.settings.DefaultWorldEnvironment;
+import dev.dementisimus.mapcreator.creator.api.settings.biomes.DefaultBiome;
+import dev.dementisimus.mapcreator.creator.api.settings.environment.DefaultWorldEnvironment;
 import lombok.AllArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
 
-import static dev.dementisimus.mapcreator.creator.api.settings.DefaultWorldEnvironment.NETHER;
+import static dev.dementisimus.mapcreator.creator.api.settings.environment.DefaultWorldEnvironment.NETHER;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
