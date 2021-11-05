@@ -218,6 +218,8 @@ public class MapCreatorPlugin extends JavaPlugin {
     public static class ItemDataStorageKeys {
 
         public static final String CATEGORY = "CATEGORY";
+        public static final String BIOME = "BIOME";
+
     }
 
     public static class Translations {
@@ -227,6 +229,8 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY = "inventory.section.categories.add";
         public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_INSTRUCTION = "inventory.section.categories.add.instruction";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP = "inventory.section.category.create.map";
+        public static final String INVENTORY_SECTION_CATEGORIES_CREATE_MAP_INSTRUCTION = "inventory.section.categories.create.map.instruction";
+        public static final String INVENTORY_SECTION_CATEGORIES_DELETE_MAP_INSTRUCTION = "inventory.section.categories.delete.map.instruction";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1 = "inventory.section.category.create.map.map.icon.lore.instructions.1";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2 = "inventory.section.category.create.map.map.icon.lore.instructions.2";
         public static final String BACK = "back";
@@ -242,6 +246,8 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND = "inventory.section.categories.noting.found";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND = "inventory.section.category.maps.noting.found";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_TEMPLATES_EMPTY = "inventory.section.category.maps.templates.empty";
+
+        public static final String MAP_CREATION_SETTINGS_INSTRUCTION_SPAWN_SET = "map.creation.settings.instruction.spawn.set";
 
         public static final String TEMPLATES_DOWNLOAD_FAILURE = "templates.download.failure";
         public static final String TEMPLATES_IMPORT_SUCCESS = "templates.import.success";

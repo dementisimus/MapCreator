@@ -15,6 +15,11 @@ import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.api.MapCreator;
 import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.api.MapTemplates;
+import dev.dementisimus.mapcreator.creator.api.settings.biomes.DefaultBiome;
+import dev.dementisimus.mapcreator.creator.api.settings.biomes.nether.DefaultNetherBiome;
+import dev.dementisimus.mapcreator.creator.api.settings.biomes.overworld.DefaultOverworldBiome;
+import dev.dementisimus.mapcreator.creator.api.settings.biomes.the_end.DefaultTheEndBiome;
+import dev.dementisimus.mapcreator.creator.api.settings.environment.DefaultWorldEnvironment;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
 import org.bson.Document;
@@ -48,11 +53,13 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
 
     public static final String DISABLED_ACTION_COLOR_CODES = "§7§l§m";
 
+    private final MapCreatorPlugin mapCreatorPlugin;
     private final CustomMapCreator customMapCreator;
     private final SetupManager setupManager;
     private final Map<Player, CustomMapCreatorMap> currentPlayerMap = new HashMap<>();
 
     public CustomMapCreatorInventory(CustomMapCreator customMapCreator) {
+        this.mapCreatorPlugin = MapCreatorPlugin.getMapCreatorPlugin();
         this.customMapCreator = customMapCreator;
         this.setupManager = customMapCreator.getSetupManager();
     }
@@ -166,6 +173,11 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                     inventoryCreator = loadedPlayerMap.getMapCreationSettings().createSettingsItems(player, inventoryCreator);
                                     this.setBackItem(inventoryCreator, 39, player);
                                 }
+                                case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME -> {
+                                    for(DefaultWorldEnvironment worldEnvironment : DefaultWorldEnvironment.values()) {
+                                        inventoryCreator.setItem(worldEnvironment.getSlot(), new ItemCreator(worldEnvironment.getIcon()).setDisplayName(player, worldEnvironment.getTranslationProperty()).apply());
+                                    }
+                                }
                             }
                             inventoryCreator.apply(player);
                         });
@@ -223,6 +235,20 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                         MapCreatorInventory.setMapManagementItem(player);
                     }
                 }
+                fetchedItems.done(documents, items);
+            }
+            case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_OVERWORLD, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_NETHER, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_THE_END -> {
+                DefaultBiome[] defaultBiomes = switch(inventorySection) {
+                    case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_OVERWORLD -> DefaultOverworldBiome.values();
+                    case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_NETHER -> DefaultNetherBiome.values();
+                    case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_THE_END -> DefaultTheEndBiome.values();
+                    default -> null;
+                };
+
+                for(DefaultBiome defaultBiome : defaultBiomes) {
+                    items.add(new ItemCreator(defaultBiome.getIcon()).setDisplayName(player, defaultBiome.getTranslationProperty()).apply());
+                }
+
                 fetchedItems.done(documents, items);
             }
             /*

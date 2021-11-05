@@ -19,7 +19,13 @@ import dev.dementisimus.mapcreator.creator.CustomPlayerMapActions;
 import dev.dementisimus.mapcreator.creator.api.MapCreator;
 import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.api.MapTemplates;
+import dev.dementisimus.mapcreator.creator.api.settings.MapCreationSettings;
+import dev.dementisimus.mapcreator.creator.api.settings.biomes.DefaultBiome;
+import dev.dementisimus.mapcreator.creator.api.settings.difficulty.DefaultDifficulty;
+import dev.dementisimus.mapcreator.creator.api.settings.environment.DefaultWorldEnvironment;
+import dev.dementisimus.mapcreator.creator.api.settings.worldtype.DefaultWorldType;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
+import dev.dementisimus.mapcreator.creator.settings.CustomMapCreationSettings;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory;
@@ -40,10 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.BACK;
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY;
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_INSTRUCTION;
-import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_CREATE_MAP;
+import static dev.dementisimus.mapcreator.MapCreatorPlugin.Translations.*;
 import static dev.dementisimus.mapcreator.gui.interfaces.MapCreatorInventory.Section.*;
 /**
  * Copyright (c) by dementisimus,
@@ -81,6 +84,12 @@ public class InfiniteInventoryClickListener implements Listener {
 
         if(currentSection != null) {
             CustomMapCreatorMap loadedPlayerMap = this.customMapCreatorInventory.getLoadedPlayerMap(player);
+
+            if(loadedPlayerMap.getRecentlyViewed() == null) {
+                loadedPlayerMap.setRecentlyViewed(new CustomMapCreatorMap());
+            }
+
+            CustomMapCreationSettings mapCreationSettings = (CustomMapCreationSettings) loadedPlayerMap.getRecentlyViewed().getMapCreationSettings();
 
             switch(currentSection) {
                 case CATEGORIES -> {
@@ -128,7 +137,7 @@ public class InfiniteInventoryClickListener implements Listener {
                     }else {
                         if(new BukkitTranslation(INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY).matches(displayName)) {
                             player.setItemOnCursor(null);
-                            this.fetchInput(player, true, newCategory -> {
+                            this.fetchInput(INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_INSTRUCTION, player, true, true, newCategory -> {
                                 if(newCategory != null) {
                                     if(!newCategory.isEmpty()) {
                                         if(!newCategory.equalsIgnoreCase(MapTemplates.CATEGORY_TEMPLATES)) {
@@ -240,7 +249,7 @@ public class InfiniteInventoryClickListener implements Listener {
                         if(clickedAction.equals(MapCreator.Action.DELETE)) {
                             MapCreator.Action finalClickedAction = clickedAction;
                             MapCreatorInventory.Section finalCurrentSection = currentSection;
-                            this.fetchInput(player, true, mapInput -> {
+                            this.fetchInput(INVENTORY_SECTION_CATEGORIES_DELETE_MAP_INSTRUCTION, player, true, true, mapInput -> {
                                 if(mapInput != null && mapInput.equals(mapCreatorMap.getMapName())) {
                                     this.handlePerformance(finalClickedAction, mapCreatorMap, player);
                                 }else {
@@ -325,6 +334,111 @@ public class InfiniteInventoryClickListener implements Listener {
                     }else {
                         if(new BukkitTranslation(BACK).matches(displayName)) {
                             this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
+                        }
+                    }
+                }
+                case MAP_CREATION_SETTINGS_OVERVIEW -> {
+                    if(isInRange) {
+                        MapCreationSettings.Items currentItem = null;
+
+                        for(MapCreationSettings.Items item : MapCreationSettings.Items.values()) {
+                            if(new BukkitTranslation(item.getTranslationProperty()).matches(displayName)) {
+                                currentItem = item;
+                                break;
+                            }
+                        }
+
+                        if(currentItem != null) {
+                            switch(currentItem) {
+                                case SPAWN -> {
+                                    this.fetchInput(MAP_CREATION_SETTINGS_INSTRUCTION_SPAWN_SET, player, true, false, newSpawn -> {
+                                        if(newSpawn != null) {
+                                            mapCreationSettings.setSpawn(newSpawn);
+                                        }
+
+                                        this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
+                                    });
+                                    return;
+                                }
+                                case DIFFICULTY -> {
+                                    switch(mapCreationSettings.getDifficulty()) {
+                                        case PEACEFUL -> mapCreationSettings.setDifficulty(DefaultDifficulty.EASY);
+                                        case EASY -> mapCreationSettings.setDifficulty(DefaultDifficulty.NORMAL);
+                                        case NORMAL -> mapCreationSettings.setDifficulty(DefaultDifficulty.HARD);
+                                        case HARD -> mapCreationSettings.setDifficulty(DefaultDifficulty.PEACEFUL);
+                                    }
+                                }
+                                case ALLOW_ANIMALS, ALLOW_MONSTERS, DRAGON_BATTLE, PVP -> {
+                                    switch(currentItem) {
+                                        case ALLOW_ANIMALS -> mapCreationSettings.setAllowAnimals(!mapCreationSettings.isAllowAnimals());
+                                        case ALLOW_MONSTERS -> mapCreationSettings.setAllowMonsters(!mapCreationSettings.isAllowMonsters());
+                                        case DRAGON_BATTLE -> mapCreationSettings.setDragonBattle(!mapCreationSettings.isDragonBattle());
+                                        case PVP -> mapCreationSettings.setPvp(!mapCreationSettings.isPvp());
+                                    }
+                                }
+                                case ENVIRONMENT -> {
+                                    switch(mapCreationSettings.getEnvironment()) {
+                                        case OVERWORLD -> mapCreationSettings.setEnvironment(DefaultWorldEnvironment.NETHER);
+                                        case NETHER -> mapCreationSettings.setEnvironment(DefaultWorldEnvironment.THE_END);
+                                        case THE_END -> mapCreationSettings.setEnvironment(DefaultWorldEnvironment.OVERWORLD);
+                                    }
+                                }
+                                case WORLD_TYPE -> {
+                                    switch(mapCreationSettings.getWorldType()) {
+                                        case DEFAULT -> mapCreationSettings.setWorldType(DefaultWorldType.FLAT);
+                                        case FLAT -> mapCreationSettings.setWorldType(DefaultWorldType.LARGE_BIOMES);
+                                        case LARGE_BIOMES -> mapCreationSettings.setWorldType(DefaultWorldType.AMPLIFIED);
+                                        case AMPLIFIED -> mapCreationSettings.setWorldType(DefaultWorldType.CUSTOMIZED);
+                                        case CUSTOMIZED -> mapCreationSettings.setWorldType(DefaultWorldType.DEBUG_ALL_BLOCK_STATES);
+                                        case DEBUG_ALL_BLOCK_STATES -> mapCreationSettings.setWorldType(DefaultWorldType.DEFAULT);
+                                    }
+                                }
+                                case DEFAULT_BIOME -> {
+                                    this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME);
+                                    return;
+                                }
+                                case CONFIRM -> {
+                                    this.handleMapCreation(player, MapCreator.Action.LOAD, loadedPlayerMap.getRecentlyViewed());
+                                    return;
+                                }
+                            }
+
+                            this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
+                        }
+                    }else {
+                        if(new BukkitTranslation(BACK).matches(displayName)) {
+                            this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
+                        }
+                    }
+                }
+                case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME -> {
+                    DefaultWorldEnvironment worldEnvironment = null;
+
+                    for(DefaultWorldEnvironment environment : DefaultWorldEnvironment.values()) {
+                        if(new BukkitTranslation(environment.getTranslationProperty()).matches(displayName)) {
+                            worldEnvironment = environment;
+                            break;
+                        }
+                    }
+
+                    if(worldEnvironment != null) {
+                        MapCreatorInventory.Section section = switch(worldEnvironment) {
+                            case OVERWORLD -> MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_OVERWORLD;
+                            case NETHER -> MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_NETHER;
+                            case THE_END -> MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_THE_END;
+                        };
+
+                        this.customMapCreatorInventory.open(player, section);
+                    }
+                }
+                case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_OVERWORLD, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_NETHER, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_THE_END -> {
+                    if(isInRange) {
+                        DefaultBiome defaultBiome = DefaultBiome.of(displayName);
+
+                        if(defaultBiome != null) {
+                            mapCreationSettings.setDefaultBiome(defaultBiome);
+
+                            this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
                         }
                     }
                 }
@@ -427,7 +541,9 @@ public class InfiniteInventoryClickListener implements Listener {
     }
 
     private void fetchUpdateInput(Player player, MapCreatorInventory.Section section, Callback<String> stringCallback) {
-        this.fetchInput(player, true, updatedInput -> {
+        String translationProperty = section.equals(CATEGORIES) ? INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_INSTRUCTION : INVENTORY_SECTION_CATEGORIES_CREATE_MAP_INSTRUCTION;
+
+        this.fetchInput(translationProperty, player, true, true, updatedInput -> {
             if(updatedInput != null) {
                 stringCallback.done(updatedInput);
             }else {
@@ -443,30 +559,33 @@ public class InfiniteInventoryClickListener implements Listener {
         database.update(success -> emptyCallback.done());
     }
 
-    private void fetchInput(Player player, boolean allowBlankInput, Callback<String> stringCallback) {
+    private void fetchInput(String translationProperty, Player player, boolean allowBlankInput, boolean applyRegex, Callback<String> stringCallback) {
         UserInputFetcher userInputFetcher = new UserInputFetcher(player);
 
         userInputFetcher.setMessagePrefix(MapCreatorPlugin.Strings.PREFIX);
-        userInputFetcher.setMessageTranslationProperty(INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_INSTRUCTION);
+        userInputFetcher.setMessageTranslationProperty(translationProperty);
         userInputFetcher.fetch(newMap -> {
-            if(newMap.matches("[A-Za-z0-9]+")) {
-                if(!newMap.isBlank() && !newMap.isEmpty()) {
-                    stringCallback.done(newMap.replaceAll(" ", ""));
-                }else {
-                    if(allowBlankInput) {
-                        stringCallback.done(null);
-                    }else {
-                        this.fetchInput(player, false, stringCallback);
-                    }
-                }
-            }else {
+            if(applyRegex && !newMap.matches("[A-Za-z0-9]+")) {
                 stringCallback.done("");
+                return;
+            }
+
+            if(!newMap.isBlank() && !newMap.isEmpty()) {
+                if(applyRegex) newMap = newMap.replaceAll(" ", "");
+
+                stringCallback.done(newMap);
+            }else {
+                if(allowBlankInput) {
+                    stringCallback.done(null);
+                }else {
+                    this.fetchInput(translationProperty, player, false, applyRegex, stringCallback);
+                }
             }
         });
     }
 
     private void handleMapCreation(Player player, MapCreator.Action action, CustomMapCreatorMap currentPlayerMap) {
-        this.fetchInput(player, true, newMap -> {
+        this.fetchInput(INVENTORY_SECTION_CATEGORIES_CREATE_MAP_INSTRUCTION, player, true, true, newMap -> {
             if(newMap != null && !newMap.isEmpty()) {
                 currentPlayerMap.setMapName(newMap);
                 this.handlePerformance(action, currentPlayerMap, player);
