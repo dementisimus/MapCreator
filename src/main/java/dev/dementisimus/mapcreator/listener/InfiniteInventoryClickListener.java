@@ -520,7 +520,7 @@ public class InfiniteInventoryClickListener implements Listener {
                 }
 
                 String elapsed = String.format("%.3fs", (System.currentTimeMillis() - started) / 1000.0f);
-                action.sendActionMessage(player, customMapCreatorMap, elapsed, true);
+                action.sendActionMessage(player, this.customMapCreatorInventory, customMapCreatorMap, elapsed, true);
             }else {
                 performance.announceFailure(player);
                 player.playSound(player.getLocation(), Sound.ENTITY_CHICKEN_DEATH, 20, 1);

@@ -3,11 +3,13 @@ package dev.dementisimus.mapcreator.creator.api;
 import com.grinderwolf.swm.api.exceptions.*;
 import com.grinderwolf.swm.api.world.SlimeWorld;
 import dev.dementisimus.capi.core.callback.Callback;
+import dev.dementisimus.capi.core.helpers.bukkit.BukkitPlayerHelper;
 import dev.dementisimus.capi.core.language.bukkit.BukkitTranslation;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.CustomPlayerMapActions;
+import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -16,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 /**
  * Copyright (c) by dementisimus,
@@ -100,6 +103,22 @@ public interface MapCreator {
             this.preActionRequired = preActionRequired;
             this.useLoadingActionBar = useLoadingActionBar;
             this.loadingActionBarActionTranslationProperty = loadingActionBarActionTranslationProperty;
+        }
+
+        public void sendActionMessage(Player defaultPlayer, CustomMapCreatorInventory mapCreatorInventory, CustomMapCreatorMap map, String elapsed, boolean isPostAction) {
+            AtomicInteger playerCount = new AtomicInteger(-1);
+
+            BukkitPlayerHelper.stream(player -> {
+                if(mapCreatorInventory.getLoadedPlayerMap(player).equals(map)) {
+                    this.sendActionMessage(player, map, elapsed, isPostAction);
+
+                    playerCount.set(1);
+                }
+            });
+
+            if(playerCount.get() == -1) {
+                this.sendActionMessage(defaultPlayer, map, elapsed, isPostAction);
+            }
         }
 
         public void sendActionMessage(Player player, CustomMapCreatorMap map, String elapsed, boolean isPostAction) {
