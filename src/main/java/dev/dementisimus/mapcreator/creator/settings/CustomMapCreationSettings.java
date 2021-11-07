@@ -14,7 +14,10 @@ import dev.dementisimus.mapcreator.creator.api.settings.environment.DefaultWorld
 import dev.dementisimus.mapcreator.creator.api.settings.worldtype.DefaultWorldType;
 import lombok.Getter;
 import lombok.Setter;
+import org.bson.Document;
 import org.bukkit.entity.Player;
+
+import static dev.dementisimus.mapcreator.MapCreatorPlugin.DataSourceMapSettings.*;
 /**
  * Copyright (c) by dementisimus,
  * licensed under Attribution-NonCommercial-NoDerivatives 4.0 International
@@ -122,5 +125,41 @@ public class CustomMapCreationSettings implements MapCreationSettings {
     @Override
     public SlimePropertyMap toSlimePropertyMap() {
         return this.toWorldData().toPropertyMap();
+    }
+
+    @Override
+    public Document toDocument(String fileName) {
+        Document document = new Document();
+
+        document.put(MAP, fileName);
+        document.put(SPAWN, this.spawn);
+        document.put(DIFFICULTY, this.difficulty.name());
+        document.put(ALLOW_ANIMALS, this.allowAnimals);
+        document.put(ALLOW_MONSTERS, this.allowMonsters);
+        document.put(DRAGON_BATTLE, this.dragonBattle);
+        document.put(PVP, this.pvp);
+        document.put(ENVIRONMENT, this.environment.name());
+        document.put(WORLD_TYPE, this.worldType.name());
+        document.put(DEFAULT_BIOME, this.defaultBiome.getBiome().getKey().toString());
+
+        return document;
+    }
+
+    @Override
+    public MapCreationSettings fromDocument(Document document) {
+
+        CustomMapCreationSettings mapCreationSettings = new CustomMapCreationSettings(this.mapCreatorPlugin);
+
+        mapCreationSettings.setSpawn(document.getString(SPAWN));
+        mapCreationSettings.setDifficulty(DefaultDifficulty.valueOf(document.getString(DIFFICULTY)));
+        mapCreationSettings.setAllowAnimals(document.getBoolean(ALLOW_ANIMALS));
+        mapCreationSettings.setAllowMonsters(document.getBoolean(ALLOW_MONSTERS));
+        mapCreationSettings.setDragonBattle(document.getBoolean(DRAGON_BATTLE));
+        mapCreationSettings.setPvp(document.getBoolean(PVP));
+        mapCreationSettings.setEnvironment(DefaultWorldEnvironment.valueOf(document.getString(ENVIRONMENT)));
+        mapCreationSettings.setWorldType(DefaultWorldType.valueOf(document.getString(WORLD_TYPE)));
+        mapCreationSettings.setDefaultBiome(DefaultBiome.ofKey(document.getString(DEFAULT_BIOME)));
+
+        return mapCreationSettings;
     }
 }

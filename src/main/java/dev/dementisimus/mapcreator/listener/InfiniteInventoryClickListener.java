@@ -85,12 +85,6 @@ public class InfiniteInventoryClickListener implements Listener {
         if(currentSection != null) {
             CustomMapCreatorMap loadedPlayerMap = this.customMapCreatorInventory.getLoadedPlayerMap(player);
 
-            if(loadedPlayerMap.getRecentlyViewed() == null) {
-                loadedPlayerMap.setRecentlyViewed(new CustomMapCreatorMap());
-            }
-
-            CustomMapCreationSettings mapCreationSettings = (CustomMapCreationSettings) loadedPlayerMap.getRecentlyViewed().getMapCreationSettings();
-
             switch(currentSection) {
                 case CATEGORIES -> {
                     Material icon = player.getItemOnCursor().getType().equals(Material.AIR) ? Material.PAPER : player.getItemOnCursor().getType();
@@ -101,7 +95,7 @@ public class InfiniteInventoryClickListener implements Listener {
                                 if(!icon.equals(Material.PAPER)) {
                                     player.setItemOnCursor(null);
 
-                                    UpdateProperty updateProperty = UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, displayName).value(MapCreatorPlugin.DataSource.ICON, icon.name());
+                                    UpdateProperty updateProperty = UpdateProperty.of(MapCreatorPlugin.DataSourceCategories.NAME, displayName).value(MapCreatorPlugin.DataSourceCategories.ICON, icon.name());
                                     this.updateCategory(database, updateProperty, () -> {
                                         this.customMapCreatorInventory.open(player, CATEGORIES);
                                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 10, 1);
@@ -110,7 +104,7 @@ public class InfiniteInventoryClickListener implements Listener {
                                     this.fetchUpdateInput(player, CATEGORIES, updatedCategoryName -> {
                                         updatedCategoryName = updatedCategoryName.toUpperCase();
 
-                                        UpdateProperty updateProperty = UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, displayName).value(MapCreatorPlugin.DataSource.NAME, updatedCategoryName);
+                                        UpdateProperty updateProperty = UpdateProperty.of(MapCreatorPlugin.DataSourceCategories.NAME, displayName).value(MapCreatorPlugin.DataSourceCategories.NAME, updatedCategoryName);
                                         this.updateCategory(database, updateProperty, () -> {
                                             List<String> mapsToRename = this.customMapCreator.listMapsByCategory(displayName);
                                             String categoryName = updateProperty.getValue().toString();
@@ -143,14 +137,14 @@ public class InfiniteInventoryClickListener implements Listener {
                                         if(!newCategory.equalsIgnoreCase(MapTemplates.CATEGORY_TEMPLATES)) {
                                             newCategory = newCategory.toUpperCase();
 
-                                            database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
+                                            database.setDataSourceProperty(MapCreatorPlugin.DataSourceCategories.PROPERTY);
 
                                             Document document = new Document();
-                                            document.append(MapCreatorPlugin.DataSource.NAME, newCategory);
-                                            document.append(MapCreatorPlugin.DataSource.ICON, icon.name());
+                                            document.append(MapCreatorPlugin.DataSourceCategories.NAME, newCategory);
+                                            document.append(MapCreatorPlugin.DataSourceCategories.ICON, icon.name());
 
                                             database.setDocument(document);
-                                            database.setUpdateProperty(UpdateProperty.of(MapCreatorPlugin.DataSource.NAME, newCategory).value(MapCreatorPlugin.DataSource.ICON, icon.name()));
+                                            database.setUpdateProperty(UpdateProperty.of(MapCreatorPlugin.DataSourceCategories.NAME, newCategory).value(MapCreatorPlugin.DataSourceCategories.ICON, icon.name()));
                                             database.writeOrUpdate(success -> {
                                                 this.customMapCreatorInventory.open(player, CATEGORIES);
                                             });
@@ -325,6 +319,7 @@ public class InfiniteInventoryClickListener implements Listener {
 
                         if(new BukkitTranslation(MapCreatorPlugin.Translations.INVENTORY_SECTION_CATEGORY_MAPS_TEMPLATES_EMPTY).matches(displayName)) {
                             this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
+                            recentlyViewed.setCloneFrom(null);
                         }else if(displayName.equalsIgnoreCase(simpleTemplate.getPrettyName())) {
                             cloneFrom.setMapName(MapTemplates.SIMPLE_TEMPLATE_NAME);
                             recentlyViewed.setCloneFrom(cloneFrom);
@@ -349,6 +344,8 @@ public class InfiniteInventoryClickListener implements Listener {
                         }
 
                         if(currentItem != null) {
+                            CustomMapCreationSettings mapCreationSettings = (CustomMapCreationSettings) loadedPlayerMap.getRecentlyViewed().getMapCreationSettings();
+
                             switch(currentItem) {
                                 case SPAWN -> {
                                     this.fetchInput(MAP_CREATION_SETTINGS_INSTRUCTION_SPAWN_SET, player, true, false, newSpawn -> {
@@ -398,16 +395,23 @@ public class InfiniteInventoryClickListener implements Listener {
                                     return;
                                 }
                                 case CONFIRM -> {
-                                    this.handleMapCreation(player, MapCreator.Action.LOAD, loadedPlayerMap.getRecentlyViewed());
+                                    CustomMapCreatorMap cloneFrom = loadedPlayerMap.getRecentlyViewed().getCloneFrom();
+
+                                    MapCreator.Action action = MapCreator.Action.LOAD;
+                                    if(cloneFrom != null) {
+                                        action = MapCreator.Action.CLONE;
+                                    }
+
+                                    this.handleMapCreation(player, action, loadedPlayerMap.getRecentlyViewed());
                                     return;
                                 }
                             }
 
                             this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
-                        }
-                    }else {
-                        if(new BukkitTranslation(BACK).matches(displayName)) {
-                            this.customMapCreatorInventory.open(player, CATEGORY_MAPS);
+                        }else {
+                            if(new BukkitTranslation(BACK).matches(displayName)) {
+                                this.customMapCreatorInventory.open(player, MAP_TEMPLATES_CHOOSE_TEMPLATE);
+                            }
                         }
                     }
                 }
@@ -429,6 +433,10 @@ public class InfiniteInventoryClickListener implements Listener {
                         };
 
                         this.customMapCreatorInventory.open(player, section);
+                    }else {
+                        if(new BukkitTranslation(BACK).matches(displayName)) {
+                            this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
+                        }
                     }
                 }
                 case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_OVERWORLD, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_NETHER, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_THE_END -> {
@@ -436,9 +444,15 @@ public class InfiniteInventoryClickListener implements Listener {
                         DefaultBiome defaultBiome = DefaultBiome.of(displayName);
 
                         if(defaultBiome != null) {
+                            CustomMapCreationSettings mapCreationSettings = (CustomMapCreationSettings) loadedPlayerMap.getRecentlyViewed().getMapCreationSettings();
+
                             mapCreationSettings.setDefaultBiome(defaultBiome);
 
                             this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
+                        }
+                    }else {
+                        if(new BukkitTranslation(BACK).matches(displayName)) {
+                            this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME);
                         }
                     }
                 }
@@ -553,7 +567,7 @@ public class InfiniteInventoryClickListener implements Listener {
     }
 
     private void updateCategory(Database database, UpdateProperty updateProperty, EmptyCallback emptyCallback) {
-        database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
+        database.setDataSourceProperty(MapCreatorPlugin.DataSourceCategories.PROPERTY);
 
         database.setUpdateProperty(updateProperty);
         database.update(success -> emptyCallback.done());
@@ -591,7 +605,7 @@ public class InfiniteInventoryClickListener implements Listener {
                 this.handlePerformance(action, currentPlayerMap, player);
             }else {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 10, 1);
-                this.customMapCreatorInventory.open(player, MAP_TEMPLATES_CHOOSE_TEMPLATE);
+                this.customMapCreatorInventory.open(player, MAP_CREATION_SETTINGS_OVERVIEW);
             }
         });
     }

@@ -9,14 +9,19 @@ import com.grinderwolf.swm.api.world.properties.SlimeProperties;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.nms.CraftSlimeWorld;
 import dev.dementisimus.capi.core.callback.Callback;
+import dev.dementisimus.capi.core.database.Database;
+import dev.dementisimus.capi.core.database.properties.DeleteProperty;
+import dev.dementisimus.capi.core.database.properties.ReadProperty;
 import dev.dementisimus.capi.core.pools.BukkitSynchronousExecutor;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.api.MapCreator;
 import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
+import dev.dementisimus.mapcreator.creator.api.MapTemplates;
 import dev.dementisimus.mapcreator.creator.api.settings.MapCreationSettings;
 import dev.dementisimus.mapcreator.creator.settings.CustomMapCreationSettings;
 import lombok.Getter;
 import lombok.Setter;
+import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -40,11 +45,11 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     @Getter private final SlimePlugin slimePlugin;
     @Getter private final SlimeLoader slimeLoader;
     @Getter private final CustomMapCreator customMapCreator;
-    private final CustomMapCreationSettings mapCreationSettings;
-
+    private final Database database;
     @Getter
     @Setter
     CustomMapCreatorMap recentlyViewed;
+    private CustomMapCreationSettings mapCreationSettings;
     @Getter private String mapCategory;
     private boolean readOnly;
     @Getter private SlimeWorld slimeWorld;
@@ -74,6 +79,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         this.slimePlugin = mapCreatorPlugin.getSlimePlugin();
         this.slimeLoader = mapCreatorPlugin.getSlimeLoader();
         this.customMapCreator = mapCreatorPlugin.getCustomMapCreator();
+        this.database = mapCreatorPlugin.getDatabase();
         this.mapCreationSettings = new CustomMapCreationSettings(mapCreatorPlugin);
     }
 
@@ -175,6 +181,11 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     }
 
     @Override
+    public boolean isTemplate() {
+        return this.mapCategory.equalsIgnoreCase(MapTemplates.CATEGORY_TEMPLATES);
+    }
+
+    @Override
     public void teleportTo(Player player) {
         World world = Bukkit.getWorld(this.getFileName());
 
@@ -201,33 +212,55 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         //ToDo: allow users to create custom location keys in the map management inventory
     }
 
-    public void load(boolean readOnly, SlimePropertyMap slimePropertyMap, Callback<MapCreator.Performance> performanceCallback) {
+    public void load(Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
         MapCreator.Performance performance = new MapCreator.Performance();
         if(!this.isLocked()) {
-            SlimeWorld slimeWorld = null;
-            try {
-                if(this.exists()) {
-                    slimeWorld = this.getSlimePlugin().loadWorld(this.getSlimeLoader(), this.getFileName(), readOnly, slimePropertyMap);
-                }else {
-                    slimeWorld = this.getSlimePlugin().createEmptyWorld(this.getSlimeLoader(), this.getFileName(), readOnly, slimePropertyMap);
+            this.database.setDataSourceProperty(MapCreatorPlugin.DataSourceMapSettings.PROPERTY);
+            this.database.setReadProperty(ReadProperty.of(MapCreatorPlugin.DataSourceMapSettings.MAP, this.getFileName()));
+
+            this.database.read(document -> {
+                try {
+                    SlimePropertyMap slimePropertyMap = this.getMapCreationSettings().toSlimePropertyMap();
+                    SlimeWorld slimeWorld;
+
+                    if(document == null) {
+                        Document mapCreationSettingsDocument = this.mapCreationSettings.toDocument(this.getFileName());
+                        this.database.setDocument(mapCreationSettingsDocument);
+                        this.database.write(bool -> {});
+                    }else {
+                        MapCreationSettings mapCreationSettings = this.mapCreationSettings.fromDocument(document);
+                        slimePropertyMap = mapCreationSettings.toSlimePropertyMap();
+                        this.mapCreationSettings = (CustomMapCreationSettings) mapCreationSettings;
+                    }
+
+                    if(this.exists()) {
+                        slimeWorld = this.getSlimePlugin().loadWorld(this.getSlimeLoader(), this.getFileName(), this.isReadOnly(), slimePropertyMap);
+                    }else {
+                        slimeWorld = this.getSlimePlugin().createEmptyWorld(this.getSlimeLoader(), this.getFileName(), this.isReadOnly(), slimePropertyMap);
+                    }
+
+                    if(slimeWorld != null) {
+                        this.setLoadedSince(new Date());
+
+                        performance.setSlimeWorld(slimeWorld);
+                        performance.setSuccess();
+
+                        performanceCallback.done(performance);
+                    }
+                }catch(Exception exception) {
+                    performance.setSuccess(exception);
+                    performanceCallback.done(performance);
                 }
-            }catch(Exception exception) {
-                performance.setSuccess(exception);
-            }
-            if(slimeWorld != null) {
-                performance.setSlimeWorld(slimeWorld);
-                performance.setSuccess();
-                this.setLoadedSince(new Date());
-            }
+            });
         }else {
             performance.setSuccess(MapCreator.Performance.FailureReason.WORLD_LOCKED);
+            performanceCallback.done(performance);
         }
-        performanceCallback.done(performance);
     }
 
-    public void save(boolean save, SlimeWorld slimeWorld, Callback<MapCreator.Performance> performanceCallback) {
+    public void save(boolean save, Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
         MapCreator.Performance performance = new MapCreator.Performance((SlimeWorld) null);
@@ -235,7 +268,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         if(world != null) {
             if(this.exists()) {
                 try {
-                    if(save) this.getSlimeLoader().saveWorld(this.getFileName(), ((CraftSlimeWorld) slimeWorld).serialize(), false);
+                    if(save) this.getSlimeLoader().saveWorld(this.getFileName(), ((CraftSlimeWorld) this.getSlimeWorld()).serialize(), false);
                     if(world.getPlayers().isEmpty()) {
                         performance.setSuccess();
                         BukkitSynchronousExecutor.execute(MapCreatorPlugin.getMapCreatorPlugin(), () -> {
@@ -263,6 +296,12 @@ public class CustomMapCreatorMap implements MapCreatorMap {
         if(this.exists()) {
             try {
                 this.slimeLoader.deleteWorld(this.getFileName());
+
+                this.database.setDataSourceProperty(MapCreatorPlugin.DataSourceMapSettings.PROPERTY);
+                this.database.setDeleteProperty(DeleteProperty.of(MapCreatorPlugin.DataSourceMapSettings.MAP, this.getFileName()));
+
+                this.database.delete(success -> {});
+
                 performance.setSuccess();
             }catch(Exception exception) {
                 performance.setSuccess(exception);
@@ -276,7 +315,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
     public void leave(Callback<MapCreator.Performance> performanceCallback) {
         this.checkArguments();
 
-        this.save(false, null, performanceCallback);
+        this.save(false, performanceCallback);
     }
 
     public void importWorld(Callback<MapCreator.Performance> performanceCallback) {

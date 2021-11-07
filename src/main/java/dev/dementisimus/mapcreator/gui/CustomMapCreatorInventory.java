@@ -82,8 +82,8 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                 try {
                     this.fetch(player, inventorySection, loadedPlayerMap, (fetchedCategories, fetchedItems) -> {
                         for(Document item : fetchedCategories) {
-                            String name = item.getString(MapCreatorPlugin.DataSource.NAME);
-                            String icon = item.getString(MapCreatorPlugin.DataSource.ICON);
+                            String name = item.getString(MapCreatorPlugin.DataSourceCategories.NAME);
+                            String icon = item.getString(MapCreatorPlugin.DataSourceCategories.ICON);
                             ItemCreator categoryItemCreator = new ItemCreator(Material.valueOf(icon));
 
                             categoryItemCreator.setDisplayName(name);
@@ -170,13 +170,18 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
                                     this.setBackItem(inventoryCreator, 18, player);
                                 }
                                 case MAP_CREATION_SETTINGS_OVERVIEW -> {
-                                    inventoryCreator = loadedPlayerMap.getMapCreationSettings().createSettingsItems(player, inventoryCreator);
+                                    inventoryCreator = loadedPlayerMap.getRecentlyViewed().getMapCreationSettings().createSettingsItems(player, inventoryCreator);
                                     this.setBackItem(inventoryCreator, 39, player);
                                 }
                                 case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME -> {
                                     for(DefaultWorldEnvironment worldEnvironment : DefaultWorldEnvironment.values()) {
                                         inventoryCreator.setItem(worldEnvironment.getSlot(), new ItemCreator(worldEnvironment.getIcon()).setDisplayName(player, worldEnvironment.getTranslationProperty()).apply());
                                     }
+
+                                    this.setBackItem(inventoryCreator, 18, player);
+                                }
+                                case MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_OVERWORLD, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_NETHER, MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_THE_END -> {
+                                    this.setBackItem(inventoryCreator, 49, player);
                                 }
                             }
                             inventoryCreator.apply(player);
@@ -197,7 +202,7 @@ public class CustomMapCreatorInventory implements MapCreatorInventory {
 
         switch(inventorySection) {
             case CATEGORIES -> {
-                database.setDataSourceProperty(MapCreatorPlugin.DataSource.PROPERTY);
+                database.setDataSourceProperty(MapCreatorPlugin.DataSourceCategories.PROPERTY);
                 database.disableCache();
 
                 database.list(fetchedCategories -> fetchedItems.done(fetchedCategories, items));

@@ -25,13 +25,8 @@ public interface DefaultBiome {
 
     static DefaultBiome of(String value) {
         DefaultBiome defaultBiome = null;
-        List<DefaultBiome> defaultBiomeList = new ArrayList<>();
 
-        defaultBiomeList.addAll(Arrays.asList(DefaultOverworldBiome.values()));
-        defaultBiomeList.addAll(Arrays.asList(DefaultNetherBiome.values()));
-        defaultBiomeList.addAll(Arrays.asList(DefaultTheEndBiome.values()));
-
-        for(DefaultBiome biome : defaultBiomeList) {
+        for(DefaultBiome biome : getDefaultBiomes()) {
             if(new BukkitTranslation(biome.getTranslationProperty()).matches(value)) {
                 defaultBiome = biome;
                 break;
@@ -39,6 +34,29 @@ public interface DefaultBiome {
         }
 
         return defaultBiome;
+    }
+
+    static DefaultBiome ofKey(String key) {
+        DefaultBiome defaultBiome = null;
+
+        for(DefaultBiome biome : getDefaultBiomes()) {
+            if(biome.getBiome().getKey().toString().equals(key)) {
+                defaultBiome = biome;
+                break;
+            }
+        }
+
+        return defaultBiome;
+    }
+
+    private static List<DefaultBiome> getDefaultBiomes() {
+        List<DefaultBiome> defaultBiomeList = new ArrayList<>();
+
+        defaultBiomeList.addAll(Arrays.asList(DefaultOverworldBiome.values()));
+        defaultBiomeList.addAll(Arrays.asList(DefaultNetherBiome.values()));
+        defaultBiomeList.addAll(Arrays.asList(DefaultTheEndBiome.values()));
+
+        return defaultBiomeList;
     }
 
     DefaultWorldEnvironment getWorldEnvironment();

@@ -121,8 +121,8 @@ public class CustomMapCreator implements MapCreator {
         this.manageWorldConfig(action, mapCreatorMap);
         BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> this.ensureNoPlayersLeftOnMap(action, mapCreatorMap, () -> ThreadPool.execute(() -> {
             switch(action) {
-                case LOAD -> mapCreatorMap.load(mapCreatorMap.isReadOnly(), mapCreatorMap.getMapCreationSettings().toSlimePropertyMap(), performanceCallback);
-                case SAVE -> mapCreatorMap.save(true, mapCreatorMap.getSlimeWorld(), performanceCallback);
+                case LOAD -> mapCreatorMap.load(performanceCallback);
+                case SAVE -> mapCreatorMap.save(true, performanceCallback);
                 case LEAVE_WITHOUT_SAVING -> mapCreatorMap.leave(performanceCallback);
                 case DELETE -> mapCreatorMap.delete(performanceCallback);
                 case IMPORT -> mapCreatorMap.importWorld(performanceCallback);

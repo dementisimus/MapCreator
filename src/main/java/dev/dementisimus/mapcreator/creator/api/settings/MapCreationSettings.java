@@ -5,6 +5,7 @@ import com.grinderwolf.swm.plugin.config.WorldData;
 import dev.dementisimus.capi.core.creators.InventoryCreator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.bson.Document;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 /**
@@ -23,6 +24,10 @@ public interface MapCreationSettings {
     WorldData toWorldData();
 
     SlimePropertyMap toSlimePropertyMap();
+
+    Document toDocument(String fileName);
+
+    MapCreationSettings fromDocument(Document document);
 
     @AllArgsConstructor
     enum Items {

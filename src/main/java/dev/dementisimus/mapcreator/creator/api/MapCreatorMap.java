@@ -130,6 +130,13 @@ public interface MapCreatorMap {
     MapCreationSettings getMapCreationSettings();
 
     /**
+     * Checks whether a map is a template or not
+     *
+     * @return true if map is a template (in TEMPLATES-category), false otherwise
+     */
+    boolean isTemplate();
+
+    /**
      * Teleports a player to the map
      *
      * @param player the player who will be teleported to the map

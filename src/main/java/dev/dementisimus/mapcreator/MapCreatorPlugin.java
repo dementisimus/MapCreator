@@ -33,6 +33,7 @@ import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.ExtraSetupStates.*;
@@ -77,7 +78,7 @@ public class MapCreatorPlugin extends JavaPlugin {
         this.bukkitCoreAPI.enableExtraSetupState(DEFAULT_WORLD);
         this.bukkitCoreAPI.enableExtraSetupState(SIMPLE_TEMPLATE_MAP_WANTED);
 
-        this.bukkitCoreAPI.enableDatabase(DataSource.PROPERTY);
+        this.bukkitCoreAPI.enableDatabase(DataSourceCategories.PROPERTY, DataSourceMapSettings.PROPERTY);
         this.database = this.bukkitCoreAPI.getDatabase();
 
         this.bukkitCoreAPI.prepare(coreAPIInjector -> {
@@ -197,9 +198,9 @@ public class MapCreatorPlugin extends JavaPlugin {
 
     }
 
-    public static class DataSource implements DataSourceProperty {
+    public static class DataSourceCategories implements DataSourceProperty {
 
-        public static final DataSource PROPERTY = new DataSource();
+        public static final DataSourceCategories PROPERTY = new DataSourceCategories();
 
         public static final String NAME = "name";
         public static final String ICON = "icon";
@@ -215,10 +216,48 @@ public class MapCreatorPlugin extends JavaPlugin {
         }
     }
 
+    public static class DataSourceMapSettings implements DataSourceProperty {
+
+        public static final DataSourceMapSettings PROPERTY = new DataSourceMapSettings();
+
+        public static final String MAP = "map";
+        public static final String SPAWN = "spawn";
+        public static final String DIFFICULTY = "difficulty";
+        public static final String ALLOW_ANIMALS = "allowAnimals";
+        public static final String ALLOW_MONSTERS = "allowMonsters";
+        public static final String DRAGON_BATTLE = "dragonBattle";
+        public static final String PVP = "pvp";
+        public static final String ENVIRONMENT = "environment";
+        public static final String WORLD_TYPE = "worldType";
+        public static final String DEFAULT_BIOME = "defaultBiome";
+
+        @Override
+        public String name() {
+            return "map_settings";
+        }
+
+        @Override
+        public Map<String, String> fields() {
+            Map<String, String> fields = new HashMap<>();
+
+            fields.put(MAP, SQLTypes.LONGTEXT);
+            fields.put(SPAWN, SQLTypes.LONGTEXT);
+            fields.put(DIFFICULTY, SQLTypes.LONGTEXT);
+            fields.put(ALLOW_ANIMALS, SQLTypes.BOOLEAN);
+            fields.put(ALLOW_MONSTERS, SQLTypes.BOOLEAN);
+            fields.put(DRAGON_BATTLE, SQLTypes.BOOLEAN);
+            fields.put(PVP, SQLTypes.BOOLEAN);
+            fields.put(ENVIRONMENT, SQLTypes.LONGTEXT);
+            fields.put(WORLD_TYPE, SQLTypes.LONGTEXT);
+            fields.put(DEFAULT_BIOME, SQLTypes.LONGTEXT);
+
+            return fields;
+        }
+    }
+
     public static class ItemDataStorageKeys {
 
         public static final String CATEGORY = "CATEGORY";
-        public static final String BIOME = "BIOME";
 
     }
 
