@@ -1,4 +1,4 @@
-package dev.dementisimus.mapcreator.creator.importer.interfaces;
+package dev.dementisimus.mapcreator.creator.api;
 
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import org.jetbrains.annotations.Nullable;

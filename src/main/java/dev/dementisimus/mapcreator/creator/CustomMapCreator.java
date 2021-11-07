@@ -3,9 +3,7 @@ package dev.dementisimus.mapcreator.creator;
 import com.grinderwolf.swm.api.SlimePlugin;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
-import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.plugin.config.ConfigManager;
-import com.grinderwolf.swm.plugin.config.WorldData;
 import com.grinderwolf.swm.plugin.config.WorldsConfig;
 import dev.dementisimus.capi.core.callback.Callback;
 import dev.dementisimus.capi.core.callback.EmptyCallback;
@@ -16,6 +14,7 @@ import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.api.MapCreator;
 import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
+import dev.dementisimus.mapcreator.creator.aswm.SlimeDataSource;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
@@ -28,6 +27,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,9 +49,8 @@ public class CustomMapCreator implements MapCreator {
     private final MapCreatorPlugin mapCreatorPlugin;
     @Getter private final SetupManager setupManager;
     private final SlimePlugin slimePlugin;
-    private final SlimeLoader slimeLoader;
     private final CustomMapCreatorInventory customMapCreatorInventory;
-
+    private SlimeLoader slimeLoader;
     @Getter
     @Setter
     private CustomWorldImporter customWorldImporter;
@@ -64,18 +64,38 @@ public class CustomMapCreator implements MapCreator {
         this.setupManager = this.mapCreatorPlugin.getSetupManager();
         this.slimePlugin = this.mapCreatorPlugin.getSlimePlugin();
         this.slimeLoader = this.slimePlugin.getLoader(this.mapCreatorPlugin.getSlimeDataSource());
+
+        if(this.slimeLoader == null) {
+            String[] dataSources = new String[]{SlimeDataSource.REDIS, SlimeDataSource.FILE};
+            for(String dataSource : dataSources) {
+                SlimeLoader slimeLoader = this.getSlimeLoader(dataSource);
+
+                if(slimeLoader != null) {
+                    this.slimeLoader = slimeLoader;
+                    this.mapCreatorPlugin.setSlimeDataSource(dataSource);
+                    break;
+                }
+            }
+        }
+
         this.customMapCreatorInventory = new CustomMapCreatorInventory(this);
     }
 
     @Override
     public void perform(Action action, MapCreatorMap mapCreatorMap, Callback<Performance> performanceCallback) {
-        this.awaitPerformance(action, mapCreatorMap, performance -> {
+        CustomMapCreatorMap customMapCreatorMap = (CustomMapCreatorMap) mapCreatorMap;
+
+        this.awaitPerformance(action, customMapCreatorMap, performance -> {
             BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> {
                 SlimeWorld slimeWorld = performance.getSlimeWorld();
 
                 if(!action.equals(Action.CLONE)) {
                     if(slimeWorld != null) {
                         this.slimePlugin.generateWorld(slimeWorld);
+
+                        customMapCreatorMap.setSlimeWorld(slimeWorld);
+                        customMapCreatorMap.setLoadedSince(new Date());
+
                         this.addMapCreatorMap(mapCreatorMap);
                     }else {
                         this.removeMapCreatorMap(mapCreatorMap);
@@ -88,41 +108,32 @@ public class CustomMapCreator implements MapCreator {
         });
     }
 
-    public void awaitPerformance(Action action, MapCreatorMap mapCreatorMap, Callback<Performance> performanceCallback) {
+    @Override
+    public List<String> listMapsByCategory(String category) {
+        try {
+            return this.slimeLoader.listWorlds().stream().filter(world -> world.startsWith(category + MapCreatorMap.CATEGORY_MAP_SEPARATOR)).collect(Collectors.toList());
+        }catch(IOException exception) {
+            return new ArrayList<>();
+        }
+    }
+
+    public void awaitPerformance(Action action, CustomMapCreatorMap mapCreatorMap, Callback<Performance> performanceCallback) {
         this.manageWorldConfig(action, mapCreatorMap);
-        this.ensureNoPlayersLeftOnMap(action, mapCreatorMap, () -> ThreadPool.execute(() -> {
+        BukkitSynchronousExecutor.execute(this.mapCreatorPlugin, () -> this.ensureNoPlayersLeftOnMap(action, mapCreatorMap, () -> ThreadPool.execute(() -> {
             switch(action) {
-                case LOAD -> mapCreatorMap.load(false, this.getSlimePropertyMap(), performanceCallback);
-                case SAVE -> mapCreatorMap.save(true, mapCreatorMap.getSlimeWorld(), performanceCallback);
+                case LOAD -> mapCreatorMap.load(performanceCallback);
+                case SAVE -> mapCreatorMap.save(true, performanceCallback);
                 case LEAVE_WITHOUT_SAVING -> mapCreatorMap.leave(performanceCallback);
                 case DELETE -> mapCreatorMap.delete(performanceCallback);
                 case IMPORT -> mapCreatorMap.importWorld(performanceCallback);
                 case CLONE -> mapCreatorMap.clone(performanceCallback);
+                case RENAME -> mapCreatorMap.rename(performanceCallback);
             }
-        }));
+        })));
     }
 
     public SlimeLoader getSlimeLoader() {
         return this.slimeLoader;
-    }
-
-    public WorldData getWorldData() {
-        WorldData worldData = new WorldData();
-        worldData.setDataSource(SlimeDataSource.MONGODB);
-        worldData.setSpawn("0, 100, 0");
-        worldData.setDifficulty("easy");
-        worldData.setAllowAnimals(false);
-        worldData.setAllowMonsters(false);
-        worldData.setDragonBattle(false);
-        worldData.setPvp(true);
-        worldData.setEnvironment("normal");
-        worldData.setWorldType("default_1_1");
-        worldData.setDefaultBiome("minecraft:plains");
-        return worldData;
-    }
-
-    public SlimePropertyMap getSlimePropertyMap() {
-        return this.getWorldData().toPropertyMap();
     }
 
     public Map<String, MapCreatorMap> getMapCreatorMaps() {
@@ -131,10 +142,6 @@ public class CustomMapCreator implements MapCreator {
 
     public CustomMapCreatorInventory getCustomMapCreatorInventory() {
         return this.customMapCreatorInventory;
-    }
-
-    public List<String> listWorldsByCategory(String categoryName) throws IOException {
-        return this.slimeLoader.listWorlds().stream().filter(world -> world.startsWith(categoryName + CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR)).collect(Collectors.toList());
     }
 
     public @Nullable MapCreatorMap getMapCreatorMap(String mapName) {
@@ -159,7 +166,7 @@ public class CustomMapCreator implements MapCreator {
             case SAVE, LEAVE_WITHOUT_SAVING, DELETE -> {
                 world.getPlayers().forEach(player -> {
                     /*
-                     * replace with previous location
+                     * ToDo: replace with previous location
                      * */
                     player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
                 });
@@ -176,10 +183,14 @@ public class CustomMapCreator implements MapCreator {
     public void manageWorldConfig(MapCreator.Action action, MapCreatorMap mapCreatorMap) {
         WorldsConfig worldsConfig = ConfigManager.getWorldConfig();
         switch(action) {
-            case SAVE, LEAVE_WITHOUT_SAVING, DELETE, IMPORT -> worldsConfig.getWorlds().remove(mapCreatorMap.getFileName());
-            default -> worldsConfig.getWorlds().put(mapCreatorMap.getFileName(), this.getWorldData());
+            case SAVE, LEAVE_WITHOUT_SAVING, DELETE, IMPORT, RENAME -> worldsConfig.getWorlds().remove(mapCreatorMap.getFileName());
+            default -> worldsConfig.getWorlds().put(mapCreatorMap.getFileName(), mapCreatorMap.getMapCreationSettings().toWorldData());
         }
         worldsConfig.save();
+    }
+
+    private SlimeLoader getSlimeLoader(String dataSource) {
+        return this.slimePlugin.getLoader(dataSource);
     }
 
     public static class CustomAction {
@@ -188,8 +199,13 @@ public class CustomMapCreator implements MapCreator {
             String cloneFrom = map.getCloneFrom() == null ? "" : map.getCloneFrom().getPrettyName();
 
             String basicActionMessageProperty = isPostAction ? MapCreatorPlugin.Translations.BASIC_POST_ACTION_MESSAGE : MapCreatorPlugin.Translations.BASIC_PRE_ACTION_MESSAGE;
-            return new BukkitTranslation(basicActionMessageProperty).get(player, new String[]{"$prefix$", "$map$", "$action$", "$elapsed$"}, new String[]{
-                    MapCreatorPlugin.Strings.PREFIX, map.getPrettyName(), new BukkitTranslation(actionMessageTranslationProperty).get(player, "$clone$", cloneFrom), elapsed
+
+            String newName = "";
+            if(map.getRenameTo() != null) {
+                newName = map.getRenameTo().getPrettyName();
+            }
+            return new BukkitTranslation(basicActionMessageProperty).get(player, new String[]{"$prefix$", "$map$", "$action$", "$elapsed$", "$newName$"}, new String[]{
+                    MapCreatorPlugin.Strings.PREFIX, map.getPrettyName(), new BukkitTranslation(actionMessageTranslationProperty).get(player, "$clone$", cloneFrom), elapsed, newName
             });
         }
 

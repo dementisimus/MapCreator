@@ -60,7 +60,12 @@ public interface MapCreatorInventory {
         CATEGORY_MAPS_MAP_CHOOSE_ACTION("player.inventory.map.choose.action", Material.ORANGE_STAINED_GLASS_PANE, 27, 28, CurrentMapInfoDataState.VIEWED),
         CATEGORY_MAPS_MAP_MANAGEMENT("player.inventory.map.management", Material.ORANGE_STAINED_GLASS_PANE, 27, 28, CurrentMapInfoDataState.LOADED),
         IMPORTER_WORLDS_AVAILABLE("importer.worlds.available", Material.YELLOW_STAINED_GLASS_PANE, 54, 28, CurrentMapInfoDataState.VIEWED),
-        MAP_TEMPLATES_CHOOSE_TEMPLATE("map.templates.choose.template", Material.CYAN_STAINED_GLASS_PANE, 27, 28, CurrentMapInfoDataState.VIEWED);
+        MAP_TEMPLATES_CHOOSE_TEMPLATE("map.templates.choose.template", Material.CYAN_STAINED_GLASS_PANE, 27, 28, CurrentMapInfoDataState.VIEWED),
+        MAP_CREATION_SETTINGS_OVERVIEW("map.creation.settings.overview", Material.RED_STAINED_GLASS_PANE, 54, 28, CurrentMapInfoDataState.VIEWED),
+        MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME("map.creation.settings.choose.default.biome", Material.GRAY_STAINED_GLASS_PANE, 27, 28, CurrentMapInfoDataState.VIEWED),
+        MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_OVERWORLD("map.creation.settings.choose.default.biome.overworld", Material.GRAY_STAINED_GLASS_PANE, 54, 28, CurrentMapInfoDataState.VIEWED),
+        MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_NETHER("map.creation.settings.choose.default.biome.nether", Material.GRAY_STAINED_GLASS_PANE, 54, 28, CurrentMapInfoDataState.VIEWED),
+        MAP_CREATION_SETTINGS_CHOOSE_DEFAULT_BIOME_THE_END("map.creation.settings.choose.default.biome.the.end", Material.GRAY_STAINED_GLASS_PANE, 54, 28, CurrentMapInfoDataState.VIEWED);
 
         @Getter String titleTranslationProperty;
         @Getter Material inventoryPlaceholderMaterial;

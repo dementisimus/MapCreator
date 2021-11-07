@@ -7,7 +7,7 @@ import dev.dementisimus.mapcreator.MapCreatorPlugin;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
 import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
 import dev.dementisimus.mapcreator.creator.api.MapCreator;
-import dev.dementisimus.mapcreator.creator.templates.interfaces.MapTemplates;
+import dev.dementisimus.mapcreator.creator.api.MapTemplates;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 

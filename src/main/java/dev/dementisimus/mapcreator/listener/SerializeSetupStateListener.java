@@ -3,7 +3,7 @@ package dev.dementisimus.mapcreator.listener;
 import dev.dementisimus.capi.core.injection.annotations.bukkit.BukkitSetupListener;
 import dev.dementisimus.capi.core.setup.events.SerializeSetupStateEvent;
 import dev.dementisimus.capi.core.setup.states.SetupState;
-import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
+import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -25,7 +25,7 @@ public class SerializeSetupStateListener implements Listener {
         SetupState setupState = event.getSetupState();
 
         if(setupState.equals(DEFAULT_WORLD)) {
-            event.setData(setupState.getString().replace("/", CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR));
+            event.setData(setupState.getString().replace("/", MapCreatorMap.CATEGORY_MAP_SEPARATOR));
         }
     }
 }

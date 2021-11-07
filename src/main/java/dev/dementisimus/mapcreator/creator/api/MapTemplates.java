@@ -1,4 +1,4 @@
-package dev.dementisimus.mapcreator.creator.templates.interfaces;
+package dev.dementisimus.mapcreator.creator.api;
 
 import java.io.File;
 /**

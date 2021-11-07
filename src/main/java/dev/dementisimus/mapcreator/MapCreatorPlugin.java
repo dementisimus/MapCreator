@@ -14,14 +14,15 @@ import dev.dementisimus.capi.core.setup.SetupManager;
 import dev.dementisimus.capi.core.setup.states.type.SetupStateBoolean;
 import dev.dementisimus.capi.core.setup.states.type.SetupStateString;
 import dev.dementisimus.mapcreator.creator.CustomMapCreator;
-import dev.dementisimus.mapcreator.creator.CustomMapCreatorMap;
-import dev.dementisimus.mapcreator.creator.SlimeDataSource;
+import dev.dementisimus.mapcreator.creator.api.MapCreatorMap;
 import dev.dementisimus.mapcreator.creator.aswm.ASWMDownloads;
+import dev.dementisimus.mapcreator.creator.aswm.SlimeDataSource;
 import dev.dementisimus.mapcreator.creator.aswm.SlimeDataSoureConfig;
 import dev.dementisimus.mapcreator.creator.importer.CustomWorldImporter;
 import dev.dementisimus.mapcreator.creator.templates.CustomMapTemplates;
 import dev.dementisimus.mapcreator.gui.CustomMapCreatorInventory;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -32,6 +33,7 @@ import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 import static dev.dementisimus.mapcreator.MapCreatorPlugin.ExtraSetupStates.*;
@@ -51,10 +53,13 @@ public class MapCreatorPlugin extends JavaPlugin {
     @Getter private BukkitCoreAPI bukkitCoreAPI;
     @Getter private SlimePlugin slimePlugin;
     @Getter private SlimeLoader slimeLoader;
-    @Getter private String slimeDataSource;
     @Getter private CustomMapCreator customMapCreator;
     @Getter private SetupManager setupManager;
     @Getter private Database database;
+
+    @Getter
+    @Setter
+    private String slimeDataSource;
 
     @Override
     public void onEnable() {
@@ -73,7 +78,7 @@ public class MapCreatorPlugin extends JavaPlugin {
         this.bukkitCoreAPI.enableExtraSetupState(DEFAULT_WORLD);
         this.bukkitCoreAPI.enableExtraSetupState(SIMPLE_TEMPLATE_MAP_WANTED);
 
-        this.bukkitCoreAPI.enableDatabase(DataSource.PROPERTY);
+        this.bukkitCoreAPI.enableDatabase(DataSourceCategories.PROPERTY, DataSourceMapSettings.PROPERTY);
         this.database = this.bukkitCoreAPI.getDatabase();
 
         this.bukkitCoreAPI.prepare(coreAPIInjector -> {
@@ -110,8 +115,8 @@ public class MapCreatorPlugin extends JavaPlugin {
                             for(Player player : Bukkit.getOnlinePlayers()) {
                                 if(player != null) {
                                     String fullMapName = player.getWorld().getName();
-                                    if(fullMapName.contains(CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
-                                        String[] fullMapNameSplitted = fullMapName.replace(CustomMapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
+                                    if(fullMapName.contains(MapCreatorMap.CATEGORY_MAP_SEPARATOR)) {
+                                        String[] fullMapNameSplitted = fullMapName.replace(MapCreatorMap.CATEGORY_MAP_SEPARATOR, "/").split("/");
                                         String category = fullMapNameSplitted[0];
                                         String name = fullMapNameSplitted[1];
 
@@ -193,9 +198,9 @@ public class MapCreatorPlugin extends JavaPlugin {
 
     }
 
-    public static class DataSource implements DataSourceProperty {
+    public static class DataSourceCategories implements DataSourceProperty {
 
-        public static final DataSource PROPERTY = new DataSource();
+        public static final DataSourceCategories PROPERTY = new DataSourceCategories();
 
         public static final String NAME = "name";
         public static final String ICON = "icon";
@@ -211,9 +216,49 @@ public class MapCreatorPlugin extends JavaPlugin {
         }
     }
 
+    public static class DataSourceMapSettings implements DataSourceProperty {
+
+        public static final DataSourceMapSettings PROPERTY = new DataSourceMapSettings();
+
+        public static final String MAP = "map";
+        public static final String SPAWN = "spawn";
+        public static final String DIFFICULTY = "difficulty";
+        public static final String ALLOW_ANIMALS = "allowAnimals";
+        public static final String ALLOW_MONSTERS = "allowMonsters";
+        public static final String DRAGON_BATTLE = "dragonBattle";
+        public static final String PVP = "pvp";
+        public static final String ENVIRONMENT = "environment";
+        public static final String WORLD_TYPE = "worldType";
+        public static final String DEFAULT_BIOME = "defaultBiome";
+
+        @Override
+        public String name() {
+            return "map_settings";
+        }
+
+        @Override
+        public Map<String, String> fields() {
+            Map<String, String> fields = new HashMap<>();
+
+            fields.put(MAP, SQLTypes.LONGTEXT);
+            fields.put(SPAWN, SQLTypes.LONGTEXT);
+            fields.put(DIFFICULTY, SQLTypes.LONGTEXT);
+            fields.put(ALLOW_ANIMALS, SQLTypes.BOOLEAN);
+            fields.put(ALLOW_MONSTERS, SQLTypes.BOOLEAN);
+            fields.put(DRAGON_BATTLE, SQLTypes.BOOLEAN);
+            fields.put(PVP, SQLTypes.BOOLEAN);
+            fields.put(ENVIRONMENT, SQLTypes.LONGTEXT);
+            fields.put(WORLD_TYPE, SQLTypes.LONGTEXT);
+            fields.put(DEFAULT_BIOME, SQLTypes.LONGTEXT);
+
+            return fields;
+        }
+    }
+
     public static class ItemDataStorageKeys {
 
         public static final String CATEGORY = "CATEGORY";
+
     }
 
     public static class Translations {
@@ -223,11 +268,16 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY = "inventory.section.categories.add";
         public static final String INVENTORY_SECTION_CATEGORIES_ADD_CATEGORY_INSTRUCTION = "inventory.section.categories.add.instruction";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP = "inventory.section.category.create.map";
+        public static final String INVENTORY_SECTION_CATEGORIES_CREATE_MAP_INSTRUCTION = "inventory.section.categories.create.map.instruction";
+        public static final String INVENTORY_SECTION_CATEGORIES_DELETE_MAP_INSTRUCTION = "inventory.section.categories.delete.map.instruction";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_1 = "inventory.section.category.create.map.map.icon.lore.instructions.1";
         public static final String INVENTORY_SECTION_CATEGORY_CREATE_MAP_MAP_ICON_LORE_INSTRUCTIONS_2 = "inventory.section.category.create.map.map.icon.lore.instructions.2";
         public static final String BACK = "back";
+        public static final String INVENTORY_SECTION_CATEGORY_ACTION_SHIFT_CLICK_RENAME = "inventory.section.category.action.shift.click.rename";
+        public static final String INVENTORY_SECTION_CATEGORY_ACTION_SHIFT_CLICK_UPDATE_ICON = "inventory.section.category.action.shift.click.update.icon";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_RIGHT_CLICK = "inventory.section.maps.map.action.right.click";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_LEFT_CLICK = "inventory.section.maps.map.action.left.click";
+        public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_ACTION_SHIFT_CLICK = "inventory.section.maps.map.action.shift.click";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_LOADED_BY = "inventory.section.category.maps.map.loaded.by";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_MAP_LOADED_SINCE = "inventory.section.category.maps.map.loaded.since";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_IMPORT_WORLD = "inventory.section.category.maps.import.world";
@@ -235,6 +285,8 @@ public class MapCreatorPlugin extends JavaPlugin {
         public static final String INVENTORY_SECTION_CATEGORIES_NOTHING_FOUND = "inventory.section.categories.noting.found";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_NOTHING_FOUND = "inventory.section.category.maps.noting.found";
         public static final String INVENTORY_SECTION_CATEGORY_MAPS_TEMPLATES_EMPTY = "inventory.section.category.maps.templates.empty";
+
+        public static final String MAP_CREATION_SETTINGS_INSTRUCTION_SPAWN_SET = "map.creation.settings.instruction.spawn.set";
 
         public static final String TEMPLATES_DOWNLOAD_FAILURE = "templates.download.failure";
         public static final String TEMPLATES_IMPORT_SUCCESS = "templates.import.success";

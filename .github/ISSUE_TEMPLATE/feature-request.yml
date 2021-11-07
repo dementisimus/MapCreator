@@ -1,0 +1,14 @@
+name: Feature Request
+description: Request a new feature or an enhancement to an existing one
+labels: ["feature", "enhancement"]
+assignees:
+  - dementisimus
+
+body:
+  - type: textarea
+    id: request-details
+    attributes:
+      label: Request details
+      description: Try to explain your request and how it may improve MapCreator
+    validations:
+      required: true
