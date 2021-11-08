@@ -37,13 +37,39 @@ MapCreator is a **lightweight**, **inventory based** map management tool which a
 
 ## **Development**
 
+##### Maven
+```xml
+<repository>
+    <id>dementisimus-dev-release</id>
+    <url>https://repo.dementisimus.dev/release/</url>
+</repository>
+
+<dependency>
+    <groupId>dev.dementisimus.mapcreator</groupId>
+    <artifactId>MapCreator</artifactId>
+    <version>INSERT_LATEST_RELEASE_VERSION_HERE</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+##### Gradle
+```
+maven {
+    name 'dementisimus-dev-release'
+    url 'https://repo.dementisimus.dev/release/'
+}
+
+compileOnly group: 'dev.dementisimus.mapcreator', name: 'MapCreator', version: 'INSERT_LATEST_RELEASE_VERSION_HERE'
+```
+
+#### Example usage
 ```java
-// Docs: https://docs.dementisimus.dev/development/MapCreator/1.4.0/dev/dementisimus/mapcreator/creator/api/package-summary.html
+// Docs: https://docs.dementisimus.dev/release/MapCreator/INSERT_LATEST_RELEASE_VERSION_HERE/dev/dementisimus/mapcreator/creator/api/package-summary.html
 MapCreator mapCreator = new CustomMapCreator();
 MapCreatorMap mapCreatorMap = MapCreatorMap.of("myMapName", "myMapCategory");
 
 // MapCreator.Action.LOAD loads 'mapCreatorMap', for more Actions see 
-// https://docs.dementisimus.dev/development/MapCreator/1.4.0/dev/dementisimus/mapcreator/creator/api/MapCreator.Action.html
+// https://docs.dementisimus.dev/release/MapCreator/INSERT_LATEST_RELEASE_VERSION_HERE/dev/dementisimus/mapcreator/creator/api/MapCreator.Action.html
 mapCreator.perform(MapCreator.Action.LOAD, mapCreatorMap, performance -> {
     // do something with MapCreator.Performance
 });
@@ -56,6 +82,7 @@ mapCreator.perform(MapCreator.Action.LOAD, mapCreatorMap, performance -> {
   <img src="https://dementisimus.dev/img/MapCreator/map_overview.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/choose_template.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/world_import.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/map_settings.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/name.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/load.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/teleport.jpg" />
@@ -83,7 +110,7 @@ mapCreator.perform(MapCreator.Action.LOAD, mapCreatorMap, performance -> {
 
 # **Happy map creating!**
 
-   [planned features]: <https://github.com/dementisimus/MapCreator/projects/2>
+   [planned features]: <https://github.com/dementisimus/MapCreator/issues>
    [Discord-Server]: <https://discord.gg/sTRg8A7>
    
    [PaperMC]: <https://papermc.io/downloads>
