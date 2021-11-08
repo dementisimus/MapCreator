@@ -30,8 +30,18 @@ body:
     attributes:
       label: Detailed Description
       description: Describe the bug detailed
+      value: see Expected & Current Behavior above
     validations:
-      required: true
+      required: false
+
+  - type: textarea
+    id: stacktraces-log-output
+    attributes:
+      label: Stacktraces / Log output
+      description: If you encountered any stacktraces, or you simply want to add some log
+      render: shell
+    validations:
+      required: false
 
   - type: textarea
     id: steps-to-reproduce
@@ -46,6 +56,26 @@ body:
     attributes:
       label: Java version
       description: What version of Java are you using ('java -version' output) ?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: database
+    attributes:
+      label: Database
+      description: What database are you using?
+      options:
+          - 'MongoDB'
+          - 'MariaDB (MySQL)'
+          - 'SQLite'
+    validations:
+      required: true
+
+  - type: input
+    id: database-version
+    attributes:
+      label: Database version
+      description: What version of the previously specified database are you using?
     validations:
       required: true
 
@@ -65,6 +95,14 @@ body:
       options:
           - 'yes'
           - 'no'
+    validations:
+      required: true
+
+  - type: input
+    id: aswm-version
+    attributes:
+      label: ASWM version
+      description: What version of ASWM (Advanced-Slime-World-Manager) are you using ('/about SlimeWorldManager' version output)?
     validations:
       required: true
 
