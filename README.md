@@ -109,7 +109,7 @@ mapCreator.perform(MapCreator.Action.LOAD, mapCreatorMap, performance -> {
 
 # **Happy map creating!**
 
-   [planned features]: <https://github.com/dementisimus/MapCreator/projects/2>
+   [planned features]: <https://github.com/dementisimus/MapCreator/issues>
    [Discord-Server]: <https://discord.gg/sTRg8A7>
    
    [PaperMC]: <https://papermc.io/downloads>
