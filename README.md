@@ -82,6 +82,7 @@ mapCreator.perform(MapCreator.Action.LOAD, mapCreatorMap, performance -> {
   <img src="https://dementisimus.dev/img/MapCreator/map_overview.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/choose_template.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/world_import.jpg" />
+  <img src="https://dementisimus.dev/img/MapCreator/map_settings.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/name.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/load.jpg" />
   <img src="https://dementisimus.dev/img/MapCreator/teleport.jpg" />
