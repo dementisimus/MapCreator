@@ -225,7 +225,7 @@ public class CustomMapCreatorMap implements MapCreatorMap {
                     SlimePropertyMap slimePropertyMap = this.getMapCreationSettings().toSlimePropertyMap();
                     SlimeWorld slimeWorld;
 
-                    if(document == null) {
+                    if(document == null || document.isEmpty()) {
                         Document mapCreationSettingsDocument = this.mapCreationSettings.toDocument(this.getFileName());
                         this.database.setDocument(mapCreationSettingsDocument);
                         this.database.write(bool -> {});
