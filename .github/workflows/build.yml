@@ -52,7 +52,7 @@ jobs:
 
       - name: deploy release artifacts
         if: endsWith(github.ref, '/main')
-        uses: garygrossgarten/github-action-scp@v0.7.3
+        uses: garygrossgarten/github-action-scp@v0.8.0
         with:
           local: ./artifacts
           remote: /home/repo-deployment/repository/repositories/release/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/
@@ -66,7 +66,7 @@ jobs:
 
       - name: deploy development artifacts
         if: endsWith(github.ref, '/develop')
-        uses: garygrossgarten/github-action-scp@v0.7.3
+        uses: garygrossgarten/github-action-scp@v0.8.0
         with:
           local: ./artifacts
           remote: /home/repo-deployment/repository/repositories/development/dev/dementisimus/${{ env.id }}/${{ env.name }}/${{ env.version }}/
@@ -80,7 +80,7 @@ jobs:
 
       - name: deploy release javadocs
         if: endsWith(github.ref, '/main')
-        uses: garygrossgarten/github-action-scp@v0.7.3
+        uses: garygrossgarten/github-action-scp@v0.8.0
         with:
           local: ./javadocs
           remote: /var/www/dementisimus.dev/html/docs/release/${{ env.name }}/${{ env.version }}/
@@ -94,7 +94,7 @@ jobs:
 
       - name: deploy development javadocs
         if: endsWith(github.ref, '/develop')
-        uses: garygrossgarten/github-action-scp@v0.7.3
+        uses: garygrossgarten/github-action-scp@v0.8.0
         with:
           local: ./javadocs
           remote: /var/www/dementisimus.dev/html/docs/development/${{ env.name }}/${{ env.version }}/
