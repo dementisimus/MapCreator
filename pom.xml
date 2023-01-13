@@ -15,7 +15,7 @@
         <annotations.version>23.0.0</annotations.version>
         <guice.version>5.0.1</guice.version>
         <slimeworldmanager-api.version>2.6.3-SNAPSHOT</slimeworldmanager-api.version>
-        <bson.version>4.4.0</bson.version>
+        <bson.version>4.8.2</bson.version>
         <lombok.version>1.18.22</lombok.version>
     </properties>
 
