@@ -1,5 +1,7 @@
 # MapCreator [![main build status](https://github.com/dementisimus/MapCreator/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/dementisimus/MapCreator) [![develop build status](https://github.com/dementisimus/MapCreator/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/dementisimus/MapCreator/tree/develop)
 ## _Build maps better. Together._
+
+# discontinued due to personal reasons!
   
 MapCreator is a **lightweight**, **inventory based** map management tool which allows users to **create**, **load**, **delete**, **import** and **clone** custom Minecraft maps. **For your custom needs**!
 
